@@ -1,0 +1,9 @@
+*
+!*/
+
+# track this file
+!.gitignore
+
+# whitelist everything in ./resources/
+!resources/
+!resources/*

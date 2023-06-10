@@ -3,7 +3,13 @@
 
 # track this file
 !.gitignore
-
+!*.cpp
+!*.hpp
+!*.ipp
+!*.h
+!*.c
+!*.tpp
+!Makefile
 # whitelist everything in ./resources/
 !resources/
 !resources/*

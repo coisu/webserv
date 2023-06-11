@@ -21,6 +21,17 @@
 // char *url;
 // char *proto;
 
+parse Request
+-> set the env with parsed data
+-> pipe & fork before running CGI(need to be excute in child process)
+-> excute CGI with the env
+-> parse the result of CGI again
+-> create Response header and body
+-> convert every hexadecimal token to decimal(string)
+-> send the response, with send function, to client socket fd
+	when it is too long, send it divided in several times
+	And when send or wirte function returns 0 or -1(error throw),
+	remove Connection(Client)
 
 GET :   read the resource, make a respond
         check MIME type

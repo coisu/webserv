@@ -36,7 +36,7 @@ TcpServer   &TcpServer::operator=( const TcpServer& src ){
     return *this;
 }
 
-// Functions
+// Methods
 int TcpServer::startServer(){
     _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverSocket < 0)
@@ -50,6 +50,34 @@ int TcpServer::startServer(){
         return 1;
     }
     return 0;
+}
+
+void TcpServer::startListen()
+{
+    if (listen(_serverSocket, 5) < 0)
+    {
+        exitWithError("Socket listen failed");
+    }
+    std::ostringstream ss;
+    ss << "\n*** Listening on ADDRESS: " 
+        << inet_ntoa(_serverSocketAddress.sin_addr) // convert the IP address (binary) in string
+        << " PORT: " << ntohs(_serverSocketAddress.sin_port) // invert octets, beacause network have big endians before and we want to have little endians before
+        << " ***\n\n";
+    log(ss.str());
+}
+
+void TcpServer::acceptConnection( int &_severNewSocket ){
+    _serverNewSocket = accept(_serverSocket, (struct sockaddr *)&_serverSocketAddress, 
+                &_socketAddressLen);
+    if (_serverNewSocket < 0)
+    {
+        std::ostringstream ss;
+        ss << 
+        "Server failed to accept incoming connection from ADDRESS: " 
+        << inet_ntoa(m_socketAddress.sin_addr) << "; PORT: " 
+        << ntohs(m_socketAddress.sin_port);
+        exitWithError(ss.str());
+    }
 }
 
 void TcpServer::closeServer(){

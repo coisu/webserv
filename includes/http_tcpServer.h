@@ -33,7 +33,9 @@ class TcpServer
     private:
     // Methods
         int     startServer( void );
-        void    closeServer( void );   
+        void    closeServer( void ); 
+        void    startListen( void );
+        void    acceptConnection( int &_severNewSocket );
     
     // Member variable
         std::string         _sIpAddress;

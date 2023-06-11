@@ -1,20 +1,12 @@
-#include <iostream>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <cstring>
+#include "http_tcpServer.h"
 
 int main() {
     // Create the socket
-    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    
-    if (serverSocket == -1) {
-        std::cerr << "Error creating socket\n" << std::endl;
-        return 1;
-    }
+    TcpServer server = TcpServer("0.0.0.0", 8080);
+    //int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     // Prepare the server address
-    struct sockaddr_in serverAddress{};
+    struct sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(8080); // Port 8080
     serverAddress.sin_addr.s_addr = INADDR_ANY;

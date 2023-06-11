@@ -5,17 +5,6 @@ int main() {
     TcpServer server = TcpServer("0.0.0.0", 8080);
     //int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
-    // Prepare the server address
-    struct sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(8080); // Port 8080
-    serverAddress.sin_addr.s_addr = INADDR_ANY;
-
-    // Bind the socket to the server address
-    if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) {
-        std::cerr << "Error binding socket to address" << std::endl;
-        return 1;
-    }
 
     // Listen for incoming connections 
     // To do : 

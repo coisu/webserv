@@ -7,6 +7,17 @@
 #include <unistd.h>
 #include <cstring>
 
+struct sockaddr_in {
+    short            sin_family;   // e.g. AF_INET
+    unsigned short   sin_port;     // e.g. htons(8080)
+    struct in_addr   sin_addr;     // see struct in_addr, below
+    //char             sin_zero[8];  // zero this if you want to
+};
+
+struct in_addr {
+    unsigned long s_addr;
+};
+
 class TcpServer
 {
     public:
@@ -20,7 +31,7 @@ class TcpServer
         TcpServer& operator=( const TcpServer& src );
     
     private:
-    // Functions
+    // Methods
         int     startServer( void );
         void    closeServer( void );   
     
@@ -32,14 +43,12 @@ class TcpServer
         long                _serverIncomingMessage;
     
     // Server address
-        struct sockaddr_in  _serverAddress;
+        struct sockaddr_in  _serverSockedAddress;
         unsigned int        _socketAddressLen;
         std::string         _serverMessage;
-    // serverAddress.sin_family = AF_INET;
-    // serverAddress.sin_port = htons(8080); // Port 8080
-    // serverAddress.sin_addr.s_addr = INADDR_ANY;
 };
 
+// Here we need to see how we want to do the error management
 void log(const std::string &message){
     std::cerr << message << std::endl;
 }

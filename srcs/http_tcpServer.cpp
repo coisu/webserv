@@ -5,6 +5,10 @@ TcpServer::TcpServer( std::string ipAddress, int port ): _sIpAddress(ipAddress),
 _serverPort(port), _serverSocket(), _serverNewSocket(), _serverIncomingMessage(),
 _socketAddressLen(sizeof(_socketAddressLen)), _serverMessage(buildResponse()){
     startServer();
+    _serverSockedAddress.sin_family = AF_INET; // for IPv4
+    _serverSockedAddress.sin_port = htons(8080); // call htons to ensure that the port is stored in network byte order
+    _serverSockedAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
+    inet_addr(_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
 }
 
 // Copy Constructor
@@ -22,6 +26,13 @@ TcpServer   &TcpServer::operator=( const TcpServer& src ){
     if (this == &src)
         return *this;
     this->_serverSocket = src._serverSocket;
+    this->_sIpAddress = src._sIpAddress;
+    this->_serverPort = src._serverPort;
+    this->_serverSocket = src._serverSocket;
+    this->_serverNewSocket = src._serverNewSocket;
+    this->_serverIncomingMessage = src._serverIncomingMessage;
+    this->_socketAddressLen = src._socketAddressLen;
+    this->_serverMessage = src._serverMessage;
     return *this;
 }
 
@@ -31,6 +42,11 @@ int TcpServer::startServer(){
     if (_serverSocket < 0)
     {
         exitWithError("Cannot create socket");
+        return 1;
+    }
+    if (bind(_serverSocket,(struct sockaddr *)&_serverSocketAddress, _socketAddressLen) < 0)
+    {
+        exitWithError("Cannot connect socket to address");
         return 1;
     }
     return 0;

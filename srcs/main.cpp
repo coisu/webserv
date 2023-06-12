@@ -6,7 +6,7 @@
 int main() {
 	// Create the socket
 	// parse_request(EXAMPLE_INPUT);
-	Get		get_method(EXAMPLE_INPUT);
+	Method		get_method(EXAMPLE_INPUT);
 	get_method.printHead();
 	TcpServer	server = TcpServer("0.0.0.0", 8080);
 

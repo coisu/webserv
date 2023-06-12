@@ -1,3 +1,5 @@
+#ifndef UTILS_H
+# define UTILS_H
 #include <iostream>
 
 #define EXAMPLE_INPUT "GET / HTTP/1.1 \
@@ -17,4 +19,15 @@
 \nAccept-Encoding: gzip, deflate, br \
 \nAccept-Language: en-US,en;q=0.9"
 
-// void	parse_request(std::string request);
+typedef enum e_method
+{
+	GET,
+	POST,
+	DELETE,
+	UNDEFINED
+} t_method;
+
+e_method	getMethodType(std::string info);
+std::string	getURL(std::string info);
+
+#endif

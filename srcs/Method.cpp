@@ -36,16 +36,13 @@ std::map<std::string, std::string>	Method::parse_request(std::string request)
 	std::map<std::string, std::string> m;
 	std::string key, val;
 	std::istringstream iss(request);
-	size_t	i, n = 0;
 
 	std::getline(iss, this->_info);
-	i = this->_info.find_first_of('/');
-	while (!std::isspace(this->_info[i + n]))
-		n++;
-	this->_url = this->_info.substr(i, n);
-	std::cout << "info: " << this->_info << std::endl;
-	std::cout << "url: " << this->_url << std::endl;
-
+	this->_type = getMethodType(this->_info);
+	this->_url = getURL(this->_info);
+	// std::cout << "info: " << this->_info << std::endl;
+	std::cout << "url: " << this->_url << std::endl
+			  << "type: " << this->_type << std::endl;
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
 		m[key] = val;
 	return m;

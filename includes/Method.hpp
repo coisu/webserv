@@ -1,14 +1,31 @@
-#include "http_tcpServer.h"
+#ifndef METHOD_HPP
+# define METHOD_HPP
+#include <map>
+#include <iostream>
+#include <sstream>
 
 class Method
 {
 	public:
-		Method();
-		~Method();
+		//OCCF
+		Method(std::string request);
+		Method(std::map<std::string, std::string>	head);
+		virtual ~Method();
 		Method(const Method& copy);
-		Method(std::string idea);
 		Method&	operator = (const Method& copy);
-	private:
+		
+		//public methods
+		void	printHead( void );
+
+
+	protected:
+		//private methods
+		std::map<std::string, std::string>	parse_request(std::string request);
+
+		//private attributes
 		std::string	_body;
 		int			_type;
+		std::map<std::string, std::string>	_head;
 };
+
+#endif

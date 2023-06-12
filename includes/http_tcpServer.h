@@ -48,11 +48,16 @@ class TcpServer
         int                 _serverSocket;
         int                 _clientSocket;
         long                _serverIncomingMessage;
+        fd_set              _socketSet;
+        int                 _maxSocket;
     
     // Server address
         struct sockaddr_in  _serverSocketAddress;
         unsigned int        _socketAddressLen;
         std::string         _serverMessage;
+    
+    // Timeout
+        struct timeval      _timeout;
 };
 
 // Here we need to see how we want to do the error management

@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include <sstream>
 #include <stdlib.h>
-
+#include <fcntl.h>
 
 // struct sockaddr_in {
 //     short            sin_family;   // e.g. AF_INET
@@ -34,10 +34,11 @@ class TcpServer
     // Assignement Operator
         TcpServer& operator=( const TcpServer& src );
         
-        void    acceptConnection( void );
+        void    runServer( void );
     
     private:
     // Methods
+        void    acceptConnection( void );
         int     startServer( void );
         void    closeServer( void ); 
         void    startListen( void );

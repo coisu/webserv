@@ -16,7 +16,7 @@ int main()
 	int addrlen = sizeof(address);
 	
 	// Only this line has been changed. Everything is same.
-	char hello[] = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
+	char hello[] = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\nHello world!";
 	
 	// Creating socket file descriptor
 	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -33,7 +33,7 @@ int main()
 	memset(address.sin_zero, '\0', sizeof address.sin_zero);
 	
 	
-	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
+	if (bind(server_fd, (struct sockaddr *)&address, addrlen)<0)
 	{
 		perror("In bind");
 		exit(EXIT_FAILURE);
@@ -52,8 +52,8 @@ int main()
 			exit(EXIT_FAILURE);
 		}
 		
-		char buffer[30000] = {0};
-		read(new_socket, buffer, 30000);
+		char buffer[3000] = {0};
+		read(new_socket, buffer, 3000);
 		printf("%s\n", buffer);
 		write(new_socket , hello , strlen(hello));
 		printf("------------------Hello message sent-------------------");

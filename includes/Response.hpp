@@ -14,6 +14,7 @@
 class Response
 {
     private:
+        std::string     path;
         std::string     location;
         std::string     body;
         size_t          body_len;
@@ -21,6 +22,7 @@ class Response
         int             e_code;
 
     public:
+        Mime            mimeList;
         Request         request;
         ServerConfig    server;
         std::string     response_content;

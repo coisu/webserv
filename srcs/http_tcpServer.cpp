@@ -1,12 +1,21 @@
 #include "../includes/http_tcpServer.h"
 
+void log(const std::string &message){
+    std::cerr << message << std::endl;
+}
+
+void exitWithError(const std::string &errorMessage){
+    log("ERROR: " + errorMessage);
+    exit(1);
+}
+
 // Constructor
 TcpServer::TcpServer( std::string ipAddress, int port ): _sIpAddress(ipAddress),
 _serverPort(port), _serverSocket(), _clientSocket(), _serverIncomingMessage(),
 _socketAddressLen(sizeof(_socketAddressLen)), _serverMessage("hello"){
     startServer();
     _serverSocketAddress.sin_family = AF_INET; // for IPv4
-    _serverAddress.sin_port = htons(8080); // call htons to ensure that the port is stored in network byte order
+    _serverSocketAddress.sin_port = htons(8080); // call htons to ensure that the port is stored in network byte order
     _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
     inet_addr(_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
 }

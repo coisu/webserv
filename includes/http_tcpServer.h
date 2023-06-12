@@ -6,17 +6,21 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <cstring>
+#include <arpa/inet.h>
+#include <sstream>
+#include <stdlib.h>
 
-struct sockaddr_in {
-    short            sin_family;   // e.g. AF_INET
-    unsigned short   sin_port;     // e.g. htons(8080)
-    struct in_addr   sin_addr;     // see struct in_addr, below
-    //char             sin_zero[8];  // zero this if you want to
-};
 
-struct in_addr {
-    unsigned long s_addr;
-};
+// struct sockaddr_in {
+//     short            sin_family;   // e.g. AF_INET
+//     unsigned short   sin_port;     // e.g. htons(8080)
+//     struct in_addr   sin_addr;     // see struct in_addr, below
+//     //char             sin_zero[8];  // zero this if you want to
+// };
+
+// struct in_addr {
+//     unsigned long s_addr;
+// };
 
 class TcpServer
 {
@@ -52,12 +56,6 @@ class TcpServer
 };
 
 // Here we need to see how we want to do the error management
-void log(const std::string &message){
-    std::cerr << message << std::endl;
-}
-void exitWithError(const std::string &errorMessage){
-    log("ERROR: " + errorMessage);
-    exit(1);
-}
+
 
 #endif

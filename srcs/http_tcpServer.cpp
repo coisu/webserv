@@ -109,7 +109,7 @@ void TcpServer::acceptConnection(){
         exitWithError("Failed to read bytes from client socket connection");
     std::cout << _serverMessage.c_str();
     bytesSent = write(_clientSocket, _serverMessage.c_str(), _serverMessage.size());
-    if (bytesSent == _serverMessage.size())
+    if (bytesSent == (long int)_serverMessage.size())
         log("------ Server Response sent to client ------\n\n");
     else
         log("Error sending response to client");

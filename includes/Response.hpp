@@ -27,7 +27,7 @@ class Response
 
 
         Response();
-        Response(Request&);
+        Response(Request &request);
         ~Response();
 
         void    buildResponse();

@@ -52,13 +52,16 @@
 		--> Send response to client.
 
 -> accept connections,
--> 
--> parsing done successfully, check is the host name, port and servername
--> pipe & fork before running CGI(need to be excute in child process)
--> excute CGI with the env
--> parse the result of CGI again
--> create Response header and body
--> convert every hexadecimal token to decimal(string)
+-> read request fd one by one,(if it has problem remove it from the set and close socket)
+-> read sucessfully, update last message time.
+-> assign server to the client
+-> start to build response
+	-> pipe and fork, excute CGI
+	-> Method GET-read, POST-write, DELETE-delete
+	-> build body, html index
+	-> append status line amd header contents 
+
+-> check is the host name, port and servername
 -> send the response, with send function, to client socket fd
 	when it is too long, send it divided in several times
 	And when send or wirte function returns 0 or -1(error throw),
@@ -81,30 +84,3 @@ DELETE : delete resource that pointed by url
          *unsafety Method
 
 
-std::string 
-
-
-// headers.push_back(getDateHeader());
-// headers.push_back(getServerHeader(this));
-
-// if (status == CGI_SUCCESS_CODE)
-// 	createCGIResponse(status, headers, body);
-// if (status >= 400 && status <= 599)
-// {
-// 	if (!location.get_m_error_page().empty())
-// 		body = location.get_m_error_page();
-// 	else
-// 		body = m_default_error_page;
-// }
-// if (!ft::hasKey(ft::stringVectorToMap(headers), "Transfer-Encoding"))
-// 	headers.push_back("Content-Length:" + ft::to_string(body.size()));
-// if (!body.empty())
-// 		headers.push_back("Content-Language:ko-KR");
-// if (status / 100 != 2)
-// 	headers.push_back("Connection:close");
-// if (status / 100 == 3 && !ft::hasKey(ft::stringVectorToMap(headers), "Location"))
-// 	headers.push_back("Location:/");
-// if (status == 504 && !ft::hasKey(ft::stringVectorToMap(headers), "Retry-After"))
-// 	headers.push_back("Retry-After:3600");
-// if (connection.get_m_request().get_m_method() == Request::HEAD)
-// 	body.clear();

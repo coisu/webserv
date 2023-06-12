@@ -28,7 +28,7 @@ _serverPort( port ), _serverSocket(), _clientSocket(), _serverIncomingMessage(),
     _serverSocketAddress.sin_family = AF_INET; // for IPv4
     _serverSocketAddress.sin_port = htons(8080); // call htons to ensure that the port is stored in network byte order
     _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
-    _timeout.tv_sec = 3 * 60;
+    _timeout.tv_sec = 1 * 60;
     _timeout.tv_usec = 0;
     inet_addr(_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
     startServer();
@@ -82,9 +82,9 @@ int TcpServer::startServer(){
 void TcpServer::startListen()
 {
     if (listen(_serverSocket, 5) < 0)
-    {
         exitWithError("Socket listen failed");
-    }
+    if (fcntl(_serverSocket, F_SETFL, O_NONBLOCK) < 0)
+        exitWithError("Socket non-blocking failed");
     std::ostringstream ss;
     ss << "\n*** Listening on ADDRESS: " 
         << inet_ntoa(_serverSocketAddress.sin_addr) // convert the IP address (binary) in string
@@ -96,6 +96,30 @@ void TcpServer::startListen()
 }
 
 void TcpServer::acceptConnection(){
+
+    if (FD_ISSET(_serverSocket, &_socketSet)){
+        // New connexion is comming
+        _clientSocket = accept(_serverSocket, (struct sockaddr *)&_serverSocketAddress, (socklen_t*)&_socketAddressLen);
+        if (_clientSocket < 0){
+            std::ostringstream ss;
+            ss << 
+            "Server failed to accept incoming connection from ADDRESS: " 
+            << inet_ntoa(_serverSocketAddress.sin_addr) << "; PORT: " 
+            << ntohs(_serverSocketAddress.sin_port);
+            exitWithError(ss.str());
+        }
+        if (fcntl(_clientSocket, F_SETFL, O_NONBLOCK) < 0)
+            exitWithError("webserv: fcntl error");
+        // + new socket
+        FD_SET(_clientSocket, &_socketSet);
+        if (_clientSocket > _maxSocket)
+            _maxSocket = _clientSocket;
+
+        std::cout << "New connexion comming: " << inet_ntoa(_serverSocketAddress.sin_addr) << ":" << ntohs(_serverSocketAddress.sin_port) << std::endl;
+    }
+}
+
+void    TcpServer::runServer(){
     char    buffer[1024] = {0};
     ssize_t bytesReceived;
     long    bytesSent;
@@ -111,27 +135,10 @@ void TcpServer::acceptConnection(){
         std::cout << "Timeout reached, no activity on sockets\n" << std::endl;
         return;
     }
-    if (FD_ISSET(_serverSocket, &tempSet)){
-        // New connexion is comming
-        _clientSocket = accept(_serverSocket, (struct sockaddr *)&_serverSocketAddress, (socklen_t*)&_socketAddressLen);
-        if (_clientSocket < 0){
-            std::ostringstream ss;
-            ss << 
-            "Server failed to accept incoming connection from ADDRESS: " 
-            << inet_ntoa(_serverSocketAddress.sin_addr) << "; PORT: " 
-            << ntohs(_serverSocketAddress.sin_port);
-            exitWithError(ss.str());
-        }
-        // + new socked
-        FD_SET(_clientSocket, &_socketSet);
-        if (_clientSocket > _maxSocket)
-            _maxSocket = _clientSocket;
-
-        std::cout << "New connexion comming: " << inet_ntoa(_serverSocketAddress.sin_addr) << ":" << ntohs(_serverSocketAddress.sin_port) << std::endl;
-    }
-        for (int socket = 0; socket <= _maxSocket; ++socket){
-            if (FD_ISSET(socket, &_socketSet)) {
+    for (int socket = 0; socket <= _maxSocket; ++socket){
+            if (FD_ISSET(socket, &tempSet)) {
                 memset(buffer, 0, sizeof(buffer));
+                acceptConnection();
                 bytesReceived = recv(socket, buffer, sizeof(buffer), 0);
                 if (bytesReceived <= 0){
                     if (bytesReceived == 0){
@@ -157,7 +164,7 @@ void TcpServer::acceptConnection(){
         } 
 }
 
-void TcpServer::closeServer(){
+void    TcpServer::closeServer(){
     close(_serverSocket);
     close(_clientSocket);
     exit(0);

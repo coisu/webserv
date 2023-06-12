@@ -40,7 +40,7 @@ GET :   read the resource, make a respond
         * when it listen the directory, it needed to test with deep sub-directory
             it supposed to listen everytime goes deeper to the sub-directory
 
-POST :  except the case(cody size == 0), basically same with GET.
+POST :  except the case(body size == 0), basically same with GET.
         so it can be redirection with Method excution function
         for this project, if the resource is not CGI,
         then response will not be changed either body exist or not, and query exist or not.
@@ -48,4 +48,5 @@ POST :  except the case(cody size == 0), basically same with GET.
 DELETE : delete resource that pointed by url
          return in response body, info which file is deleted
          *unsafety Method
+
 

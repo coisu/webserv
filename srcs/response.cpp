@@ -88,6 +88,7 @@
 
 Response::Response()
 {
+	path = "";
 	location = "";
 	body = "";
 	body_len = 0;
@@ -98,6 +99,7 @@ Response::Response()
 
 Response::Response(Request &request) : request(request)
 {
+	path = "";
 	location = "";
 	body = "";
 	body_len = 0;
@@ -108,12 +110,18 @@ Response::Response(Request &request) : request(request)
 
 Response::~Response() {}
 
+int	Request::buildResponse() {}
+
 void	Response::writeContentType()
 {
 	response_content.append("Content-Type: ");
-	int extnPos = target_file.rfind(".", std::string::npos);
+	int extnPos = path.rfind(".", std::string::npos);
 	if(extnPos != std::string::npos && e_code == 200)
-        response_content.append(mime.getMimeType(target_file.substr(extnPos)));
+        response_content.append(mimeList.getMimeType(path.substr(extnPos)));
     else
-    	response_content.append(mime.getMimeType("default"));
-    response_content.append("\r\n");}
+    	response_content.append(mimeList.getMimeType("default"));
+    response_content.append("\r\n");
+}
+
+
+

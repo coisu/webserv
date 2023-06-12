@@ -83,4 +83,138 @@ DELETE : delete resource that pointed by url
          return in response body, info which file is deleted
          *unsafety Method
 
+class configServer
+{
+	private:
+		uint16_t						port;
+		in_addr_t						host;
+		std::string						server_name;
+		std::string						root;
+		unsigned long					client_max_body_size;
+		std::string						index;
+		bool							autoindex;
+		std::map<int, std::string>		error_pages;
+		std::vector<Location> 			locations;
+        struct sockaddr_in 				server_addr;
+        int     						listen_fd;
+};
 
+class Request
+{
+	private:
+        std::string                         path;
+        std::string                         query;
+        std::map<std::string, std::string>  req_headers;
+        Method          	                method;
+        size_t                              max_body_size;
+        size_t                              body;
+        int                               	e_code;
+        size_t                              chunk_length;
+        std::string                         server_name;
+        std::string                         body_str;
+
+};
+
+enum Method
+{
+    GET,
+    POST,
+    DELETE
+};
+
+class Response
+{
+	private:
+        configServer    server;
+        std::string     target_file;
+        std::vector<unsigned long> _body;
+        size_t          body_length;
+        std::string     response_body;
+        std::string     location;
+        int           	e_code;
+        char            *res;
+		int				cgi;
+		int				cgi_fd[2];
+		size_t			cgi_response_length;
+        bool            auto_index;
+
+	public:
+		std::string     res_content;
+        Request     	request;
+};
+
+int    Response::buildResponse()
+{
+    if (request.getBody().length() > server.getClientMaxBodySize())
+    {
+        e_code = 413;
+        return (1);
+    }
+    if ( checkAllowedMethod() || checkLocation()) 
+        return (1);
+	if (location.path == cgi-bin)
+	{
+		check extension (.py || .sh)
+		check...
+		init env,
+		if pipe and fork suceed
+		excute CGI..
+		execve(CGI->_argv[0], CGI->_argv, CGI->env);
+	}
+    if (cgi || _auto_index)
+        return (0);
+    
+    if (request.getMethod() == GET)
+    {
+        std::ifstream file(target_file.c_str());
+
+        if (file.fail())
+        {
+            _code = 404;
+            return (1);
+        }
+        std::ostringstream ss;
+        ss << file.rdbuf();
+        response_body = ss.str();
+    }
+     else if (request.getMethod() == POST)
+    {
+        if (fileExists(target_file))
+        {
+            e_code = 204;
+            return (0);
+        }
+        std::ofstream file(target_file.c_str(), std::ios::binary);
+        if (file.fail())
+        {
+            e_code = 404;
+            return (1);
+        }
+
+        if (request.getMultiformFlag())
+        {
+            std::string body = request.getBody();
+            body = removeBoundary(body, request.getBoundary());
+            file.write(body.c_str(), body.length());
+        }
+        else
+        {
+            file.write(request.getBody().c_str(), request.getBody().length());
+        }
+    }
+    else if (request.getMethod() == DELETE)
+    {
+        if (!fileExists(_target_file))
+        {
+            e_code = 404;
+            return (1);
+        }
+        if (remove( _target_file.c_str() ) != 0 )
+        {
+            e_code = 500;
+            return (1);
+        }
+    }
+    e_code = 200;
+    return (0);
+}

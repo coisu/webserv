@@ -1,11 +1,7 @@
 # VARIABLES #
 COMPILER = c++
 INC_DIR = includes/
-<<<<<<< HEAD
-INCLUDES = #$(INC_DIR)*.hpp
-=======
 INCLUDES = $(INC_DIR)*.h*
->>>>>>> c5468bbf7c2cee40de73fa00baa3be4936bdc691
 FLAGS = -std=c++98
 FLAGS += -Wall -Werror -Wextra
 FLAGS += -g3
@@ -45,8 +41,4 @@ re:
 	@make --no-print-directory clean
 	@make --no-print-directory all
 
-<<<<<<< HEAD
-.phoney: clean fclean re all
-=======
 .PHONY: clean fclean re all
->>>>>>> c5468bbf7c2cee40de73fa00baa3be4936bdc691

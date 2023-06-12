@@ -5,11 +5,11 @@
 #include <string>
 #include <map>
 #include <set>
-#include <sys/stat.h>
 #include <cerrno>
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
+#include "Request.hpp"
 
 class Response
 {
@@ -18,12 +18,11 @@ class Response
         std::string     body;
         size_t          body_len;
         bool            auto_index;
-        ServerConfig    server;
         int             e_code;
 
-
     public:
-        Request request;
+        Request         request;
+        ServerConfig    server;
         std::string     response_content;
 
         Response();
@@ -32,6 +31,7 @@ class Response
 
         void    buildResponse();
         void    buildErrorResponse();
+
 
 
 };

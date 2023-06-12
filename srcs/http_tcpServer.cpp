@@ -1,13 +1,13 @@
-#include "http_tcpServer.h"
+#include "../includes/http_tcpServer.h"
 
 // Constructor
 TcpServer::TcpServer( std::string ipAddress, int port ): _sIpAddress(ipAddress),
-_serverPort(port), _serverSocket(), _serverNewSocket(), _serverIncomingMessage(),
-_socketAddressLen(sizeof(_socketAddressLen)), _serverMessage(buildResponse()){
+_serverPort(port), _serverSocket(), _clientSocket(), _serverIncomingMessage(),
+_socketAddressLen(sizeof(_socketAddressLen)), _serverMessage("hello"){
     startServer();
-    _serverSockedAddress.sin_family = AF_INET; // for IPv4
-    _serverSockedAddress.sin_port = htons(8080); // call htons to ensure that the port is stored in network byte order
-    _serverSockedAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
+    _serverSocketAddress.sin_family = AF_INET; // for IPv4
+    _serverAddress.sin_port = htons(8080); // call htons to ensure that the port is stored in network byte order
+    _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
     inet_addr(_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
 }
 
@@ -29,7 +29,7 @@ TcpServer   &TcpServer::operator=( const TcpServer& src ){
     this->_sIpAddress = src._sIpAddress;
     this->_serverPort = src._serverPort;
     this->_serverSocket = src._serverSocket;
-    this->_serverNewSocket = src._serverNewSocket;
+    this->_clientSocket = src._clientSocket;
     this->_serverIncomingMessage = src._serverIncomingMessage;
     this->_socketAddressLen = src._socketAddressLen;
     this->_serverMessage = src._serverMessage;
@@ -66,22 +66,34 @@ void TcpServer::startListen()
     log(ss.str());
 }
 
-void TcpServer::acceptConnection( int &_severNewSocket ){
-    _serverNewSocket = accept(_serverSocket, (struct sockaddr *)&_serverSocketAddress, 
+void TcpServer::acceptConnection(){
+    char    buffer[1025];
+    ssize_t bytesReceived;
+    long    bytesSent;
+
+    _clientSocket = accept(_serverSocket, (struct sockaddr *)&_serverSocketAddress, 
                 &_socketAddressLen);
-    if (_serverNewSocket < 0)
-    {
+    if (_clientSocket < 0){
         std::ostringstream ss;
         ss << 
         "Server failed to accept incoming connection from ADDRESS: " 
-        << inet_ntoa(m_socketAddress.sin_addr) << "; PORT: " 
-        << ntohs(m_socketAddress.sin_port);
+        << inet_ntoa(_serverSocketAddress.sin_addr) << "; PORT: " 
+        << ntohs(_serverSocketAddress.sin_port);
         exitWithError(ss.str());
     }
+    bytesReceived = read(_clientSocket, buffer, sizeof(buffer) - 1);
+    buffer[bytesReceived] = '\0';
+    if (bytesReceived < 0)
+        exitWithError("Failed to read bytes from client socket connection");
+    bytesSent = write(_clientSocket, _serverMessage.c_str(), _serverMessage.size());
+    if (bytesSent == _serverMessage.size())
+        log("------ Server Response sent to client ------\n\n");
+    else
+        log("Error sending response to client");
 }
 
 void TcpServer::closeServer(){
     close(_serverSocket);
-    close(_serverNewSocket);
+    close(_clientSocket);
     exit(0);
 }

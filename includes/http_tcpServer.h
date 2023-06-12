@@ -29,23 +29,24 @@ class TcpServer
         ~TcpServer();
     // Assignement Operator
         TcpServer& operator=( const TcpServer& src );
+        
+        void    acceptConnection( void );
     
     private:
     // Methods
         int     startServer( void );
         void    closeServer( void ); 
         void    startListen( void );
-        void    acceptConnection( int &_severNewSocket );
     
     // Member variable
         std::string         _sIpAddress;
         int                 _serverPort;
         int                 _serverSocket;
-        int                 _serverNewSocket;
+        int                 _clientSocket;
         long                _serverIncomingMessage;
     
     // Server address
-        struct sockaddr_in  _serverSockedAddress;
+        struct sockaddr_in  _serverSocketAddress;
         unsigned int        _socketAddressLen;
         std::string         _serverMessage;
 };

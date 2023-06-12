@@ -16,5 +16,3 @@
 \nSec-Fetch-Dest: document \
 \nAccept-Encoding: gzip, deflate, br \
 \nAccept-Language: en-US,en;q=0.9"
-
-// void	parse_request(std::string request);

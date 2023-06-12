@@ -25,6 +25,8 @@ class Method
 		//private attributes
 		std::string	_body;
 		int			_type;
+		std::string	_info;
+		std::string	_url;
 		std::map<std::string, std::string>	_head;
 };
 

@@ -1,22 +1,28 @@
 # ifndef SERVERCONFIG_HPP
 #include SERVERCONFIG_HPP
 
+enum Method
+{
+    GET,
+    POST,
+    DELETE
+};
+
 class Location
 {
     private:
-        std::string     path;
-        std::string     root;
-        std::string     index;
-        std::string     retrn;
-        std::vector<int>    method;
+        std::string         path;
+        std::string         root;
+        std::string         index;
+        std::string         retrn;
+        std::vector<int>    allow_method;
         std::vector<std::string> cgi_path;
         std::vector<std::string> cgi_ext;
     public:
 
-
 };
 
-class ServerConfig
+class serverConfig
 {
     private:
         unsigned int                port;

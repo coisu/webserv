@@ -25,6 +25,7 @@ class Response
         ServerConfig    server;
         std::string     response_content;
 
+
         Response();
         Response(Request&);
         ~Response();

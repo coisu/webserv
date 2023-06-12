@@ -14,15 +14,26 @@
 class Response
 {
     private:
-        std::string     content;
-        std::string     body;
         std::string     location;
+        std::string     body;
         size_t          body_len;
-        Server          server;
         bool            auto_index;
+        ServerConfig    server;
+        int             e_code;
+
 
     public:
         Request request;
+        std::string     response_content;
+
+        Response();
+        Response(Request&);
+        ~Response();
+
+        void    buildResponse();
+        void    buildErrorResponse();
 
 
-}
+};
+
+#endif

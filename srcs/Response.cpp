@@ -204,3 +204,12 @@ void	Response::writeServer()
 	response_content.append("Server: nginx 1.0.15\r\n");
 }
 
+// Connection: close
+void	Response::writeConnection()
+{
+	// std::string headerSearcher(std::string str);
+    if(request.SOMETHING_SERACH_FUNCTION("connection") == "keep-alive")
+        response_content.append("Connection: keep-alive\r\n");
+	else
+		response_content.append("Connection: colse\r\n");
+}

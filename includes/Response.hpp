@@ -38,11 +38,15 @@ class Response
         void    buildResponse();
         void    buildErrorResponse();
 
+        void	Response::writeHeader();
+        void    Response::writeStatusLine();
         void	Response::writeDate();
         void	Response::writeContentType();
         void	Response::writeContentLength();
         void	Response::writeServer();
         void	Response::writeConnection();
+
+        void	Response::writeBody();
 
 
 };

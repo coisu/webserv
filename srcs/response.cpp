@@ -84,6 +84,9 @@
 //          *unsafety Method
 
 
+// The server will put a html file to the body of response
+
+
 #include "Response.hpp"
 
 Response::Response()
@@ -110,7 +113,10 @@ Response::Response(Request &request) : request(request)
 
 Response::~Response() {}
 
-int	Request::buildResponse() {}
+int	Request::buildResponse()
+{
+
+}
 
 void	Response::writeContentType()
 {

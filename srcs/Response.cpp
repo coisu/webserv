@@ -139,7 +139,23 @@ Response::Response(Method &request) : request(request)
 
 Response::~Response() {}
 
-int	Response::buildResponse()
+void	Response::buildResponse()
+{
+	Response::writeHeader();
+	Response::writeBody();
+}
+
+void	Response::writeHeader()
+{
+	Response::writeStatusLine();
+	Response::writeDate();
+	Response::writeContentType();
+	Response::writeContentLength();
+	Response::writeServer();
+	Response::writeConnection();
+}
+
+void	Response::writeBody()
 {
 
 }
@@ -149,15 +165,6 @@ void	Response::writeStatusLine()
 
 }
 
-void	Response::writeHeader()
-{
-
-}
-
-void	Response::writeBody()
-{
-
-}
 
 // Date: Mon, 23 May 2005 22:38:34 GMT
 void	Response::writeDate()

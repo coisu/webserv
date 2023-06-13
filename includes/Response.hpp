@@ -14,17 +14,17 @@
 class Response
 {
     private:
-        std::string     path;
+        std::string     path;               // path of requested page/data.
         std::string     location;
         std::string     body;
-        size_t          body_len;
+        size_t          body_len;           // content-Length
         bool            auto_index;
         int             e_code;
 
     public:
         Mime            mimeList;
-        Request         request;
-        ServerConfig    server;
+        Method          request;            // Method
+        ServerConfig    server;             // port & Host
         std::string     response_content;
 
 

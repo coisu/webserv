@@ -171,6 +171,7 @@ void	Response::writeDate()
 	
 }
 
+// Content-Type: application/json; charset=UTF-8
 void	Response::writeContentType()
 {
 	response_content.append("Content-Type: ");
@@ -195,5 +196,11 @@ void	Response::writeContentLength()
 	response_content.append("Content-Length: ");
 	response_content.append(body_len);
 	response_content.append("\r\n");
+}
+
+// Server: BestServ (Unix) (Red-Hat/Linux)
+void	Response::writeServer()
+{
+	response_content.append("Server: nginx 1.0.15\r\n");
 }
 

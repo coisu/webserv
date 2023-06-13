@@ -41,10 +41,8 @@ class Response
         void	Response::writeDate();
         void	Response::writeContentType();
         void	Response::writeContentLength();
-
-
-
-
+        void	Response::writeServer();
+        void	Response::writeConnection();
 
 
 };

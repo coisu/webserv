@@ -10,7 +10,7 @@ class Mime
     public:
         Mime();
         ~Mime();
-        std::string getType(std::string extn);
+        std::string getMimeType(std::string extn);
 };
 
 #endif

@@ -26,7 +26,7 @@ Mime::Mime()
 
 Mime::~Mime() {}
 
-std::string Mime::getType(std::string extn)
+std::string Mime::getMimeType(std::string extn)
 {
     if (mime_types.count(extn))
         return (mime_types[extn]);

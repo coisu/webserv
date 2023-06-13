@@ -9,7 +9,10 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include "Request.hpp"
+
+#include "Method.hpp"
+#include "serverConfig.hpp"
+#include "Mime.hpp"
 
 class Response
 {
@@ -24,16 +27,23 @@ class Response
     public:
         Mime            mimeList;
         Method          request;            // Method
-        ServerConfig    server;             // port & Host
+        serverConfig    server;             // port & Host
         std::string     response_content;
 
 
         Response();
-        Response(Request &request);
+        Response(Method &request);
         ~Response();
 
         void    buildResponse();
         void    buildErrorResponse();
+
+        void	Response::writeDate();
+        void	Response::writeContentType();
+        void	Response::writeContentLength();
+
+
+
 
 
 

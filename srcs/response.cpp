@@ -1,21 +1,4 @@
-// HTTP/1.1 200 OK
-// Date: Mon, 23 May 2005 22:38:34 GMT
-// Content-Type: text/html; charset=UTF-8
-// Content-Length: 155
-// Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT
-// Server: BestServ (Unix) (Red-Hat/Linux)
-// ETag: "3f80f-1b6-3e1cb03b"
-// Accept-Ranges: bytes
-// Connection: close
 
-// <html>
-// <head>
-//     <title>An Example Page</title>
-// </head>
-// <body>
-//     <p>Exemple of a server response.</p>
-// </body>
-// </html>
 
 // char **env;
 // char *url;
@@ -84,8 +67,51 @@
 //          *unsafety Method
 
 
-// The server will put a html file to the body of response
+// The server will put a html file to the body of response,
+// and then send it back to client when client aske for one
 
+// GET /hello.htm HTTP/1.1
+// User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)
+// Host: 127.0.0.1:8080
+// Accept-Language: en-us
+// Accept-Encoding: gzip, deflate
+// Connection: Keep-Alive
+
+// GET /index HTTP/1.1
+// Host: 127.0.0.1:8080
+// Connection: keep-alive
+// Accept: */*
+// User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.22 (KHTML, like Gecko)     Chrome/25.0.1364.97 Safari/537.22
+// Accept-Encoding: gzip,deflate,sdch
+// Accept-Language: en-US,en;q=0.8
+// Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3
+
+
+
+// HTTP/1.1 200 OK
+// Date: Mon, 23 May 2005 22:38:34 GMT
+// Content-Type: application/json; charset=UTF-8
+// Content-Length: 155
+// Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT
+// Server: BestServ (Unix) (Red-Hat/Linux)
+// ETag: "3f80f-1b6-3e1cb03b"
+// Accept-Ranges: bytes
+// Connection: close
+
+// <html>
+// <head>
+//     <title>An Example Page</title>
+// </head>
+// <body>
+//     <p>Exemple of a server response.</p>
+// </body>
+// </html>
+
+
+
+
+
+// NEEDED OR NOT, CHUNK BODY PARSER?!!
 
 #include "Response.hpp"
 
@@ -100,7 +126,7 @@ Response::Response()
 	response_content = "";
 }
 
-Response::Response(Request &request) : request(request)
+Response::Response(Method &request) : request(request)
 {
 	path = "";
 	location = "";
@@ -113,15 +139,43 @@ Response::Response(Request &request) : request(request)
 
 Response::~Response() {}
 
-int	Request::buildResponse()
+int	Response::buildResponse()
 {
 
+}
+
+void	Response::writeStatusLine()
+{
+
+}
+
+void	Response::writeHeader()
+{
+
+}
+
+void	Response::writeBody()
+{
+
+}
+
+// Date: Mon, 23 May 2005 22:38:34 GMT
+void	Response::writeDate()
+{
+	std::string date;
+	time_t cur = time(0);
+	struct tm *gmt = gmtime(&cur);
+	strftime(const_cast<char*>(date.c_str()), sizeof(date), "Date: %a, %d %b %Y %H:%M:%S %Z", gmt);
+	response_content.append(date);
+	response_content.append("\r\n");
+	
 }
 
 void	Response::writeContentType()
 {
 	response_content.append("Content-Type: ");
 	int extnPos = path.rfind(".", std::string::npos);
+
 	if(extnPos != std::string::npos && e_code == 200)
         response_content.append(mimeList.getMimeType(path.substr(extnPos)));
     else
@@ -129,5 +183,17 @@ void	Response::writeContentType()
     response_content.append("\r\n");
 }
 
+// Content-Length: 155
+void	Response::writeContentLength()
+{
+	std::stringstream ss;
+	std::string	body_len;
 
+	ss << body.length();
+	ss >> body_len;
+
+	response_content.append("Content-Length: ");
+	response_content.append(body_len);
+	response_content.append("\r\n");
+}
 

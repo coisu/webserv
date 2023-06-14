@@ -30,7 +30,7 @@ _serverPort( port ), _serverSocket(), _clientSocket(), _serverIncomingMessage(),
     _serverSocketAddress.sin_family = AF_INET; // for IPv4
     _serverSocketAddress.sin_port = htons(8080); // call htons to ensure that the port is stored in network byte order
     _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
-    _timeout.tv_sec = 1 * 60;
+    _timeout.tv_sec = 3 * 60;
     _timeout.tv_usec = 0;
     inet_addr(_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
     startServer();
@@ -141,7 +141,7 @@ void    TcpServer::runServer(){
     if (activity == -1)
         exitWithError("Error calling select()");
     if (activity == 0) {
-        std::cout << "Timeout reached, no activity on sockets\n" << std::endl;
+        exitWithError("Timeout reached, no activity on sockets");
         return;
     }
     for (int socket = 0; socket <= _maxSocket; socket++){
@@ -167,6 +167,10 @@ void    TcpServer::runServer(){
                     } else {
                         std::cout << "we got data" << std::endl;
                         bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
+                        if (bytesSent == (long int)_serverMessage.size())
+                            log("------ Server Response sent to client ------\n\n");
+                        else
+                            log("Error sending response to client");
 
                         // for (int socketSent = 0; socketSent <= _maxSocket; socketSent++){
                         //     if (FD_ISSET(socketSent, &_socketSet)){

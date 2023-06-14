@@ -28,7 +28,7 @@ TcpServer::TcpServer( std::string ipAddress, int port ): _sIpAddress(ipAddress),
 _serverPort( port ), _serverSocket(), _clientSocket(), _serverIncomingMessage(),
  _socketSet(), _maxSocket(), _socketAddressLen( sizeof(_serverSocketAddress) ), _serverMessage(buildResponse(200, "hello worldywoo!")){
     _serverSocketAddress.sin_family = AF_INET; // for IPv4
-    _serverSocketAddress.sin_port = htons(8080); // call htons to ensure that the port is stored in network byte order
+    _serverSocketAddress.sin_port = htons(8081); // call htons to ensure that the port is stored in network byte order
     _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
     _timeout.tv_sec = 3 * 60;
     _timeout.tv_usec = 0;
@@ -105,7 +105,6 @@ void TcpServer::startListen()
 
 void TcpServer::acceptConnection(){
 
-    // if (FD_ISSET(_serverSocket, &_socketSet)){
     //     // New connexion is comming
         _clientSocket = accept(_serverSocket, (struct sockaddr *)&_serverSocketAddress, (socklen_t*)&_socketAddressLen);
         std::cout << "client_socket" << _clientSocket << std::endl;
@@ -125,7 +124,6 @@ void TcpServer::acceptConnection(){
             _maxSocket = _clientSocket;
 
         std::cout << "New connexion comming: " << inet_ntoa(_serverSocketAddress.sin_addr) << ":" << ntohs(_serverSocketAddress.sin_port) << std::endl;
-    // }
 }
 
 void    TcpServer::runServer(){
@@ -145,7 +143,7 @@ void    TcpServer::runServer(){
         return;
     }
     for (int socket = 0; socket <= _maxSocket; socket++){
-        // std::cout << "max_socket" << _maxSocket << std::endl;
+        std::cout << "max_socket" << _maxSocket << std::endl;
             if (FD_ISSET(socket, &tempSet)) {
                 if (socket == _serverSocket){
                     // memset(buffer, 0, sizeof(buffer));
@@ -153,7 +151,10 @@ void    TcpServer::runServer(){
                     //accept connection
                 } else {
                     std::cout << "RECEIVING DATA FROM CLIENT: " << socket << std::endl;
-                    if ((bytesReceived = recv(socket, buffer, sizeof(buffer), 0)) <= 0)
+                    // std::cout << "My buffer is: " << buffer << "\n\n"; 
+                    bytesReceived = recv(socket, buffer, sizeof(buffer), 0);
+                    // std::cout << buffer << std::endl;
+                    if (bytesReceived <= 0)
                     {
                         if (bytesReceived == 0)
                         {
@@ -168,22 +169,11 @@ void    TcpServer::runServer(){
                         std::cout << "we got data" << std::endl;
                         bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
                         if (bytesSent == (long int)_serverMessage.size())
-                            log("------ Server Response sent to client ------\n\n");
+                            log("------ Server Response sent to client check------\n\n");
                         else
                             log("Error sending response to client");
-
-                        // for (int socketSent = 0; socketSent <= _maxSocket; socketSent++){
-                        //     if (FD_ISSET(socketSent, &_socketSet)){
-                        //         if (socketSent != _serverSocket && socketSent != socket){
-                        //             std::cout << _serverMessage.c_str();
-                        //             bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
-                        //             if (bytesSent == (long int)_serverMessage.size())
-                        //                 log("------ Server Response sent to client ------\n\n");
-                        //             else
-                        //                 log("Error sending response to client");
-                        //         }
-                        //     }
-                        // }
+                        close(socket);
+                        FD_CLR(socket, &_socketSet);
                     }
                     // bytesReceived = recv(socket, buffer, sizeof(buffer), 0);
                     // std::cout << bytesReceived << " " << sizeof(buffer) << std::endl;

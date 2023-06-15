@@ -28,7 +28,7 @@ TcpServer::TcpServer( std::string ipAddress, int port ): _sIpAddress(ipAddress),
 _serverPort( port ), _serverSocket(), _clientSocket(), _serverIncomingMessage(),
  _socketSet(), _maxSocket(), _socketAddressLen( sizeof(_serverSocketAddress) ), _serverMessage(buildResponse(200, "hello worldywoo!")){
     _serverSocketAddress.sin_family = AF_INET; // for IPv4
-    _serverSocketAddress.sin_port = htons(8081); // call htons to ensure that the port is stored in network byte order
+    _serverSocketAddress.sin_port = htons(port); // call htons to ensure that the port is stored in network byte order
     _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
     _timeout.tv_sec = 3 * 60;
     _timeout.tv_usec = 0;

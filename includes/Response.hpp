@@ -28,13 +28,13 @@ class Response
     public:
         Code            statusCode;
         Mime            mimeList;
-        Method          request;            // Method
+        Request         request;
         serverConfig    server;             // port & Host
         std::string     response_content;
 
 
         Response();
-        Response(Method &request);
+        Response(Request &request);
         Response(const Response &copy);
         Response &operator=(const Response &copy);
         ~Response();

@@ -126,7 +126,7 @@ Response::Response()
 	response_content = "";
 }
 
-Response::Response(Method &request) : request(request)
+Response::Response(Request &request) : request(request)
 {
 	path = "";
 	location = "";

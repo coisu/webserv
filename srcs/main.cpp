@@ -1,7 +1,6 @@
 #include "http_tcpServer.h"
 #include "utils.h"
-#include "Method.hpp"
-#include "Get.hpp"
+#include "Request.hpp"
 
 int main() {
 	// Create the socket

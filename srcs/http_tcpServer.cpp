@@ -1,6 +1,7 @@
 #include "../includes/http_tcpServer.h"
 #include <stdio.h>
 #include <errno.h>
+#include "Request.hpp"
 
 void log(const std::string &message){
     std::cerr << message << std::endl;
@@ -107,7 +108,7 @@ void TcpServer::acceptConnection(){
 
     //     // New connexion is comming
         _clientSocket = accept(_serverSocket, (struct sockaddr *)&_serverSocketAddress, (socklen_t*)&_socketAddressLen);
-        std::cout << "client_socket" << _clientSocket << std::endl;
+        // std::cout << "client_socket" << _clientSocket << std::endl;
         if (_clientSocket < 0){
             std::ostringstream ss;
             ss << 
@@ -143,7 +144,7 @@ void    TcpServer::runServer(){
         return;
     }
     for (int socket = 0; socket <= _maxSocket; socket++){
-        std::cout << "max_socket" << _maxSocket << std::endl;
+        // std::cout << "max_socket" << _maxSocket << std::endl;
             if (FD_ISSET(socket, &tempSet)) {
                 if (socket == _serverSocket){
                     // memset(buffer, 0, sizeof(buffer));
@@ -167,6 +168,11 @@ void    TcpServer::runServer(){
                         FD_CLR(socket, &_socketSet);
                     } else {
                         std::cout << "we got data" << std::endl;
+						// std::cout << buffer << std::endl;
+						Request	request(buffer);
+						request.printHead();
+						request.construct_env(_serverSocketAddress);
+						request.getEnv();
                         bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
                         if (bytesSent == (long int)_serverMessage.size())
                             log("------ Server Response sent to client check------\n\n");

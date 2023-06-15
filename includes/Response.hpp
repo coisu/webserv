@@ -13,6 +13,7 @@
 #include "Method.hpp"
 #include "serverConfig.hpp"
 #include "Mime.hpp"
+#include "statusCode.hpp"
 
 class Response
 {
@@ -22,9 +23,10 @@ class Response
         std::string     body;
         size_t          body_len;           // content-Length
         bool            auto_index;
-        int             e_code;
+        int             Code;
 
     public:
+        Code            statusCode;
         Mime            mimeList;
         Method          request;            // Method
         serverConfig    server;             // port & Host
@@ -33,20 +35,22 @@ class Response
 
         Response();
         Response(Method &request);
+        Response(const Response &copy);
+        Response &operator=(const Response &copy);
         ~Response();
 
         void    buildResponse();
         void    buildErrorResponse();
 
-        void	Response::writeHeader();
-        void    Response::writeStatusLine();
-        void	Response::writeDate();
-        void	Response::writeContentType();
-        void	Response::writeContentLength();
-        void	Response::writeServer();
-        void	Response::writeConnection();
+        void	Response::setHeader();
+        void    Response::setStatusLine();
+        void	Response::setDate();
+        void	Response::setContentType();
+        void	Response::setContentLength();
+        void	Response::setServer();
+        void	Response::setConnection();
 
-        void	Response::writeBody();
+        void	Response::setBody();
 
 
 };

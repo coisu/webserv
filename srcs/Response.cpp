@@ -26,7 +26,7 @@
 // 	check file descriptors returend from select():
 //  	* if server fd --> accept new client
 //  	* if client fd in read_set --> read message from client
-//  	* if client fd in write_set:
+//  	* if client fd in set_set:
 //  	* 1- If it's a CGI response and Body still not sent to CGI child process
 // 		--> Send request body to CGI child process.
 //  	* 2- If it's a CGI response and Body was sent to CGI child process
@@ -40,7 +40,7 @@
 // -> assign server to the client
 // -> start to build response
 // 	-> pipe and fork, excute CGI
-// 	-> Method GET-read, POST-write, DELETE-delete
+// 	-> Method GET-read, POST-set, DELETE-delete
 // 	-> build body, html index
 // 	-> append status line amd header contents 
 
@@ -122,7 +122,7 @@ Response::Response()
 	body = "";
 	body_len = 0;
 	auto_index = false;
-	e_code = 0;
+	code = 0;
 	response_content = "";
 }
 
@@ -133,7 +133,7 @@ Response::Response(Method &request) : request(request)
 	body = "";
 	body_len = 0;
 	auto_index = false;
-	e_code = 0;
+	code = request.code;
 	response_content = "";
 }
 
@@ -141,33 +141,41 @@ Response::~Response() {}
 
 void	Response::buildResponse()
 {
-	Response::writeHeader();
-	Response::writeBody();
+	Response::setHeader();
+	Response::setBody();
 }
 
-void	Response::writeHeader()
+void	Response::setHeader()
 {
-	Response::writeStatusLine();
-	Response::writeDate();
-	Response::writeContentType();
-	Response::writeContentLength();
-	Response::writeServer();
-	Response::writeConnection();
+	Response::setStatusLine();
+	Response::setDate();
+	Response::setContentType();
+	Response::setContentLength();
+	Response::setServer();
+	Response::setConnection();
 }
 
-void	Response::writeBody()
-{
-
-}
-
-void	Response::writeStatusLine()
+void	Response::setBody()
 {
 
 }
 
+void	Response::setStatusLine()
+{
+	std::stringstream ss;
+	std::string strCode;
+
+	ss << code;
+	ss >> strCode;
+
+	response_content.append("HTTP/1.1 ");
+	response_content.append(strCode + " ");
+	response_content.append(statusCode[code]);
+	response_content.append("\r\n");
+}
 
 // Date: Mon, 23 May 2005 22:38:34 GMT
-void	Response::writeDate()
+void	Response::setDate()
 {
 	std::string date;
 	time_t cur = time(0);
@@ -179,7 +187,7 @@ void	Response::writeDate()
 }
 
 // Content-Type: application/json; charset=UTF-8
-void	Response::writeContentType()
+void	Response::setContentType()
 {
 	response_content.append("Content-Type: ");
 	int extnPos = path.rfind(".", std::string::npos);
@@ -192,7 +200,7 @@ void	Response::writeContentType()
 }
 
 // Content-Length: 155
-void	Response::writeContentLength()
+void	Response::setContentLength()
 {
 	std::stringstream ss;
 	std::string	body_len;
@@ -206,17 +214,53 @@ void	Response::writeContentLength()
 }
 
 // Server: BestServ (Unix) (Red-Hat/Linux)
-void	Response::writeServer()
+void	Response::setServer()
 {
 	response_content.append("Server: nginx 1.0.15\r\n");
 }
 
-// Connection: close
-void	Response::writeConnection()
+// Connection: close / keep-alive
+void	Response::setConnection()
 {
-	// std::string headerSearcher(std::string str);
-    if(request.SOMETHING_SERACH_FUNCTION("connection") == "keep-alive")
+    if(request.parse_request[Connection] == "keep-alive")
         response_content.append("Connection: keep-alive\r\n");
 	else
 		response_content.append("Connection: colse\r\n");
 }
+
+
+
+
+
+
+// void http::Server::_handleEpollout(Socket &sock, std::pair< http::Request, t_serverData > &data,
+//                                    struct epoll_event *event, int epoll_fd)
+// {
+//     http::Response response;
+//     t_serverData serverData = _getServerData(sock, data.first.header("host"));
+
+//     if (data.first.isBodyTooLarge())
+//         response = http::Response(http::PAYLOAD_TOO_LARGE);
+//     else
+//     {
+//         try
+//         {
+//             response = handleRequest(data.first, serverData);
+//         }
+//         catch (cgi::CGIException &e)
+//         {
+//             throw Socket::SocketException();
+//         }
+//     }
+
+//     // _log(data.first, response);
+//     sock.send(response.toString(data.second.error_page));
+//     if (!data.first.keepAlive() || data.first.isBodyTooLarge())
+//         _removeAcceptedFD(sock);
+//     else
+//     {
+//         data.first.clear();
+//         event->events = EPOLLIN;
+//         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, sock.Fd(), event);
+//     }
+// }

@@ -22,8 +22,6 @@ class Request
 		
 		//public methods
 		void	printHead( void );
-		char**	getEnv( void );
-		std::map<std::string, std::string>	construct_env( struct sockaddr_in& _serverSocketAddress );
 
 		//public attributes
 		// char const**	cgi_env;

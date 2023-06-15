@@ -10,7 +10,7 @@ FLAGS += -I$(INC_DIR)
 BINARY = serv
 
 SOURCE_DIR = srcs/
-SOURCES_FILES =	main.cpp http_tcpServer.cpp Request.cpp method_utils.cpp
+SOURCES_FILES =	main.cpp http_tcpServer.cpp Request.cpp CGI.cpp method_utils.cpp
 
 SRCS = $(addprefix $(SOURCE_DIR), $(SOURCES_FILES))
 

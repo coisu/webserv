@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <cstdlib>
 #include "utils.h"
 
 class Request
@@ -20,14 +21,15 @@ class Request
 		
 		//public methods
 		void	printHead( void );
+		char**	getEnv( void );
+		std::map<std::string, std::string>	construct_env( struct sockaddr_in& _serverSocketAddress );
 
 		//public attributes
-		char const**	cgi_env;
+		// char const**	cgi_env;
 
 	protected:
 		//private methods
 		std::map<std::string, std::string>	parse_request(std::string request);
-		std::map<std::string, std::string>	construct_env( struct sockaddr_in& _serverSocketAddress );
 
 
 		//private attributes

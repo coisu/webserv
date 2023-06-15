@@ -60,6 +60,24 @@ std::map<std::string, std::string>	Request::construct_env( struct sockaddr_in& _
 	return (cgi_env);
 }
 
+char**	Request::getEnv( void )
+{
+	// char*	p = {0};
+	char**	env = (char **)malloc(sizeof(char *) * this->_cgi_env.size());
+	std::map<std::string, std::string>::iterator it = this->_cgi_env.begin();
+
+	for (long unsigned int i = 0; i < this->_cgi_env.size(); i++)
+	{
+		env[i] = (char *)(it->first + "=" + it->second).c_str();
+		it++;
+	}
+	it = this->_cgi_env.begin();
+	std::cout << "env:" << std::endl;
+	for (long unsigned int i = 0; i < this->_cgi_env.size(); i++, it++)
+		std::cout << env[i] << std::endl;
+	return (env);
+}
+
 std::map<std::string, std::string>	Request::parse_request(std::string request)
 {
 	std::map<std::string, std::string> m;

@@ -57,16 +57,13 @@ std::map<std::string, std::string>	Request::construct_env( struct sockaddr_in& _
 	this->_cgi_env["HTTP_ACCEPT_LANGUAGE"] = "banana";
 	this->_cgi_env["HTTP_USER_AGENT"] = "banana";
 	this->_cgi_env["HTTP_COOKIE"] = "banana";
-	// this->_this->_cgi_env = this->_cgi_env;
 	return (this->_cgi_env);
 }
 
 char**	Request::getEnv( void )
 {
-	// char*	p = {0};
 	char**	env = new char*[this->_cgi_env.size() + 1];
 	int		i = 0;
-	// std::map<std::string, std::string>::iterator iti = this->_cgi_env.begin();
 
 	for (std::map<std::string, std::string>::iterator it = this->_cgi_env.begin(); it != this->_cgi_env.end(); it++, i++)
 	{
@@ -75,14 +72,14 @@ char**	Request::getEnv( void )
 		strcpy(env[i], elem.c_str());
 	}
 	env[i] = NULL;
-	std::cout << "\n\n-------ENV-------\n" << std::endl;
-	i = 0;
-	for (std::map<std::string, std::string>::iterator it = this->_cgi_env.begin(); it != this->_cgi_env.end(); it++)
-	{
-		std::cout << env[i] << std::endl;
-		i++;
-	}
-	std::cout << "\n\n-----------------\n" << std::endl;
+	// std::cout << "\n\n-------ENV-------\n" << std::endl;
+	// i = 0;
+	// for (std::map<std::string, std::string>::iterator it = this->_cgi_env.begin(); it != this->_cgi_env.end(); it++)
+	// {
+	// 	std::cout << env[i] << std::endl;
+	// 	i++;
+	// }
+	// std::cout << "\n\n-----------------\n" << std::endl;
 	return (env);
 }
 
@@ -98,16 +95,19 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	std::cout << "url: " << this->_url << std::endl
 			  << "type: " << this->_type << std::endl;
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-		m[key] = val;
+		m[key] = val.substr(0, val.size() - 2);
 	return m;
 }
 
 void	Request::printHead( void )
 {
 	std::map<std::string, std::string>::iterator it = this->_head.begin();
+
+	std::cout << "\n\n-------HEAD-------\n" << std::endl;
 	while (it != this->_head.end())
 	{
 		std::cout << "[" << it->first << " : " << it->second << "]" << std::endl;
 		++it;
 	}
+	std::cout << "\n--------END---------\n" << std::endl;
 }

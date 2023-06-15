@@ -27,16 +27,16 @@ CGI&	CGI::operator = (const CGI& copy)
 	return (*this);
 }
 
-std::map<std::string, std::string>	CGI::construct_env( Request& request )
+std::map<std::string, std::string>	CGI::construct_env(Request& request, Tconfig temp_config)
 {
 	(void)request;
 	this->_env["SERVER_SOFTWARE"] = "Jisu, Yoel and Amanda's Software ;)";
-	this->_env["SERVER_NAME"] = "127.0.0.1";
+	this->_env["SERVER_NAME"] = "127.0.0.1"; // config.getName();
 	this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
 	this->_env["SERVER_PROTOCOL"] = "HTML/1.1";
-	this->_env["SERVER_PORT"] = "banana";
-	this->_env["REQUEST_METHOD"] = "banana";
-	this->_env["PATH_INFO"] = "banana";
+	this->_env["SERVER_PORT"] = "8081"; // config.getHostPort();
+	this->_env["REQUEST_METHOD"] = request.getMethodStr();
+	this->_env["PATH_INFO"] = extractPathInfo(request.getURL());
 	this->_env["PATH_TRANSLATED"] = "banana";
 	this->_env["SCRIPT_NAME"] = "banana";
 	this->_env["QUERY_STRING"] = "banana";

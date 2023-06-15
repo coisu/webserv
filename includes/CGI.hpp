@@ -9,13 +9,14 @@
 #include <cstdlib>
 #include <cstring>
 #include "Request.hpp"
+#include "http_tcpServer.h"
 #include "utils.h"
 
 class CGI
 {
 	public:
 		//OCCF
-		CGI( Request& request );
+		CGI(Request& request, Tconfig temp_config);
 		virtual ~CGI();
 		CGI(const CGI& copy);
 		CGI&	operator = (const CGI& copy);

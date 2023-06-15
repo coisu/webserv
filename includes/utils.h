@@ -30,4 +30,9 @@ typedef enum e_method
 e_method	extractMethodType(std::string info);
 std::string	extractURL(std::string info);
 
+// struct Tconfig
+// {
+// 	static std::string	root = "/workspaces/webserv";
+// };
+
 #endif

@@ -36,12 +36,14 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	std::map<std::string, std::string> m;
 	std::string key, val;
 	std::istringstream iss(request);
+	std::string methods[3] = {"GET", "POST", "DELETE"};
 
 	std::getline(iss, this->_info);
-	this->_method = extractMethodType(this->_info);
+	this->_method_enum = extractMethodType(this->_info);
+	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
 	std::cout << "url: " << this->_url << std::endl
-			  << "type: " << this->_method << std::endl;
+			  << "type: " << this->_method_enum << std::endl;
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
 		m[key] = val.substr(0, val.size() - 2);
 	return m;
@@ -60,14 +62,25 @@ void	Request::printHead( void )
 	std::cout << "\n--------END---------\n" << std::endl;
 }
 
-//GETTERS
+bool		Request::UrlIsDirectory()
+{
+	std::ifstream	ifile;
 
+	ifile.open((this->temp_config.root + this->_url).c_str());
+	return (1);
+}
+
+//GETTERS
 std::string	Request::getBody(){
 	return (this->_body);
 }
 
-t_method	Request::getMethod(){
-	return (this->_method);
+t_method	Request::getMethodEnum(){
+	return (this->_method_enum);
+}
+
+std::string	Request::getMethodStr(){
+	return (this->_method_str);
 }
 
 std::string	Request::getInfo(){

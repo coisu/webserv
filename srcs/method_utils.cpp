@@ -11,17 +11,18 @@ e_method	extractMethodType(std::string info)
 	type = info.substr(0, n);
 	while (!methods[i].empty() && methods[i] != type)
 		i++;
-	switch (i)
-	{
-		case 0:
-			return (GET);
-		case 1:
-			return (POST);
-		case 2:
-			return (DELETE);
-		default:
-			return (UNDEFINED);
-	}
+	// switch (i)
+	// {
+	// 	case 0:
+	// 		return (GET);
+	// 	case 1:
+	// 		return (POST);
+	// 	case 2:
+	// 		return (DELETE);
+	// 	default:
+	// 		return (UNDEFINED);
+	// }
+	return ((t_method)i);
 }
 
 std::string	extractURL(std::string info)

@@ -134,6 +134,7 @@ void    TcpServer::runServer(){
     long    bytesSent;
     fd_set  tempSet;
     int     activity;
+	char	buffer[1024];
 
     FD_ZERO(&tempSet);
     memcpy(&tempSet, &_socketSet, sizeof(_socketSet));
@@ -171,7 +172,7 @@ void    TcpServer::runServer(){
                         std::cout << "we got data" << std::endl;
 						// std::cout << buffer << std::endl;
 						Request	request(buffer);
-						CGI		cgi(request);
+						CGI		cgi(request, this->temp_config);
 						cgi.getCharEnv();
                         bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
                         if (bytesSent == (long int)_serverMessage.size())

@@ -2,6 +2,7 @@
 # define REQUEST_HPP
 #include <map>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -23,14 +24,17 @@ class Request
 		//public methods
 		void	printHead();
 		std::string	getBody();
-		t_method	getMethod();
+		t_method	getMethodEnum();
+		std::string	getMethodStr();
 		std::string	getInfo();
 		std::string	getURL();
 		std::string	getLocation();
 		std::string	getQuery();
 		std::map<std::string, std::string>	getHead();
+		bool		UrlIsDirectory();
 		
 		//public attributes
+		Tconfig temp_config;
 		// char const**	cgi_env;
 
 	protected:
@@ -40,7 +44,8 @@ class Request
 
 		//private attributes
 		std::string	_body;
-		t_method	_method;
+		t_method	_method_enum;
+		std::string	_method_str;
 		std::string	_info;
 		std::string	_url;
 		std::string	_location;

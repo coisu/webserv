@@ -31,30 +31,32 @@ Request&	Request::operator = (const Request& copy)
 	return (*this);
 }
 
-std::map<std::string, std::string>	Request::construct_env( struct sockaddr& _serverSocketAddress )
+std::map<std::string, std::string>	Request::construct_env( struct sockaddr_in& _serverSocketAddress )
 {
-	std::map<std::string, std::string> cgi_env;
+	std::map<std::string, std::string>	cgi_env;
+	std::stringstream					ss;
 
-	cgi_env["SERVER_SOFTWARE"] =
-	cgi_env["SERVER_NAME"] =
-	cgi_env["GATEWAY_INTERFACE"] =
-	cgi_env["SERVER_PROTOCOL"] =
-	cgi_env["SERVER_PORT"] =
-	cgi_env["REQUEST_METHOD"] =
-	cgi_env["PATH_INFO"] =
-	cgi_env["PATH_TRANSLATED"] =
-	cgi_env["SCRIPT_NAME"] =
-	cgi_env["QUERY_STRING"] =
-	cgi_env["REMOTE_HOST"] =
-	cgi_env["REMOTE_ADDR"] =
-	cgi_env["AUTH_TYPE"] =
-	cgi_env["REMOTE_IDENT"] =
-	cgi_env["CONTENT_TYPE"] =
-	cgi_env["CONTENT_LENGTH"] =
-	cgi_env["HTTP_ACCEPT"] =
-	cgi_env["HTTP_ACCEPT_LANGUAGE"] =
-	cgi_env["HTTP_USER_AGENT"] =
-	cgi_env["HTTP_COOKIE"] =
+	cgi_env["SERVER_SOFTWARE"] = "banana";
+	cgi_env["SERVER_NAME"] = "banana";
+	cgi_env["GATEWAY_INTERFACE"] = "banana";
+	cgi_env["SERVER_PROTOCOL"] = "banana";
+	ss << _serverSocketAddress.sin_port;
+	cgi_env["SERVER_PORT"] = ss.str();
+	cgi_env["REQUEST_METHOD"] = "banana";
+	cgi_env["PATH_INFO"] = "banana";
+	cgi_env["PATH_TRANSLATED"] = "banana";
+	cgi_env["SCRIPT_NAME"] = "banana";
+	cgi_env["QUERY_STRING"] = "banana";
+	cgi_env["REMOTE_HOST"] = "banana";
+	cgi_env["REMOTE_ADDR"] = "banana";
+	cgi_env["AUTH_TYPE"] = "banana";
+	cgi_env["REMOTE_IDENT"] = "banana";
+	cgi_env["CONTENT_TYPE"] = "banana";
+	cgi_env["CONTENT_LENGTH"] = "banana";
+	cgi_env["HTTP_ACCEPT"] = "banana";
+	cgi_env["HTTP_ACCEPT_LANGUAGE"] = "banana";
+	cgi_env["HTTP_USER_AGENT"] = "banana";
+	cgi_env["HTTP_COOKIE"] = "banana";
 	return (cgi_env);
 }
 
@@ -67,7 +69,6 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	std::getline(iss, this->_info);
 	this->_type = getMethodType(this->_info);
 	this->_url = getURL(this->_info);
-	// std::cout << "info: " << this->_info << std::endl;
 	std::cout << "url: " << this->_url << std::endl
 			  << "type: " << this->_type << std::endl;
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
@@ -80,7 +81,6 @@ void	Request::printHead( void )
 	std::map<std::string, std::string>::iterator it = this->_head.begin();
 	while (it != this->_head.end())
 	{
-		// std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
 		std::cout << "[" << it->first << " : " << it->second << "]" << std::endl;
 		++it;
 	}

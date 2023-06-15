@@ -3,6 +3,9 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include "utils.h"
 
 class Request
@@ -24,7 +27,7 @@ class Request
 	protected:
 		//private methods
 		std::map<std::string, std::string>	parse_request(std::string request);
-		std::map<std::string, std::string>	construct_env( struct sockaddr& _serverSocketAddress )
+		std::map<std::string, std::string>	construct_env( struct sockaddr_in& _serverSocketAddress );
 
 
 		//private attributes

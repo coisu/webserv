@@ -38,10 +38,10 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	std::istringstream iss(request);
 
 	std::getline(iss, this->_info);
-	this->_type = getMethodType(this->_info);
-	this->_url = getURL(this->_info);
+	this->_method = extractMethodType(this->_info);
+	this->_url = extractURL(this->_info);
 	std::cout << "url: " << this->_url << std::endl
-			  << "type: " << this->_type << std::endl;
+			  << "type: " << this->_method << std::endl;
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
 		m[key] = val.substr(0, val.size() - 2);
 	return m;
@@ -59,3 +59,34 @@ void	Request::printHead( void )
 	}
 	std::cout << "\n--------END---------\n" << std::endl;
 }
+
+//GETTERS
+
+std::string	Request::getBody(){
+	return (this->_body);
+}
+
+t_method	Request::getMethod(){
+	return (this->_method);
+}
+
+std::string	Request::getInfo(){
+	return (this->_info);
+}
+
+std::string	Request::getURL(){
+	return (this->_url);
+}
+
+std::string	Request::getLocation(){
+	return (this->_location);
+}
+
+std::string	Request::getQuery(){
+	return (this->_query);
+}
+
+std::map<std::string, std::string>	Request::getHead(){
+	return (this->_head);
+}
+

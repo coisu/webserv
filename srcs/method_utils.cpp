@@ -1,6 +1,6 @@
 #include "utils.h"
 
-e_method	getMethodType(std::string info)
+e_method	extractMethodType(std::string info)
 {
 	size_t		i = 0, n = 0;
 	std::string methods[3] = {"GET", "POST", "DELETE"};
@@ -24,7 +24,7 @@ e_method	getMethodType(std::string info)
 	}
 }
 
-std::string	getURL(std::string info)
+std::string	extractURL(std::string info)
 {
 	size_t	i, n = 0;
 

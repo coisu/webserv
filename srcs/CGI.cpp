@@ -30,10 +30,10 @@ CGI&	CGI::operator = (const CGI& copy)
 std::map<std::string, std::string>	CGI::construct_env( Request& request )
 {
 	(void)request;
-	this->_env["SERVER_SOFTWARE"] = "banana";
-	this->_env["SERVER_NAME"] = "banana";
-	this->_env["GATEWAY_INTERFACE"] = "banana";
-	this->_env["SERVER_PROTOCOL"] = "banana";
+	this->_env["SERVER_SOFTWARE"] = "Jisu, Yoel and Amanda's Software ;)";
+	this->_env["SERVER_NAME"] = "127.0.0.1";
+	this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
+	this->_env["SERVER_PROTOCOL"] = "HTML/1.1";
 	this->_env["SERVER_PORT"] = "banana";
 	this->_env["REQUEST_METHOD"] = "banana";
 	this->_env["PATH_INFO"] = "banana";

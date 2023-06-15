@@ -21,8 +21,15 @@ class Request
 		Request&	operator = (const Request& copy);
 		
 		//public methods
-		void	printHead( void );
-
+		void	printHead();
+		std::string	getBody();
+		t_method	getMethod();
+		std::string	getInfo();
+		std::string	getURL();
+		std::string	getLocation();
+		std::string	getQuery();
+		std::map<std::string, std::string>	getHead();
+		
 		//public attributes
 		// char const**	cgi_env;
 
@@ -33,13 +40,12 @@ class Request
 
 		//private attributes
 		std::string	_body;
-		int			_type;
+		t_method	_method;
 		std::string	_info;
 		std::string	_url;
 		std::string	_location;
 		std::string	_query;
 		std::map<std::string, std::string>	_head;
-		std::map<std::string, std::string>	_cgi_env;
 };
 
 #endif

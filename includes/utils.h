@@ -27,7 +27,7 @@ typedef enum e_method
 	UNDEFINED
 } t_method;
 
-e_method	getMethodType(std::string info);
-std::string	getURL(std::string info);
+e_method	extractMethodType(std::string info);
+std::string	extractURL(std::string info);
 
 #endif

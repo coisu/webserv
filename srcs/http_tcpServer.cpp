@@ -1,4 +1,6 @@
 #include "../includes/http_tcpServer.h"
+#include <stdio.h>
+#include <errno.h>
 
 void log(const std::string &message){
     std::cerr << message << std::endl;
@@ -26,9 +28,9 @@ TcpServer::TcpServer( std::string ipAddress, int port ): _sIpAddress(ipAddress),
 _serverPort( port ), _serverSocket(), _clientSocket(), _serverIncomingMessage(),
  _socketSet(), _maxSocket(), _socketAddressLen( sizeof(_serverSocketAddress) ), _serverMessage(buildResponse(200, "hello worldywoo!")){
     _serverSocketAddress.sin_family = AF_INET; // for IPv4
-    _serverSocketAddress.sin_port = htons(8080); // call htons to ensure that the port is stored in network byte order
+    _serverSocketAddress.sin_port = htons(8081); // call htons to ensure that the port is stored in network byte order
     _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
-    _timeout.tv_sec = 1 * 60;
+    _timeout.tv_sec = 3 * 60;
     _timeout.tv_usec = 0;
     inet_addr(_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
     startServer();
@@ -81,8 +83,14 @@ int TcpServer::startServer(){
 
 void TcpServer::startListen()
 {
-    if (listen(_serverSocket, 5) < 0)
+    int yes = 1;
+
+    if (listen(_serverSocket, 10) < 0)
         exitWithError("Socket listen failed");
+    if (setsockopt(_serverSocket,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes) == -1) {
+        perror("setsockopt");
+        exit(1);
+    } 
     if (fcntl(_serverSocket, F_SETFL, O_NONBLOCK) < 0)
         exitWithError("Socket non-blocking failed");
     std::ostringstream ss;
@@ -97,9 +105,9 @@ void TcpServer::startListen()
 
 void TcpServer::acceptConnection(){
 
-    if (FD_ISSET(_serverSocket, &_socketSet)){
-        // New connexion is comming
+    //     // New connexion is comming
         _clientSocket = accept(_serverSocket, (struct sockaddr *)&_serverSocketAddress, (socklen_t*)&_socketAddressLen);
+        std::cout << "client_socket" << _clientSocket << std::endl;
         if (_clientSocket < 0){
             std::ostringstream ss;
             ss << 
@@ -108,15 +116,14 @@ void TcpServer::acceptConnection(){
             << ntohs(_serverSocketAddress.sin_port);
             exitWithError(ss.str());
         }
-        if (fcntl(_clientSocket, F_SETFL, O_NONBLOCK) < 0)
-            exitWithError("webserv: fcntl error");
+        // if (fcntl(_clientSocket, F_SETFL, O_NONBLOCK) < 0)
+        //     exitWithError("webserv: fcntl error");
         // + new socket
         FD_SET(_clientSocket, &_socketSet);
         if (_clientSocket > _maxSocket)
             _maxSocket = _clientSocket;
 
         std::cout << "New connexion comming: " << inet_ntoa(_serverSocketAddress.sin_addr) << ":" << ntohs(_serverSocketAddress.sin_port) << std::endl;
-    }
 }
 
 void    TcpServer::runServer(){
@@ -132,34 +139,72 @@ void    TcpServer::runServer(){
     if (activity == -1)
         exitWithError("Error calling select()");
     if (activity == 0) {
-        std::cout << "Timeout reached, no activity on sockets\n" << std::endl;
+        exitWithError("Timeout reached, no activity on sockets");
         return;
     }
-    for (int socket = 0; socket <= _maxSocket; ++socket){
+    for (int socket = 0; socket <= _maxSocket; socket++){
+        std::cout << "max_socket" << _maxSocket << std::endl;
             if (FD_ISSET(socket, &tempSet)) {
-                memset(buffer, 0, sizeof(buffer));
-                acceptConnection();
-                bytesReceived = recv(socket, buffer, sizeof(buffer), 0);
-                if (bytesReceived <= 0){
-                    if (bytesReceived == 0){
-                        std::ostringstream ss;
-                        ss << "Desconexion of socket: " << socket << ": " << buffer;
-                        exitWithError(ss.str());
-                    } else
-                        exitWithError("Failed to read bytes from client socket connection");
-                    close(socket);
-                    FD_CLR(socket, &_socketSet);       
+                if (socket == _serverSocket){
+                    // memset(buffer, 0, sizeof(buffer));
+                    acceptConnection();
+                    //accept connection
                 } else {
-                    std::cout << "Data rreceived from the socket " << socket << ": " << buffer << std::endl;
-
-                     // Sent a response
-                    std::cout << _serverMessage.c_str();
-                    bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
-                    if (bytesSent == (long int)_serverMessage.size())
-                        log("------ Server Response sent to client ------\n\n");
-                    else
-                        log("Error sending response to client");
-                } 
+                    std::cout << "RECEIVING DATA FROM CLIENT: " << socket << std::endl;
+                    // std::cout << "My buffer is: " << buffer << "\n\n"; 
+                    bytesReceived = recv(socket, buffer, sizeof(buffer), 0);
+                    // std::cout << buffer << std::endl;
+                    if (bytesReceived <= 0)
+                    {
+                        if (bytesReceived == 0)
+                        {
+                            std::cout << "connection closed from socket: " << socket << std::endl;
+                        }
+                        else {
+                            std::cout << "error with socket: " << socket << std::endl;
+                        }
+                        close(socket);
+                        FD_CLR(socket, &_socketSet);
+                    } else {
+                        std::cout << "we got data" << std::endl;
+                        bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
+                        if (bytesSent == (long int)_serverMessage.size())
+                            log("------ Server Response sent to client check------\n\n");
+                        else
+                            log("Error sending response to client");
+                        close(socket);
+                        FD_CLR(socket, &_socketSet);
+                    }
+                    // bytesReceived = recv(socket, buffer, sizeof(buffer), 0);
+                    // std::cout << bytesReceived << " " << sizeof(buffer) << std::endl;
+                    // if (bytesReceived <= 0){
+                    //     if (bytesReceived == 0){
+                    //         // perror("Erreur lors de la réception des données 2");
+                    //         std::ostringstream ss;
+                    //         ss << "Desconexion of socket: " << socket << ": " << buffer;
+                    //         exitWithError(ss.str());
+                    //     } else
+                    //         perror("Erreur lors de la réception des données");
+                    //         // exitWithError("Failed to read bytes from client socket connection");
+                    //     close(socket);
+                    //     FD_CLR(socket, &_socketSet);       
+                    // } else {
+                    //     std::cout << "socket" << socket << std::endl;
+                    //     std::cout << "Data received from the socket " << socket << ": " << buffer << std::endl;
+                    //     for (int socketSent = 0; socketSent <= _maxSocket; socketSent++){
+                    //         if (FD_ISSET(socketSent, &_socketSet)){
+                    //             if (socketSent != _serverSocket && socketSent != socket){
+                    //                 std::cout << _serverMessage.c_str();
+                    //                 bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
+                    //                 if (bytesSent == (long int)_serverMessage.size())
+                    //                     log("------ Server Response sent to client ------\n\n");
+                    //                 else
+                    //                     log("Error sending response to client");
+                    //             }
+                    //         }
+                    //     }
+                    // } 
+                }
             }
         } 
 }

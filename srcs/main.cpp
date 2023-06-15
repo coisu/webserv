@@ -8,7 +8,7 @@ int main() {
 	// parse_request(EXAMPLE_INPUT);
 	Method		get_method(EXAMPLE_INPUT);
 	get_method.printHead();
-	TcpServer	server = TcpServer("0.0.0.0", 8080);
+	TcpServer	server = TcpServer("0.0.0.0", 8081);
 
     while (true)
         server.runServer();

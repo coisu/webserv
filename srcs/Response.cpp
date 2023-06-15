@@ -153,6 +153,7 @@ void	Response::setHeader()
 	Response::setContentLength();
 	Response::setServer();
 	Response::setConnection();
+	Response::setLocation();
 }
 
 void	Response::setBody()

@@ -22,6 +22,8 @@
 //     unsigned long s_addr;
 // };
 
+#define BUFFER_SIZE 1024
+
 class TcpServer
 {
     public:
@@ -44,13 +46,21 @@ class TcpServer
         void    startListen( void );
     
     // Member variable
-        std::string         _sIpAddress;
-        int                 _serverPort;
-        int                 _serverSocket;
-        int                 _clientSocket;
+        int                 _serverPort; // = _port
+        int                 _serverSocket; // = _server_fd
+        std::vector<int>    _clientSocket; //this vector will store  socket clients which reached server 
         long                _serverIncomingMessage;
         fd_set              _socketSet;
         int                 _maxSocket;
+        char				_buffer[BUFFER_SIZE + 1];
+        bool                _closeConnexion;
+        std::string         _sIpAddress;
+
+        //private:
+		//int						_listen_fd;
+		//bool					_close_connexion;
+		//bool					_compress_array;// any time a clients disconnected  this variable will be set to true to squeeze poll array
+		//bool					_hasError;
     
     // Server address
         struct sockaddr_in  _serverSocketAddress;

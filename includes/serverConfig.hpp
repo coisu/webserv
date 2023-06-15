@@ -19,7 +19,7 @@ class Location
         std::vector<std::string> cgi_path;
         std::vector<std::string> cgi_ext;
     public:
-
+        std::vector<int>   getAllowMethod ();
 };
 
 class serverConfig

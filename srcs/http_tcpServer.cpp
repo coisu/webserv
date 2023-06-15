@@ -127,7 +127,7 @@ void TcpServer::acceptConnection(){
 }
 
 void    TcpServer::runServer(){
-    char    buffer[1024] = {0};
+    
     ssize_t bytesReceived;
     long    bytesSent;
     fd_set  tempSet;

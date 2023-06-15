@@ -33,48 +33,53 @@ Request&	Request::operator = (const Request& copy)
 
 std::map<std::string, std::string>	Request::construct_env( struct sockaddr_in& _serverSocketAddress )
 {
-	std::map<std::string, std::string>	cgi_env;
+	// std::map<std::string, std::string>	cgi_env;
 	std::stringstream					ss;
 
-	cgi_env["SERVER_SOFTWARE"] = "banana";
-	cgi_env["SERVER_NAME"] = "banana";
-	cgi_env["GATEWAY_INTERFACE"] = "banana";
-	cgi_env["SERVER_PROTOCOL"] = "banana";
+	this->_cgi_env["SERVER_SOFTWARE"] = "banana";
+	this->_cgi_env["SERVER_NAME"] = "banana";
+	this->_cgi_env["GATEWAY_INTERFACE"] = "banana";
+	this->_cgi_env["SERVER_PROTOCOL"] = "banana";
 	ss << _serverSocketAddress.sin_port;
-	cgi_env["SERVER_PORT"] = ss.str();
-	cgi_env["REQUEST_METHOD"] = "banana";
-	cgi_env["PATH_INFO"] = "banana";
-	cgi_env["PATH_TRANSLATED"] = "banana";
-	cgi_env["SCRIPT_NAME"] = "banana";
-	cgi_env["QUERY_STRING"] = "banana";
-	cgi_env["REMOTE_HOST"] = "banana";
-	cgi_env["REMOTE_ADDR"] = "banana";
-	cgi_env["AUTH_TYPE"] = "banana";
-	cgi_env["REMOTE_IDENT"] = "banana";
-	cgi_env["CONTENT_TYPE"] = "banana";
-	cgi_env["CONTENT_LENGTH"] = "banana";
-	cgi_env["HTTP_ACCEPT"] = "banana";
-	cgi_env["HTTP_ACCEPT_LANGUAGE"] = "banana";
-	cgi_env["HTTP_USER_AGENT"] = "banana";
-	cgi_env["HTTP_COOKIE"] = "banana";
-	return (cgi_env);
+	this->_cgi_env["SERVER_PORT"] = ss.str();
+	this->_cgi_env["REQUEST_METHOD"] = "banana";
+	this->_cgi_env["PATH_INFO"] = "banana";
+	this->_cgi_env["PATH_TRANSLATED"] = "banana";
+	this->_cgi_env["SCRIPT_NAME"] = "banana";
+	this->_cgi_env["QUERY_STRING"] = "banana";
+	this->_cgi_env["REMOTE_HOST"] = "banana";
+	this->_cgi_env["REMOTE_ADDR"] = "banana";
+	this->_cgi_env["AUTH_TYPE"] = "banana";
+	this->_cgi_env["REMOTE_IDENT"] = "banana";
+	this->_cgi_env["CONTENT_TYPE"] = "banana";
+	this->_cgi_env["CONTENT_LENGTH"] = "banana";
+	this->_cgi_env["HTTP_ACCEPT"] = "banana";
+	this->_cgi_env["HTTP_ACCEPT_LANGUAGE"] = "banana";
+	this->_cgi_env["HTTP_USER_AGENT"] = "banana";
+	this->_cgi_env["HTTP_COOKIE"] = "banana";
+	return (this->_cgi_env);
 }
 
 char**	Request::getEnv( void )
 {
-	// char*	p = {0};
-	char**	env = (char **)malloc(sizeof(char *) * this->_cgi_env.size());
-	std::map<std::string, std::string>::iterator it = this->_cgi_env.begin();
+	char**	env = new char*[this->_cgi_env.size() + 1];
+	int		i = 0;
 
-	for (long unsigned int i = 0; i < this->_cgi_env.size(); i++)
+	for (std::map<std::string, std::string>::iterator it = this->_cgi_env.begin(); it != this->_cgi_env.end(); it++, i++)
 	{
-		env[i] = (char *)(it->first + "=" + it->second).c_str();
-		it++;
+		std::string elem = it->first + "=" + it->second;
+		env[i] = new char[elem.size() + 1];
+		strcpy(env[i], elem.c_str());
 	}
-	it = this->_cgi_env.begin();
-	std::cout << "env:" << std::endl;
-	for (long unsigned int i = 0; i < this->_cgi_env.size(); i++, it++)
-		std::cout << env[i] << std::endl;
+	env[i] = NULL;
+	// std::cout << "\n\n-------ENV-------\n" << std::endl;
+	// i = 0;
+	// for (std::map<std::string, std::string>::iterator it = this->_cgi_env.begin(); it != this->_cgi_env.end(); it++)
+	// {
+	// 	std::cout << env[i] << std::endl;
+	// 	i++;
+	// }
+	// std::cout << "\n\n-----------------\n" << std::endl;
 	return (env);
 }
 
@@ -90,16 +95,19 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	std::cout << "url: " << this->_url << std::endl
 			  << "type: " << this->_type << std::endl;
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-		m[key] = val;
+		m[key] = val.substr(0, val.size() - 2);
 	return m;
 }
 
 void	Request::printHead( void )
 {
 	std::map<std::string, std::string>::iterator it = this->_head.begin();
+
+	std::cout << "\n\n-------HEAD-------\n" << std::endl;
 	while (it != this->_head.end())
 	{
 		std::cout << "[" << it->first << " : " << it->second << "]" << std::endl;
 		++it;
 	}
+	std::cout << "\n--------END---------\n" << std::endl;
 }

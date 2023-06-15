@@ -170,9 +170,7 @@ void    TcpServer::runServer(){
                         std::cout << "we got data" << std::endl;
 						// std::cout << buffer << std::endl;
 						Request	request(buffer);
-						request.printHead();
 						request.construct_env(_serverSocketAddress);
-						request.getEnv();
                         bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
                         if (bytesSent == (long int)_serverMessage.size())
                             log("------ Server Response sent to client check------\n\n");

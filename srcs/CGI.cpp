@@ -3,7 +3,7 @@
 CGI::CGI(Request& request)// : _env(construct_env(request))
 {
 	_env = construct_env(request);
-	// std::cout << "CGI created\n";
+	std::cout << "CGI created\n";
 }
 
 CGI::~CGI()
@@ -30,27 +30,29 @@ CGI&	CGI::operator = (const CGI& copy)
 std::map<std::string, std::string>	CGI::construct_env(Request& request)
 {
 	(void)request;
-	this->_env["SERVER_SOFTWARE"] = "Jisu, Yoel and Amanda's Software ;)";
-	this->_env["SERVER_NAME"] = "127.0.0.1"; // config.getName();
-	this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
-	this->_env["SERVER_PROTOCOL"] = "HTML/1.1";
-	this->_env["SERVER_PORT"] = "8081"; // config.getHostPort();
-	this->_env["REQUEST_METHOD"] = request.getMethodStr();
-	this->_env["PATH_INFO"] = "banana";//extractPathInfo(request.getURL());
-	this->_env["PATH_TRANSLATED"] = "banana";
-	this->_env["SCRIPT_NAME"] = "banana";
-	this->_env["QUERY_STRING"] = "banana";
-	this->_env["REMOTE_HOST"] = "banana";
-	this->_env["REMOTE_ADDR"] = "banana";
-	this->_env["AUTH_TYPE"] = "banana";
-	this->_env["REMOTE_IDENT"] = "banana";
-	this->_env["CONTENT_TYPE"] = "banana";
-	this->_env["CONTENT_LENGTH"] = "banana";
-	this->_env["HTTP_ACCEPT"] = "banana";
-	this->_env["HTTP_ACCEPT_LANGUAGE"] = "banana";
-	this->_env["HTTP_USER_AGENT"] = "banana";
-	this->_env["HTTP_COOKIE"] = "banana";
-	return (this->_env);
+	std::map<std::string, std::string> env;
+
+	env["SERVER_SOFTWARE"] = "Jisu, Yoel and Amanda's Software ;)";
+	env["SERVER_NAME"] = temp_config.name;
+	env["GATEWAY_INTERFACE"] = "CGI/1.1";
+	env["SERVER_PROTOCOL"] = "HTML/1.1";
+	env["SERVER_PORT"] = SSTR(temp_config.host_port);
+	env["REQUEST_METHOD"] = request.getMethodStr();
+	env["PATH_INFO"] = extractPathInfo(request.getURL());
+	env["PATH_TRANSLATED"] = "banana";
+	env["SCRIPT_NAME"] = "banana";
+	env["QUERY_STRING"] = "banana";
+	env["REMOTE_HOST"] = "banana";
+	env["REMOTE_ADDR"] = "banana";
+	env["AUTH_TYPE"] = "banana";
+	env["REMOTE_IDENT"] = "banana";
+	env["CONTENT_TYPE"] = "banana";
+	env["CONTENT_LENGTH"] = "banana";
+	env["HTTP_ACCEPT"] = "banana";
+	env["HTTP_ACCEPT_LANGUAGE"] = "banana";
+	env["HTTP_USER_AGENT"] = "banana";
+	env["HTTP_COOKIE"] = "banana";
+	return (env);
 }
 
 char**	CGI::getCharEnv( void )
@@ -65,13 +67,13 @@ char**	CGI::getCharEnv( void )
 		strcpy(char_env[i], elem.c_str());
 	}
 	char_env[i] = NULL;
-	// std::cout << "\n\n-------ENV-------\n" << std::endl;
-	// i = 0;
-	// for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
-	// {
-	// 	std::cout << char_env[i] << std::endl;
-	// 	i++;
-	// }
-	// std::cout << "\n\n-----------------\n" << std::endl;
+	std::cout << "\n\n-------ENV-------\n" << std::endl;
+	i = 0;
+	for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
+	{
+		std::cout << char_env[i] << std::endl;
+		i++;
+	}
+	std::cout << "\n\n-----------------\n" << std::endl;
 	return (char_env);
 }

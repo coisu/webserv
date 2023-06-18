@@ -27,7 +27,7 @@ class Request
 		//public methods
 		void	printHead();
 		//getters
-		// CGI*		getCGI() const;
+		CGI*		getCGI() const;
 		std::string	getBody();
 		t_method	getMethodEnum();
 		std::string	getMethodStr();
@@ -36,7 +36,8 @@ class Request
 		// std::string	getLocation();
 		// std::string	getQuery();
 		std::map<std::string, std::string>	getHead();
-		bool		UrlIsDir();
+		bool	UrlIsDir();
+		bool	isCGI();
 		
 		//public attributes
 		// char const**	cgi_env;
@@ -55,7 +56,7 @@ class Request
 		std::string	_info;
 		std::string	_url;
 		std::map<std::string, std::string>	_head;
-		// CGI*		_cgi;
+		CGI*		_cgi;
 		// std::string	_location;
 		// std::string	_query;
 };

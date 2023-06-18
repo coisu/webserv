@@ -46,3 +46,9 @@ bool	extractDirStatus(std::string url)
 	perror("stat");
 	return (0);
 }
+
+std::string	extractPathInfo(std::string url)
+{
+	size_t i = url.find(temp_config.cgi_folder) + temp_config.cgi_folder.size();
+	return (url.substr(i));
+}

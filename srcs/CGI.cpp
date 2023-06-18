@@ -30,7 +30,8 @@ CGI&	CGI::operator = (const CGI& copy)
 std::map<std::string, std::string>	CGI::construct_env(Request& request)
 {
 	(void)request;
-	std::map<std::string, std::string> env;
+	std::map<std::string, std::string>	env;
+	std::string	url = request.getURL();
 
 	env["SERVER_SOFTWARE"] = "Jisu, Yoel and Amanda's Software ;)";
 	env["SERVER_NAME"] = temp_config.name;
@@ -38,9 +39,9 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request)
 	env["SERVER_PROTOCOL"] = "HTML/1.1";
 	env["SERVER_PORT"] = SSTR(temp_config.host_port);
 	env["REQUEST_METHOD"] = request.getMethodStr();
-	env["PATH_INFO"] = extractPathInfo(request.getURL());
-	env["PATH_TRANSLATED"] = "banana";
-	env["SCRIPT_NAME"] = "banana";
+	env["PATH_INFO"] = extractPathInfo(url);
+	env["PATH_TRANSLATED"] = temp_config.root + extractPathInfo(url);
+	env["SCRIPT_NAME"] = "/";// + temp_config.cgi_folder + url.substr(url.find(temp_config.cgi_folder) + );
 	env["QUERY_STRING"] = "banana";
 	env["REMOTE_HOST"] = "banana";
 	env["REMOTE_ADDR"] = "banana";

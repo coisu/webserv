@@ -2,17 +2,17 @@
 
 Request::Request(std::string request) : _head(parse_request(request))
 {
-	std::cout << "Request created\n";
+	// std::cout << "Request created\n";
 }
 
 Request::Request(std::map<std::string, std::string>	head) : _head(head)
 {
-	std::cout << "Request created\n";
+	// std::cout << "Request created\n";
 }
 
 Request::~Request()
 {
-	std::cout << "Request destroyed\n";
+	// std::cout << "Request destroyed\n";
 }
 
 Request::Request(const Request& copy)
@@ -42,10 +42,8 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	this->_method_enum = extractMethodType(this->_info);
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
-	std::cout << "url: " << this->_url << std::endl
-			  << "type: " << this->_method_enum << std::endl;
-	this->_is_dir = extractDirStatus(this->_url);
-	std::cout << "is_dir: " << this->_is_dir << std::endl;
+	this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 1);
+	this->_is_dir = (this->_is_cgi) ? true : extractDirStatus(this->_url);
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
 		m[key] = val.substr(0, val.size() - 2);
 	return m;
@@ -91,13 +89,13 @@ std::string	Request::getURL(){
 	return (this->_url);
 }
 
-std::string	Request::getLocation(){
-	return (this->_location);
-}
+// std::string	Request::getLocation(){
+// 	return (this->_location);
+// }
 
-std::string	Request::getQuery(){
-	return (this->_query);
-}
+// std::string	Request::getQuery(){
+// 	return (this->_query);
+// }
 
 std::map<std::string, std::string>	Request::getHead(){
 	return (this->_head);

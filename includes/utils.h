@@ -40,7 +40,9 @@ bool		extractDirStatus(std::string url);
 typedef struct TempConfig
 {
 	std::string	root;
+	std::string	cgi_folder;
 } Tconfig;
 
 extern Tconfig	temp_config;
+
 #endif

@@ -40,9 +40,8 @@ bool	extractDirStatus(std::string url)
 	struct stat		statbuf;
 
 	if (!stat((temp_config.root + url).c_str(), &statbuf))
-		return (std::cout << "URLLLLL!: " << (temp_config.root + url).c_str() << std::endl, \
-		S_ISDIR(statbuf.st_mode));
-	std::cout << "URLLLLL!: " << (temp_config.root + url).c_str() << std::endl;
+		return (S_ISDIR(statbuf.st_mode));
+	// std::cout << "URLLLLL!: " << (temp_config.root + url).c_str() << std::endl;
 	// throw std::file
 	perror("stat");
 	return (0);

@@ -2,7 +2,7 @@
 #include "utils.h"
 #include "Request.hpp"
 
-Tconfig	temp_config = (Tconfig){"/workspaces/webserv"};
+Tconfig	temp_config = (Tconfig){"/workspaces/webserv", "cgi-bin"};
 
 int main(int ac, char **av) {
 	int	port = 8081;

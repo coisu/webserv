@@ -28,8 +28,8 @@ class Request
 		std::string	getMethodStr();
 		std::string	getInfo();
 		std::string	getURL();
-		std::string	getLocation();
-		std::string	getQuery();
+		// std::string	getLocation();
+		// std::string	getQuery();
 		std::map<std::string, std::string>	getHead();
 		bool		UrlIsDir();
 		
@@ -42,14 +42,15 @@ class Request
 
 
 		//private attributes
+		bool		_is_cgi;
 		bool		_is_dir;
 		std::string	_body;
 		t_method	_method_enum;
 		std::string	_method_str;
 		std::string	_info;
 		std::string	_url;
-		std::string	_location;
-		std::string	_query;
+		// std::string	_location;
+		// std::string	_query;
 		std::map<std::string, std::string>	_head;
 };
 

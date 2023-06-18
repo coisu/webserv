@@ -3,12 +3,12 @@
 CGI::CGI(Request& request)// : _env(construct_env(request))
 {
 	_env = construct_env(request);
-	std::cout << "CGI created\n";
+	// std::cout << "CGI created\n";
 }
 
 CGI::~CGI()
 {
-	std::cout << "CGI destroyed\n";
+	// std::cout << "CGI destroyed\n";
 }
 
 CGI::CGI(const CGI& copy)

@@ -12,6 +12,8 @@
 #include "http_tcpServer.h"
 #include "utils.h"
 
+class	Request;
+
 class CGI
 {
 	public:
@@ -31,7 +33,7 @@ class CGI
 		//private methods
 
 		//private attributes
-		std::map<std::string, std::string>	construct_env( Request& request );
+		std::map<std::string, std::string>	construct_env(Request& request);
 		std::string	_query;
 		std::map<std::string, std::string>	_env;
 };

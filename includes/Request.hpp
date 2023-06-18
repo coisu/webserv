@@ -9,7 +9,10 @@
 #include <arpa/inet.h>
 #include <cstdlib>
 #include <cstring>
+#include "CGI.hpp"
 #include "utils.h"
+
+class	CGI;
 
 class Request
 {
@@ -23,6 +26,8 @@ class Request
 		
 		//public methods
 		void	printHead();
+		//getters
+		// CGI*		getCGI() const;
 		std::string	getBody();
 		t_method	getMethodEnum();
 		std::string	getMethodStr();
@@ -49,9 +54,10 @@ class Request
 		std::string	_method_str;
 		std::string	_info;
 		std::string	_url;
+		std::map<std::string, std::string>	_head;
+		// CGI*		_cgi;
 		// std::string	_location;
 		// std::string	_query;
-		std::map<std::string, std::string>	_head;
 };
 
 #endif

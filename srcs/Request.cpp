@@ -2,7 +2,11 @@
 
 Request::Request(std::string request) : _head(parse_request(request))
 {
+	// Request	banana(request);
 	// std::cout << "Request created\n";
+	// this->_cgi = NULL;
+	// if (this->_is_cgi)
+		// this->_cgi = new CGI(*this);
 }
 
 Request::Request(std::map<std::string, std::string>	head) : _head(head)
@@ -15,7 +19,7 @@ Request::~Request()
 	// std::cout << "Request destroyed\n";
 }
 
-Request::Request(const Request& copy)
+Request::Request(const Request& copy)// : _cgi(copy.getCGI())
 {
 	std::cout << "Request is being copied\n";
 	*this = copy;
@@ -38,7 +42,15 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	std::istringstream iss(request);
 	std::string methods[3] = {"GET", "POST", "DELETE"};
 
-	std::getline(iss, this->_info);
+	try
+	{
+		std::getline(iss, this->_info);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	
 	this->_method_enum = extractMethodType(this->_info);
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
@@ -64,8 +76,12 @@ void	Request::printHead( void )
 
 
 //GETTERS
-bool		Request::UrlIsDir()
-{
+
+// CGI*	Request::getCGI() const{
+// 	return (this->_cgi);
+// }
+
+bool	Request::UrlIsDir(){
 	return (this->_is_dir);
 }
 

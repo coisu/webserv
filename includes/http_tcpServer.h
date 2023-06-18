@@ -10,6 +10,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <fcntl.h>
+#include "utils.h"
 
 // struct sockaddr_in {
 //     short            sin_family;   // e.g. AF_INET
@@ -24,10 +25,10 @@
 
 #define BUFFER_SIZE 1024
 
-struct Tconfig
-{
-	const std::string	root = "/workspaces/webserv";
-};
+// struct Tconfig
+// {
+// 	const std::string	root = "/workspaces/webserv";
+// };
 
 class TcpServer
 {
@@ -43,7 +44,6 @@ class TcpServer
         
         void    runServer( void );
 
-		Tconfig	temp_config;
     private:
     // Methods
         void    acceptConnection( void );

@@ -1,6 +1,12 @@
 #ifndef UTILS_H
 # define UTILS_H
 #include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <cstdio>
+#include <cstdlib>
+// #include <cstring>
 
 #define EXAMPLE_INPUT "GET / HTTP/1.1 \
 \nHost: 127.0.0.1:8080 \
@@ -29,10 +35,12 @@ typedef enum e_method
 
 e_method	extractMethodType(std::string info);
 std::string	extractURL(std::string info);
+bool		extractDirStatus(std::string url);
 
-// struct Tconfig
-// {
-// 	static std::string	root = "/workspaces/webserv";
-// };
+typedef struct TempConfig
+{
+	std::string	root;
+} Tconfig;
 
+extern Tconfig	temp_config;
 #endif

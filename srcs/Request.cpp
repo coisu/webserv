@@ -44,6 +44,8 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	this->_url = extractURL(this->_info);
 	std::cout << "url: " << this->_url << std::endl
 			  << "type: " << this->_method_enum << std::endl;
+	this->_is_dir = extractDirStatus(this->_url);
+	std::cout << "is_dir: " << this->_is_dir << std::endl;
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
 		m[key] = val.substr(0, val.size() - 2);
 	return m;
@@ -62,15 +64,13 @@ void	Request::printHead( void )
 	std::cout << "\n--------END---------\n" << std::endl;
 }
 
-bool		Request::UrlIsDirectory()
-{
-	std::ifstream	ifile;
-
-	ifile.open((this->temp_config.root + this->_url).c_str());
-	return (1);
-}
 
 //GETTERS
+bool		Request::UrlIsDir()
+{
+	return (this->_is_dir);
+}
+
 std::string	Request::getBody(){
 	return (this->_body);
 }

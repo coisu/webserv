@@ -16,7 +16,7 @@ class CGI
 {
 	public:
 		//OCCF
-		CGI(Request& request, Tconfig temp_config);
+		CGI(Request& request);
 		virtual ~CGI();
 		CGI(const CGI& copy);
 		CGI&	operator = (const CGI& copy);

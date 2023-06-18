@@ -2,6 +2,8 @@
 #include "utils.h"
 #include "Request.hpp"
 
+Tconfig	temp_config = (Tconfig){"/workspaces/webserv"};
+
 int main(int ac, char **av) {
 	int	port = 8081;
 	if (ac > 1)

@@ -27,7 +27,7 @@ CGI&	CGI::operator = (const CGI& copy)
 	return (*this);
 }
 
-std::map<std::string, std::string>	CGI::construct_env(Request& request, Tconfig temp_config)
+std::map<std::string, std::string>	CGI::construct_env(Request& request)
 {
 	(void)request;
 	this->_env["SERVER_SOFTWARE"] = "Jisu, Yoel and Amanda's Software ;)";
@@ -36,7 +36,7 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request, Tconfig 
 	this->_env["SERVER_PROTOCOL"] = "HTML/1.1";
 	this->_env["SERVER_PORT"] = "8081"; // config.getHostPort();
 	this->_env["REQUEST_METHOD"] = request.getMethodStr();
-	this->_env["PATH_INFO"] = extractPathInfo(request.getURL());
+	this->_env["PATH_INFO"] = "banana";//extractPathInfo(request.getURL());
 	this->_env["PATH_TRANSLATED"] = "banana";
 	this->_env["SCRIPT_NAME"] = "banana";
 	this->_env["QUERY_STRING"] = "banana";
@@ -65,13 +65,13 @@ char**	CGI::getCharEnv( void )
 		strcpy(char_env[i], elem.c_str());
 	}
 	char_env[i] = NULL;
-	std::cout << "\n\n-------ENV-------\n" << std::endl;
-	i = 0;
-	for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
-	{
-		std::cout << char_env[i] << std::endl;
-		i++;
-	}
-	std::cout << "\n\n-----------------\n" << std::endl;
+	// std::cout << "\n\n-------ENV-------\n" << std::endl;
+	// i = 0;
+	// for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
+	// {
+	// 	std::cout << char_env[i] << std::endl;
+	// 	i++;
+	// }
+	// std::cout << "\n\n-----------------\n" << std::endl;
 	return (char_env);
 }

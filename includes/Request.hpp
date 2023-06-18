@@ -31,10 +31,9 @@ class Request
 		std::string	getLocation();
 		std::string	getQuery();
 		std::map<std::string, std::string>	getHead();
-		bool		UrlIsDirectory();
+		bool		UrlIsDir();
 		
 		//public attributes
-		Tconfig temp_config;
 		// char const**	cgi_env;
 
 	protected:
@@ -43,6 +42,7 @@ class Request
 
 
 		//private attributes
+		bool		_is_dir;
 		std::string	_body;
 		t_method	_method_enum;
 		std::string	_method_str;

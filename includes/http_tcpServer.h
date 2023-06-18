@@ -10,6 +10,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <fcntl.h>
+#include "utils.h"
 
 // struct sockaddr_in {
 //     short            sin_family;   // e.g. AF_INET
@@ -24,6 +25,11 @@
 
 #define BUFFER_SIZE 1024
 
+// struct Tconfig
+// {
+// 	const std::string	root = "/workspaces/webserv";
+// };
+
 class TcpServer
 {
     public:
@@ -37,7 +43,7 @@ class TcpServer
         TcpServer& operator=( const TcpServer& src );
         
         void    runServer( void );
-    
+
     private:
     // Methods
         void    acceptConnection( void );
@@ -46,15 +52,15 @@ class TcpServer
         void    startListen( void );
     
     // Member variable
+        std::string         _sIpAddress;
         int                 _serverPort; // = _port
         int                 _serverSocket; // = _server_fd
-        std::vector<int>    _clientSocket; //this vector will store  socket clients which reached server 
+        int					_clientSocket; //this vector will store  socket clients which reached server 
         long                _serverIncomingMessage;
         fd_set              _socketSet;
         int                 _maxSocket;
-        char				_buffer[BUFFER_SIZE + 1];
+        // char				_buffer[BUFFER_SIZE + 1];
         bool                _closeConnexion;
-        std::string         _sIpAddress;
 
         //private:
 		//int						_listen_fd;

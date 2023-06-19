@@ -59,9 +59,12 @@ class ParseConfig
             std::map<std::string, std:string>   getDefaultConfigInterface( void );
 
         // Methods
-            void    handleCommentes( std::string &line );
-            size_t  interfaceNumberOfServer( void );
+            void    handleComments( std::string &line );
+            size_t  numberOfServerInterface( void );
             size_t  numberOfServer( void );
+            bool    isNumber(std::string &str);
+            void    checkPort(std::string &strPort);
+            std::string createToken(size_t &i);
 
         // Members variables
             std::string                             _fileName;

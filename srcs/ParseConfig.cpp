@@ -138,13 +138,15 @@ std::map<std::string, std:string>   &ParseConfig::getDefaultConfig(){
 	return(getInstance(severFileName).getDefaultConfigInterface());
 }
 
+bool	Parse_config_file::	getErrorHappened(){return (_errorHappened);}
+
 // Methods
 
 /* This function remove comments line in give string 
  * comment line start with "#"
  * param line which has # */
 
-void	ParseConfig::handleCommentes(std::string &line)
+void	ParseConfig::handleComments(std::string &line)
 {
 	size_t  begin = line.find("#");
 	if (begin != std::string::npos)
@@ -152,19 +154,70 @@ void	ParseConfig::handleCommentes(std::string &line)
 }
 
 size_t	ParseConfig::numberOfServer( void ){
-	return(getInstance(severFileName).interfaceNumberOfServer());
+	return(getInstance(severFileName).NumberOfServerInterface());
 }
 
-size_t	ParseConfig::interfaceNumberOfServer( void ){
+size_t	ParseConfig::numberOfServerInterface( void ){
 	return(_serverList.size())
 }
 
-// Parse_config_file & Parse_config_file::							getInstance(std::string fileName)
+/* Returns true if given string in parameter is a number else return false
+ * param str the given string to parse each character if is a digit character
+ * return true  if given string in parameter is a number
+ * return false if given string in parameter is not a number */
+bool	ParseConfig::isNumber(std::string &str)
+{
+	int res;
+	for (size_t i = 0; i < str.size(); i++)
+	{
+		res = isdigit(str[i]);
+		if (res == 0)
+			return (false);
+	}
+	return (true);
+}
+
+/* check if the port is a integer
+ * if str_port is not a integer in string format a error will be  throw  
+ * param str_port port in string format */
+void	ParseConfig::checkPort(std::string &strPort)
+{
+	int intPort ;
+	bool ret = isNumber(strPort);
+	if (ret == false)
+		throw("error : port must be a integer");
+	std::stringstream(strPort) >> intPort; // convert string to integer
+	_ports.push_back(intPort);
+}
+
+// /**
+//  * @brief Get the Piece Of string it is a token it return a token on each call
+//  * the goal is to get a word from string this word will be stored in @pieceOfString
+//  * this word came from '_configFile'
+//  * @_configFile is the config file
+//  * @start is the begin of word 
+//  * @nbCharacterTocopy number of character to copy from @start
+//  * @param i is index of string _configFile 
+//  * @return std::string 
+//  */
+// std::string	Parse_config_file::								create_token(size_t &i)
 // {
-// 	// s_fileName = fileName;
-// 	static  Parse_config_file  _instance(fileName);
-// 	return (_instance);
+// 	size_t	nbCharacterTocopy = 0;
+// 	size_t start = i;
+
+// 	if (_configFile[i] == '{' || _configFile[i] == '}' || _configFile[i] == ';')//if { or } or ; is the first character i going to catch that piece Of String
+// 	{
+// 		i++;
+// 		nbCharacterTocopy++;
+// 	}
+// 	else
+// 	{
+// 		while (!isspace(_configFile[i]) && (_configFile[i] != '{' && _configFile[i] != '}') && _configFile[i] != ';') // { or } or ; and whitespace character are delimiter
+// 		{
+// 			nbCharacterTocopy++;
+// 			i++;
+// 		}
+// 	}
+// 	std::string pieceOfString = _configFile.substr(start, nbCharacterTocopy);
+// 	return (pieceOfString);
 // }
-
-
-bool	Parse_config_file::	getErrorHappened(){return (_errorHappened);}

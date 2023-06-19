@@ -10,6 +10,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <fcntl.h>
+#include "utils.h"
 
 // struct sockaddr_in {
 //     short            sin_family;   // e.g. AF_INET
@@ -20,6 +21,13 @@
 
 // struct in_addr {
 //     unsigned long s_addr;
+// };
+
+#define BUFFER_SIZE 1024
+
+// struct Tconfig
+// {
+// 	const std::string	root = "/workspaces/webserv";
 // };
 
 class TcpServer
@@ -35,7 +43,7 @@ class TcpServer
         TcpServer& operator=( const TcpServer& src );
         
         void    runServer( void );
-    
+
     private:
     // Methods
         void    acceptConnection( void );
@@ -45,12 +53,20 @@ class TcpServer
     
     // Member variable
         std::string         _sIpAddress;
-        int                 _serverPort;
-        int                 _serverSocket;
-        int                 _clientSocket;
+        int                 _serverPort; // = _port
+        int                 _serverSocket; // = _server_fd
+        int					_clientSocket; //this vector will store  socket clients which reached server 
         long                _serverIncomingMessage;
         fd_set              _socketSet;
         int                 _maxSocket;
+        // char				_buffer[BUFFER_SIZE + 1];
+        bool                _closeConnexion;
+
+        //private:
+		//int						_listen_fd;
+		//bool					_close_connexion;
+		//bool					_compress_array;// any time a clients disconnected  this variable will be set to true to squeeze poll array
+		//bool					_hasError;
     
     // Server address
         struct sockaddr_in  _serverSocketAddress;

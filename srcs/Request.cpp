@@ -2,20 +2,25 @@
 
 Request::Request(std::string request) : _head(parse_request(request))
 {
-	std::cout << "Request created\n";
+	// std::cout << "Request created\n";
+	this->_cgi = NULL;
+	if (this->_is_cgi)
+		this->_cgi = new CGI(*this);
 }
 
 Request::Request(std::map<std::string, std::string>	head) : _head(head)
 {
-	std::cout << "Request created\n";
+	// std::cout << "Request created\n";
 }
 
 Request::~Request()
 {
-	std::cout << "Request destroyed\n";
+	if (this->_cgi)
+		delete this->_cgi;
+	// std::cout << "Request destroyed\n";
 }
 
-Request::Request(const Request& copy)
+Request::Request(const Request& copy) : _cgi(copy.getCGI())
 {
 	std::cout << "Request is being copied\n";
 	*this = copy;
@@ -31,71 +36,24 @@ Request&	Request::operator = (const Request& copy)
 	return (*this);
 }
 
-std::map<std::string, std::string>	Request::construct_env( struct sockaddr_in& _serverSocketAddress )
-{
-	// std::map<std::string, std::string>	cgi_env;
-	std::stringstream					ss;
-
-	this->_cgi_env["SERVER_SOFTWARE"] = "banana";
-	this->_cgi_env["SERVER_NAME"] = "banana";
-	this->_cgi_env["GATEWAY_INTERFACE"] = "banana";
-	this->_cgi_env["SERVER_PROTOCOL"] = "banana";
-	ss << _serverSocketAddress.sin_port;
-	this->_cgi_env["SERVER_PORT"] = ss.str();
-	this->_cgi_env["REQUEST_METHOD"] = "banana";
-	this->_cgi_env["PATH_INFO"] = "banana";
-	this->_cgi_env["PATH_TRANSLATED"] = "banana";
-	this->_cgi_env["SCRIPT_NAME"] = "banana";
-	this->_cgi_env["QUERY_STRING"] = "banana";
-	this->_cgi_env["REMOTE_HOST"] = "banana";
-	this->_cgi_env["REMOTE_ADDR"] = "banana";
-	this->_cgi_env["AUTH_TYPE"] = "banana";
-	this->_cgi_env["REMOTE_IDENT"] = "banana";
-	this->_cgi_env["CONTENT_TYPE"] = "banana";
-	this->_cgi_env["CONTENT_LENGTH"] = "banana";
-	this->_cgi_env["HTTP_ACCEPT"] = "banana";
-	this->_cgi_env["HTTP_ACCEPT_LANGUAGE"] = "banana";
-	this->_cgi_env["HTTP_USER_AGENT"] = "banana";
-	this->_cgi_env["HTTP_COOKIE"] = "banana";
-	return (this->_cgi_env);
-}
-
-char**	Request::getEnv( void )
-{
-	char**	env = new char*[this->_cgi_env.size() + 1];
-	int		i = 0;
-
-	for (std::map<std::string, std::string>::iterator it = this->_cgi_env.begin(); it != this->_cgi_env.end(); it++, i++)
-	{
-		std::string elem = it->first + "=" + it->second;
-		env[i] = new char[elem.size() + 1];
-		strcpy(env[i], elem.c_str());
-	}
-	env[i] = NULL;
-	// std::cout << "\n\n-------ENV-------\n" << std::endl;
-	// i = 0;
-	// for (std::map<std::string, std::string>::iterator it = this->_cgi_env.begin(); it != this->_cgi_env.end(); it++)
-	// {
-	// 	std::cout << env[i] << std::endl;
-	// 	i++;
-	// }
-	// std::cout << "\n\n-----------------\n" << std::endl;
-	return (env);
-}
-
 std::map<std::string, std::string>	Request::parse_request(std::string request)
 {
 	std::map<std::string, std::string> m;
 	std::string key, val;
 	std::istringstream iss(request);
+	std::string methods[3] = {"GET", "POST", "DELETE"};
 
 	std::getline(iss, this->_info);
-	this->_type = getMethodType(this->_info);
-	this->_url = getURL(this->_info);
-	std::cout << "url: " << this->_url << std::endl
-			  << "type: " << this->_type << std::endl;
+
+	this->_method_enum = extractMethodType(this->_info);
+	this->_method_str = methods[this->_method_enum];
+	this->_url = extractURL(this->_info);
+	this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 1);
+	this->_is_dir = (this->_is_cgi) ? true : extractDirStatus(this->_url);
+
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
 		m[key] = val.substr(0, val.size() - 2);
+
 	return m;
 }
 
@@ -111,3 +69,51 @@ void	Request::printHead( void )
 	}
 	std::cout << "\n--------END---------\n" << std::endl;
 }
+
+
+//GETTERS
+
+CGI*	Request::getCGI() const{
+	return (this->_cgi);
+}
+
+bool	Request::isCGI(){
+	return (this->_is_cgi);
+}
+
+bool	Request::UrlIsDir(){
+	return (this->_is_dir);
+}
+
+std::string	Request::getBody(){
+	return (this->_body);
+}
+
+t_method	Request::getMethodEnum(){
+	return (this->_method_enum);
+}
+
+std::string	Request::getMethodStr(){
+	return (this->_method_str);
+}
+
+std::string	Request::getInfo(){
+	return (this->_info);
+}
+
+std::string	Request::getURL(){
+	return (this->_url);
+}
+
+// std::string	Request::getLocation(){
+// 	return (this->_location);
+// }
+
+// std::string	Request::getQuery(){
+// 	return (this->_query);
+// }
+
+std::map<std::string, std::string>	Request::getHead(){
+	return (this->_head);
+}
+

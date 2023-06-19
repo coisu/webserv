@@ -1,6 +1,13 @@
 #ifndef UTILS_H
 # define UTILS_H
 #include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <sstream>
 
 #define EXAMPLE_INPUT "GET / HTTP/1.1 \
 \nHost: 127.0.0.1:8080 \
@@ -19,6 +26,9 @@
 \nAccept-Encoding: gzip, deflate, br \
 \nAccept-Language: en-US,en;q=0.9"
 
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
+
 typedef enum e_method
 {
 	GET,
@@ -27,7 +37,20 @@ typedef enum e_method
 	UNDEFINED
 } t_method;
 
-e_method	getMethodType(std::string info);
-std::string	getURL(std::string info);
+e_method	extractMethodType(std::string info);
+std::string	extractURL(std::string info);
+bool		extractDirStatus(std::string url);
+std::string	extractPathInfo(std::string url);
+
+
+typedef struct TempConfig
+{
+	std::string	root;
+	std::string	cgi_folder;
+	std::string	name;
+	int			host_port;
+} Tconfig;
+
+extern Tconfig	temp_config;
 
 #endif

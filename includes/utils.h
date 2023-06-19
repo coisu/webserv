@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
+#include <vector>
 
 #define EXAMPLE_INPUT "GET / HTTP/1.1 \
 \nHost: 127.0.0.1:8080 \
@@ -40,8 +41,7 @@ typedef enum e_method
 e_method	extractMethodType(std::string info);
 std::string	extractURL(std::string info);
 bool		extractDirStatus(std::string url);
-std::string	extractPathInfo(std::string url);
-
+std::string	extractPathInfo(std::vector<std::string> urlvec);
 
 typedef struct TempConfig
 {

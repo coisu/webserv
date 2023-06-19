@@ -1,6 +1,7 @@
 #ifndef CGI_HPP
 # define CGI_HPP
 #include <map>
+#include <vector>
 #include <iostream>
 #include <sstream>
 #include <sys/socket.h>

@@ -32,8 +32,8 @@ std::string	extractURL(std::string info)
 	i = info.find_first_of('/');
 	while (!std::isspace(info[i + n]))
 		n++;
-	if (n > 0 && info[i + n - 1] == '/')
-		n--;
+	// if (n > 0 && info[i + n - 1] == '/')
+	// 	n--;
 	return (info.substr(i, n));
 }
 
@@ -47,8 +47,15 @@ bool	extractDirStatus(std::string url)
 	return (0);
 }
 
-std::string	extractPathInfo(std::string url)
+std::string	extractPathInfo(std::vector<std::string> urlvec)
 {
-	size_t i = url.find(temp_config.cgi_folder) + temp_config.cgi_folder.size();
-	return (url.substr(i));
+	std::string	path_info;
+
+	if (urlvec.size() > 2)
+	{
+		size_t i = 2;
+		while (i < urlvec.size() && urlvec[i][0] != '?')
+			path_info += urlvec[i++];
+	}
+	return (path_info);
 }

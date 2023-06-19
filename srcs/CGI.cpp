@@ -34,14 +34,29 @@ std::string	extractScriptName(std::string url, std::string cgi_folder)
 	std::istringstream	iss(url);
 
 	while (tmp != cgi_folder)
-	{
 		std::getline(iss, tmp, '/');
-		std::cout << "\nCGIII: " << tmp << " url: " << url << std::endl;
-	}
 	std::getline(iss, tmp, '/');
-	std::cout << "\nCGIII: " << tmp << " url: " << url << std::endl;
 	script_name = "/" + cgi_folder + "/" + tmp;
 	return (script_name);
+}
+
+std::vector<std::string>	split_url(std::string url)
+{
+	std::vector<std::string>	vec;
+
+	std::size_t prev = 0, pos;
+	while ((pos = url.find_first_of("/?", prev)) != std::string::npos)
+	{
+		if (pos > prev && prev > 0)
+			vec.push_back(url.substr(prev - 1, pos - prev + 1));
+		prev = pos + 1;
+	}
+	if (prev < url.length() && prev > 0)
+		vec.push_back(url.substr(prev - 1, std::string::npos));
+	// std::cout << "\n-----VEC-----\n";
+	for (long unsigned int i = 0; i < vec.size(); i++)
+		std::cout << "vec: " << vec[i] << std::endl;
+	return (vec);
 }
 
 std::map<std::string, std::string>	CGI::construct_env(Request& request)
@@ -49,6 +64,7 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request)
 	(void)request;
 	std::map<std::string, std::string>	env;
 	std::string	url = request.getURL();
+	std::vector<std::string>	urlvec = split_url(url);
 
 	env["SERVER_SOFTWARE"] = "Jisu, Yoel and Amanda's Software ;)";
 	env["SERVER_NAME"] = temp_config.name;
@@ -56,8 +72,8 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request)
 	env["SERVER_PROTOCOL"] = "HTML/1.1";
 	env["SERVER_PORT"] = SSTR(temp_config.host_port);
 	env["REQUEST_METHOD"] = request.getMethodStr();
-	env["PATH_INFO"] = extractPathInfo(url);
-	env["PATH_TRANSLATED"] = temp_config.root + extractPathInfo(url);
+	env["PATH_INFO"] = extractPathInfo(urlvec);
+	env["PATH_TRANSLATED"] = temp_config.root + extractPathInfo(urlvec);
 	env["SCRIPT_NAME"] = extractScriptName(url, temp_config.cgi_folder);
 	env["QUERY_STRING"] = "banana";
 	env["REMOTE_HOST"] = "banana";

@@ -5,7 +5,7 @@ Request::Request(std::string request) : _head(parse_request(request))
 	// std::cout << "Request created\n";
 	this->_cgi = NULL;
 	if (this->_is_cgi)
-		this->_cgi = new CGI(*this);
+		std::cout << "\n----MAKING CGI----\n", this->_cgi = new CGI(*this);
 }
 
 Request::Request(std::map<std::string, std::string>	head) : _head(head)
@@ -52,7 +52,7 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	std::cout << "\nSIZE OF URL: " << this->_url.size() << " SIZE OF CGI: " << temp_config.cgi_folder.size() << std::endl;
 	std::cout << "URL: " << this->_url << " CGI: "<< temp_config.cgi_folder << std::endl;
 	if (this->_is_cgi && this->_url.size() <= temp_config.cgi_folder.size() + 1)
-		std::cerr << "\n\n----------ERROR-CGI-FOLDER----------\n\n";
+		std::cerr << "\n\n----------ERROR-CGI-FOLDER----------\n\n", this->_is_cgi = false;
 	this->_is_dir = (this->_is_cgi) ? false : extractDirStatus(this->_url);
 
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))

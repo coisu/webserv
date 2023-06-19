@@ -27,6 +27,23 @@ CGI&	CGI::operator = (const CGI& copy)
 	return (*this);
 }
 
+std::string	extractScriptName(std::string url, std::string cgi_folder)
+{
+	std::string			script_name;
+	std::string			tmp;
+	std::istringstream	iss(url);
+
+	while (tmp != cgi_folder)
+	{
+		std::getline(iss, tmp, '/');
+		std::cout << "\nCGIII: " << tmp << " url: " << url << std::endl;
+	}
+	std::getline(iss, tmp, '/');
+	std::cout << "\nCGIII: " << tmp << " url: " << url << std::endl;
+	script_name = "/" + cgi_folder + "/" + tmp;
+	return (script_name);
+}
+
 std::map<std::string, std::string>	CGI::construct_env(Request& request)
 {
 	(void)request;
@@ -41,7 +58,7 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request)
 	env["REQUEST_METHOD"] = request.getMethodStr();
 	env["PATH_INFO"] = extractPathInfo(url);
 	env["PATH_TRANSLATED"] = temp_config.root + extractPathInfo(url);
-	env["SCRIPT_NAME"] = "/";// + temp_config.cgi_folder + url.substr(url.find(temp_config.cgi_folder) + );
+	env["SCRIPT_NAME"] = extractScriptName(url, temp_config.cgi_folder);
 	env["QUERY_STRING"] = "banana";
 	env["REMOTE_HOST"] = "banana";
 	env["REMOTE_ADDR"] = "banana";

@@ -32,6 +32,8 @@ std::string	extractURL(std::string info)
 	i = info.find_first_of('/');
 	while (!std::isspace(info[i + n]))
 		n++;
+	if (n > 0 && info[i + n - 1] == '/')
+		n--;
 	return (info.substr(i, n));
 }
 
@@ -39,10 +41,8 @@ bool	extractDirStatus(std::string url)
 {
 	struct stat		statbuf;
 
-	if (!stat((temp_config.root + url).c_str(), &statbuf))
+	if (stat((temp_config.root + url).c_str(), &statbuf) == 0)
 		return (S_ISDIR(statbuf.st_mode));
-	// std::cout << "URLLLLL!: " << (temp_config.root + url).c_str() << std::endl;
-	// throw std::file
 	perror("stat");
 	return (0);
 }

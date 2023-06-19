@@ -49,7 +49,11 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
 	this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 1);
-	this->_is_dir = (this->_is_cgi) ? true : extractDirStatus(this->_url);
+	std::cout << "\nSIZE OF URL: " << this->_url.size() << " SIZE OF CGI: " << temp_config.cgi_folder.size() << std::endl;
+	std::cout << "URL: " << this->_url << " CGI: "<< temp_config.cgi_folder << std::endl;
+	if (this->_is_cgi && this->_url.size() <= temp_config.cgi_folder.size() + 1)
+		std::cerr << "\n\n----------ERROR-CGI-FOLDER----------\n\n";
+	this->_is_dir = (this->_is_cgi) ? false : extractDirStatus(this->_url);
 
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
 		m[key] = val.substr(0, val.size() - 2);

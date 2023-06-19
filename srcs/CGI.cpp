@@ -71,7 +71,7 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request)
 	env["PATH_INFO"] = extractPathInfo(urlvec);
 	env["PATH_TRANSLATED"] = temp_config.root + env["PATH_INFO"];
 	env["SCRIPT_NAME"] = extractScriptName(urlvec);
-	env["QUERY_STRING"] = "banana";
+	env["QUERY_STRING"] = extractQueryString(urlvec);
 	env["REMOTE_HOST"] = "banana";
 	env["REMOTE_ADDR"] = "banana";
 	env["AUTH_TYPE"] = "banana";

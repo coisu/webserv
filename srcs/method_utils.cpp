@@ -59,3 +59,15 @@ std::string	extractPathInfo(std::vector<std::string> urlvec)
 	}
 	return (path_info);
 }
+
+std::string	extractQueryString(std::vector<std::string> urlvec)
+{
+	std::string	query;
+
+	for (size_t i = 0; i < urlvec.size(); i++)
+	{
+		if (urlvec[i][0] == '?')
+			return (urlvec[i].substr(1));
+	}
+	return (query);
+}

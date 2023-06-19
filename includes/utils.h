@@ -42,6 +42,7 @@ e_method	extractMethodType(std::string info);
 std::string	extractURL(std::string info);
 bool		extractDirStatus(std::string url);
 std::string	extractPathInfo(std::vector<std::string> urlvec);
+std::string	extractQueryString(std::vector<std::string> urlvec);
 
 typedef struct TempConfig
 {

@@ -233,7 +233,6 @@ void	Response::setConnection()
 
 
 
-
 // void http::Server::_handleEpollout(Socket &sock, std::pair< http::Request, t_serverData > &data,
 //                                    struct epoll_event *event, int epoll_fd)
 // {

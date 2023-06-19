@@ -33,7 +33,7 @@ std::string Mime::getMimeType(std::string extn)
     return (mime_type[default]);
 }
 
-// types {
+// typ0es {
 //   text/html                             html htm shtml;
 //   text/css                              css;
 //   text/xml                              xml rss;

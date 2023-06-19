@@ -29,7 +29,7 @@ class Response
         Code            statusCode;
         Mime            mimeList;
         Request         request;
-        serverConfig    *server;             // port & Host
+        serverConfig    server;             // port & Host
         std::string     response_content;
 
 

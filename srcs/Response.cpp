@@ -141,11 +141,11 @@ Response::~Response() {}
 
 void	Response::buildResponse()
 {
-	Response::setHeader();
-	Response::setBody();
+	Response::buildHeader();
+	Response::buildBody();
 }
 
-void	Response::setHeader()
+void	Response::buildHeader()
 {
 	Response::setStatusLine();
 	Response::setDate();
@@ -156,8 +156,127 @@ void	Response::setHeader()
 	Response::setLocation();
 }
 
-void	Response::setBody()
+std::vector<Location>::iterator Response::matchLocation(std::string path, std::vector<Location> locs, std::string &matchedPath)
 {
+	int match_len = 0;
+
+	std::vector<Location>::iterator it;
+	std::vector<Location>::iterator ret;
+	for (it = locs.begin(); it != locs.end(); it++)
+	{
+		std::string it_path = it->getPath();
+		if (path.find(it_path) == 0)
+		{
+			if (it->it_path == "/" \
+				|| path.length() == it_path.length() || path[it_path.length()] == '/')
+			{
+				if (it_path.length() > match_len)
+				{
+					matchedPath = it_path;
+					match_len = it_path.length();
+					ret = it;
+				}
+			}
+		}
+	}
+	return ret;
+}
+
+int Response::checkAllowedMethods()
+{
+	std::vector<int>methods = matchLoc.getAllowedMethods();
+	if (request.getMethod() == GET && !methods.find(method.begin(), method.end(), GET)
+		|| request.getMethod() == POST && !methods.find(method.begin(), method.end(), POST)
+		|| request.getMethod() == DELETE && !methods.find(method.begin(), method.end(), DELETE))
+		return (1);
+	return  (0);
+}
+
+int	Response::checkMaxBody(Location &loc)
+{
+	if (request.getBody().length() > loc.getMaxBodySize())
+		return (1);
+	return (0);
+}
+
+// In response to a request with URI equal to this string,
+// but without the trailing slash,
+// a permanent redirect with the code 301 will be returned to the requested URI with the slash appended.
+int	Response::checkReturn(Location &loc)
+{
+	if (loc.getReturn().empty() == 0)
+	{
+		location = loc.getReturn();
+		if (locaition[0] != '/')
+			location.insert(0, '/');
+		return (1);
+	}
+	return (0);
+}
+
+int	Response::checkCgi(std::string path_loc, Location &loc)
+{
+	std::string path_req = request.getPath();
+	std::string extn;
+	int	pos;
+
+	if (path_req[0] && path_req[0] == '/')
+		path_req = path_req.substr(1);
+
+	std::string indexStr;
+	if (path_req.back() != '/')
+		indexStr = "/";
+	indexStr.append(loc.getIndex())
+	path_req.append(indexStr);
+
+}
+
+int	Response::isCgi(Location &loc)
+{
+	if (loc.getPath().find("cgi-bin") != std::string::npos)
+		return (1);
+	return (0);
+}
+
+int Response::checkLocation()
+{
+	std::string matchedPath;
+	Location matchLoc = matchLocation(request.getPath(), server.getLocations());
+	
+	if (matchedPath.length())
+	{
+		if (checkAllowedMethods())
+		{
+			Code = 405;
+			return (1);
+		}
+	        // throw serverConfig::ErrorStatus(405);
+		if (checkMaxBody(matchLoc))
+		{
+			Code = 413;
+			return (1);
+		}
+			// throw serverConfig::ErrorStatus(413);
+		if (checkReturn(matchLoc))
+		{
+			Code = 301;
+			return (1);
+		}
+		if (isCgi(matchLoc) && checkCgi(matchedPath, matchLoc))
+		{
+			return (1)
+		}
+			// throw serverConfig::ErrorStatus(301);
+	}
+
+}
+
+int	Response::buildBody()
+{
+	if (request.getBody().length() > server.client_max_body_size)
+		throw serverConfig::ErrorStatus(413);
+	if (checkLocation())
+		return (1);
 
 }
 
@@ -228,6 +347,9 @@ void	Response::setConnection()
 	else
 		response_content.append("Connection: colse\r\n");
 }
+
+
+
 
 
 

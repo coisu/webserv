@@ -27,16 +27,12 @@ CGI&	CGI::operator = (const CGI& copy)
 	return (*this);
 }
 
-std::string	extractScriptName(std::string url, std::string cgi_folder)
+std::string	extractScriptName(std::vector<std::string> urlvec)
 {
-	std::string			script_name;
-	std::string			tmp;
-	std::istringstream	iss(url);
-
-	while (tmp != cgi_folder)
-		std::getline(iss, tmp, '/');
-	std::getline(iss, tmp, '/');
-	script_name = "/" + cgi_folder + "/" + tmp;
+	std::string	script_name;
+	
+	if (urlvec.size() >= 2)
+		script_name = urlvec[0] + urlvec[1];
 	return (script_name);
 }
 
@@ -73,8 +69,8 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request)
 	env["SERVER_PORT"] = SSTR(temp_config.host_port);
 	env["REQUEST_METHOD"] = request.getMethodStr();
 	env["PATH_INFO"] = extractPathInfo(urlvec);
-	env["PATH_TRANSLATED"] = temp_config.root + extractPathInfo(urlvec);
-	env["SCRIPT_NAME"] = extractScriptName(url, temp_config.cgi_folder);
+	env["PATH_TRANSLATED"] = temp_config.root + env["PATH_INFO"];
+	env["SCRIPT_NAME"] = extractScriptName(urlvec);
 	env["QUERY_STRING"] = "banana";
 	env["REMOTE_HOST"] = "banana";
 	env["REMOTE_ADDR"] = "banana";

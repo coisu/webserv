@@ -55,8 +55,8 @@ class ParseConfig
             std::map<std::string, std:string>   getGlobalConfigInterface( void );
             std::vector<int>                    getPorts( void );
             std::vector<int>                    getPortsInterface( void );
-            std::map<std::string, std:string>   getDefaultConfig( void );
-            std::map<std::string, std:string>   getDefaultConfigInterface( void );
+            std::map<std::string, std::string>   getDefaultConfig( void );
+            std::map<std::string, std::string>   getDefaultConfigInterface( void );
 
         // Methods
             void    handleComments( std::string &line );

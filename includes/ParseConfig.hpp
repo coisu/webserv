@@ -76,7 +76,7 @@ class ParseConfig
             size_t                                  _indexConfigFile;
             bool                                    _location;
             t_double_list                           _serverList;
-            std::map<std::string, std::string       _globalConfig;
+            std::map<std::string, std::string>      _globalConfig;
             std::vector<int>                        _ports;
         //  unsigned long                           _clientMaxBodySize;
         // std::vector<serverConfig>   servers;

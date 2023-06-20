@@ -211,7 +211,7 @@ size_t	ParseConfig::numberOfServer( void ){
 }
 
 size_t	ParseConfig::numberOfServerInterface( void ){
-	return(_serverList.size())
+	return(_serverList.size());
 }
 
 /* Returns true if given string in parameter is a number else return false
@@ -274,35 +274,35 @@ std::string	ParseConfig::createToken(size_t &i)
 	return (partOfStr);
 }
 
-static bool	isKeyWord(std::string &word)
-{
-	if (word.compare("listen") == 0)
-		return (true);
-	if (word.compare("server_name") == 0)
-		return (true);
-	if (word.compare("root") == 0)
-		return (true);
-	if (word.compare("error_page") == 0)
-		return (true);
-	if (word.compare("autoindex") == 0)
-		return (true);
-	if (word.compare("client_body") == 0)
-		return (true);
-	if (word.compare("index") == 0)
-		return (true);
-	if (word.compare("methods") == 0)
-		return (true);
-	if (word.compare("allow") == 0)
-		return (true);
-	if (word.compare("cgi") == 0)
-		return (true);
-	if (word.compare("fastcgi_pass") == 0)
-		return (true);
-	if (word.compare("fastcgi_param") == 0)
-		return (true);
-	if (word.compare("return") == 0)
-		return (true);
-	if (word.compare("cgi_pass") == 0)
-		return (true);
-	return (false);
-}
+// static bool	isKeyWord(std::string &word)
+// {
+// 	if (word.compare("listen") == 0)
+// 		return (true);
+// 	if (word.compare("server_name") == 0)
+// 		return (true);
+// 	if (word.compare("root") == 0)
+// 		return (true);
+// 	if (word.compare("error_page") == 0)
+// 		return (true);
+// 	if (word.compare("autoindex") == 0)
+// 		return (true);
+// 	if (word.compare("client_body") == 0)
+// 		return (true);
+// 	if (word.compare("index") == 0)
+// 		return (true);
+// 	if (word.compare("methods") == 0)
+// 		return (true);
+// 	if (word.compare("allow") == 0)
+// 		return (true);
+// 	if (word.compare("cgi") == 0)
+// 		return (true);
+// 	if (word.compare("fastcgi_pass") == 0)
+// 		return (true);
+// 	if (word.compare("fastcgi_param") == 0)
+// 		return (true);
+// 	if (word.compare("return") == 0)
+// 		return (true);
+// 	if (word.compare("cgi_pass") == 0)
+// 		return (true);
+// 	return (false);
+// }

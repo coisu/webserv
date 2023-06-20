@@ -1,4 +1,4 @@
-#include "../includes/http_tcpServer.h"
+#include "TcpServer.hpp"
 #include <stdio.h>
 #include <errno.h>
 #include "Request.hpp"
@@ -26,17 +26,28 @@ std::string buildResponse(int code, std::string body)
 }
 
 // Constructor
+TcpServer::TcpServer():_port(8080){}
+
 TcpServer::TcpServer( std::string ipAddress, int port ): _sIpAddress(ipAddress),
-_serverPort( port ), _serverSocket(), _clientSocket(), _serverIncomingMessage(),
+_port( port ), _serverSocket(), _clientSocket(), _serverIncomingMessage(),
  _socketSet(), _maxSocket(), _socketAddressLen( sizeof(_serverSocketAddress) ), _serverMessage(buildResponse(200, "hello worldywoo!")){
-    _serverSocketAddress.sin_family = AF_INET; // for IPv4
-    _serverSocketAddress.sin_port = htons(port); // call htons to ensure that the port is stored in network byte order
-    _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
-    _timeout.tv_sec = 3 * 60;
-    _timeout.tv_usec = 0;
-    inet_addr(_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
-    startServer();
-    startListen();
+    setUpServer();
+}
+
+void    TcpServer::setUpServer(){
+
+        startServer();
+        _serverSocketAddress.sin_family = AF_INET; // for IPv4
+        memset(&_serverSocketAddress.sin_zero, 0, sizeof(_serverSocketAddress.sin_zero));
+        _serverSocketAddress.sin_port = htons(_port); // call htons to ensure that the port is stored in network byte order
+        _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
+        _timeout.tv_sec = 3 * 60;
+        _timeout.tv_usec = 0;
+        if (bind(_serverSocket,(struct sockaddr *)&_serverSocketAddress, _socketAddressLen) < 0)
+            exitWithError("Cannot connect socket to address");//ATTENTION need to be manage correctly
+        _maxSocket = _serverSocket;
+        inet_addr(_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
+        startListen();
 }
 
 // Copy Constructor
@@ -55,7 +66,7 @@ TcpServer   &TcpServer::operator=( const TcpServer& src ){
         return *this;
     this->_serverSocket = src._serverSocket;
     this->_sIpAddress = src._sIpAddress;
-    this->_serverPort = src._serverPort;
+    this->_port = src._port;
     this->_serverSocket = src._serverSocket;
     this->_clientSocket = src._clientSocket;
     this->_serverMessage = src._serverMessage;
@@ -68,18 +79,28 @@ TcpServer   &TcpServer::operator=( const TcpServer& src ){
 
 // Methods
 int TcpServer::startServer(){
+    
+    int ret;
+    int option = 1;
+
     _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverSocket < 0)
     {
         exitWithError("Cannot create socket");
         return 1;
     }
-    if (bind(_serverSocket,(struct sockaddr *)&_serverSocketAddress, _socketAddressLen) < 0)
+    ret = setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&option, sizeof(option));//Forcefully attaching socket to the port
+    if (ret < 0)
     {
-        exitWithError("Cannot connect socket to address");
+        exitWithError("bfrforce to reuse a port function setsockopt");
         return 1;
     }
-    _maxSocket = _serverSocket;
+    ret = fcntl(_serverSocket, F_SETFL, O_NONBLOCK);// Set socket to be nonblocking
+    if (ret < 0)
+    {
+        exitWithError("Error function fcnt");
+        return 1;
+    }
     return 0;
 }
 
@@ -135,11 +156,13 @@ void    TcpServer::runServer(){
     fd_set  tempSet;
     int     activity;
 	char	buffer[1024];
+    // std::vector<int>    _fds;
 
     FD_ZERO(&tempSet);
     memcpy(&tempSet, &_socketSet, sizeof(_socketSet));
     activity = select(_maxSocket + 1, &tempSet, NULL, NULL, &_timeout);
-    if (activity == -1)
+    //_fds.push_back(select(_maxSocket + 1, &tempSet, NULL, NULL, &_timeout));
+    if (activity == -1)//_fds.back() == -1)
         exitWithError("Error calling select()");
     if (activity == 0) {
         exitWithError("Timeout reached, no activity on sockets");
@@ -183,35 +206,6 @@ void    TcpServer::runServer(){
                         close(socket);
                         FD_CLR(socket, &_socketSet);
                     }
-                    // bytesReceived = recv(socket, buffer, sizeof(buffer), 0);
-                    // std::cout << bytesReceived << " " << sizeof(buffer) << std::endl;
-                    // if (bytesReceived <= 0){
-                    //     if (bytesReceived == 0){
-                    //         // perror("Erreur lors de la réception des données 2");
-                    //         std::ostringstream ss;
-                    //         ss << "Desconexion of socket: " << socket << ": " << buffer;
-                    //         exitWithError(ss.str());
-                    //     } else
-                    //         perror("Erreur lors de la réception des données");
-                    //         // exitWithError("Failed to read bytes from client socket connection");
-                    //     close(socket);
-                    //     FD_CLR(socket, &_socketSet);       
-                    // } else {
-                    //     std::cout << "socket" << socket << std::endl;
-                    //     std::cout << "Data received from the socket " << socket << ": " << buffer << std::endl;
-                    //     for (int socketSent = 0; socketSent <= _maxSocket; socketSent++){
-                    //         if (FD_ISSET(socketSent, &_socketSet)){
-                    //             if (socketSent != _serverSocket && socketSent != socket){
-                    //                 std::cout << _serverMessage.c_str();
-                    //                 bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
-                    //                 if (bytesSent == (long int)_serverMessage.size())
-                    //                     log("------ Server Response sent to client ------\n\n");
-                    //                 else
-                    //                     log("Error sending response to client");
-                    //             }
-                    //         }
-                    //     }
-                    // } 
                 }
             }
         } 
@@ -222,3 +216,12 @@ void    TcpServer::closeServer(){
     close(_clientSocket);
     exit(0);
 }
+
+/* ------------------------ Getters ------------------------------ */
+
+int     TcpServer::getServerSocketFd(){ return(_serverSocket); }
+int     TcpServer::getPort(){ return(_port); }
+
+/* ------------------------ Setters ------------------------------ */
+
+void    TcpServer::setPort(int port){ _port = port; }

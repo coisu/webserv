@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <list>
 #include <unistd.h>
+#include "utils.h"
 
 enum tokenType
 {
@@ -25,9 +26,6 @@ enum tokenType
 	SERV,
 	INIT
 };
-
-#define ERROR		-1
-#define SUCCESS		0
 
 typedef std::list < std::list < std::map < std::string, std::string > > > t_double_list;
 typedef std::list < std::map < std::string, std::string > > t_single_list;
@@ -90,8 +88,8 @@ class ParseConfig
 
         // Members variables
             std::string                             _fileName;
-            bool                                    _errorHappened;
             std::string                             _configFile;
+            bool                                    _errorHappened;
             std::map<std::string, std::string>		_defautConfig;
             std::string                             _pwd;
             int                                     _bracketCounter;
@@ -107,7 +105,6 @@ class ParseConfig
             std::string                             _directiveValue;
             std::string                             _curWord;
             t_single_list                           _sigleList;
-            std::string                             _pwd;
 
         //  unsigned long                           _clientMaxBodySize;
         // std::vector<serverConfig>   servers;

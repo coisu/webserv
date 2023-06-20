@@ -11,30 +11,15 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include "utils.h"
+#include <vector>
 
-// struct sockaddr_in {
-//     short            sin_family;   // e.g. AF_INET
-//     unsigned short   sin_port;     // e.g. htons(8080)
-//     struct in_addr   sin_addr;     // see struct in_addr, below
-//     //char             sin_zero[8];  // zero this if you want to
-// };
-
-// struct in_addr {
-//     unsigned long s_addr;
-// };
-
-#define BUFFER_SIZE 1024
-
-// struct Tconfig
-// {
-// 	const std::string	root = "/workspaces/webserv";
-// };
 
 class TcpServer
 {
     public:
 
     // Constructor & Copy constructor
+        TcpServer( void );
         TcpServer( std::string ip_adress, int port );
         TcpServer( const TcpServer& copy );
     // Destructor
@@ -43,17 +28,23 @@ class TcpServer
         TcpServer& operator=( const TcpServer& src );
         
         void    runServer( void );
+        void    acceptConnection( void );
+        int     getPort( void );
+        int     getServerSocketFd( void );
+
+    // Setters
+        void    setPort( int port );
+        void    setUpServer( void );
 
     private:
     // Methods
-        void    acceptConnection( void );
         int     startServer( void );
-        void    closeServer( void ); 
+        void    closeServer( void );
         void    startListen( void );
     
     // Member variable
         std::string         _sIpAddress;
-        int                 _serverPort; // = _port
+        int                 _port; 
         int                 _serverSocket; // = _server_fd
         int					_clientSocket; //this vector will store  socket clients which reached server 
         long                _serverIncomingMessage;

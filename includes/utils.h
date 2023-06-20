@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
+#include <vector>
 
 #define EXAMPLE_INPUT "GET / HTTP/1.1 \
 \nHost: 127.0.0.1:8080 \
@@ -25,6 +26,10 @@
 \nSec-Fetch-Dest: document \
 \nAccept-Encoding: gzip, deflate, br \
 \nAccept-Language: en-US,en;q=0.9"
+
+#define ERROR		-1
+#define SUCCESS		0
+#define BUFFER_SIZE	1024
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()

@@ -86,14 +86,12 @@ int	Service::setUpService(){
 	return (SUCCESS);
 }
 
-/**
- * @brief 
- * allow to handle event
- * event can be on existed files descriptor or can be on  new files file descriptor which has to be accept by a server like  new file descriptor  
+/* Allow to handle event
+ * event can be on existed files descriptor or can be on new file descriptor which has to be accept by a server like  new file descriptor  
  * 
  * this function do two thing main:
- * 		one: if new connection came, add it in the vector "_socket_client" and poll array
- * 		two: if is existing socket go read request, and send reponse
+ * 		- if new connection came, add it in the vector "_socket_client" and select array
+ * 		- if is existing socket go read request, and send reponse
  * 
  * it important to know than "_listServer"  this linked list contain a server on each node
  * this function loop through this list to look up the socket client which has triggered even
@@ -102,43 +100,43 @@ int	Service::setUpService(){
  *
  *	the loop allow to loop through each Server inside linked list
  *
- * when event is  new on  new files file descriptor:
- * 		-> this file descriptor is add in an array  which belong server it has send request
- * 		-> likewise, this file descriptor is add in array of poll too
+ * when event is new on new file descriptor:
+ * 		- this file descriptor is add in an array  which belong server it has send request
+ * 		- likewise, this file descriptor is add in array of select too
  * 
  *	when event is   on  existing file descriptor:
- *		-> go head, to recovery data inside
+ *		- go head, to recovery data inside
  *
- * 	variable "old_size" is initialized at size of array "vect_socket_client" this let me to update poll array :
- *	if the size of "_sockect_clients" has grown, variable "old_size" contain the old size of vect_socket_client, 
- *	with the difference between new size of "_sockect_clients"  and old size allow to update poll array with function addFdsToPollFds(..))
- * @param index on file descriptor of server to handler
- */
+ * 	variable "prev_size" is initialized at size of array "vectSocketClient" this let me to update select array :
+ *	if the size of "_sockect_clients" has grown, variable "prev_size" contain the old size of vectSocketClient, 
+ *	with the difference between new size of "_sockect_clients"  and old size allow to update select array with function addFdsToSelectFds(..))
+ * param index on file descriptor of server to handler */
 
-// void	Service::manageServer(size_t &index)
-// {
-// 	size_t	prev_size;
-// 	for (std::list<TcpServer>::iterator it = _listServer.begin(); it != _listServer.end(); it++)
-// 	{
-// 		TcpServer	&currentServer = *it;
-// 		std::vector<int> & vect_socket_client = currentServer.get_sockect_clients();
-// 		prev_size = vect_socket_client.size();
-// 		if (_fdSel[index] == currentServer.getServerSocketFd())// meaning new incoming connection
-// 		{
-// 			currentServer.accept_all_incoming_connections();// new socket has been added to "_sockect_clients"
-// 			addFdsToPollFds(vect_socket_client, prev_size);// poll array should update to by adding the new socket on it
-// 		}
-// 		else if ((std::find(vect_socket_client.begin(), vect_socket_client.end(), _fdSel[index].fd)) != vect_socket_client.end())
-// 		{
-// 			//std::cout << "========= handle existing connection ===============" << std::endl;
-// 			_closeConnexion = currentServer.handle_existing_connections(&_fdSel[index]); // return true if the connection is closed
-// 			if (_closeConnexion == true)
-// 			{
-// 				_compressFdSel = true;// In this case the array  poll will be  squeeze
-// 			}
-// 		}
-// 	}
-// }
+void	Service::manageServer(size_t &index)
+{
+	size_t	prev_size;
+	for (std::list<TcpServer>::iterator it = _listServer.begin(); it != _listServer.end(); it++)
+	{
+		TcpServer	&curServer = *it;
+		std::vector<int> & vectSocketClient = curServer.getClientSockets();
+		prev_size = vectSocketClient.size();
+		if (_fdSel[index] == curServer.getServerSocketFd())// meaning new incoming connection
+		{
+			curServer.acceptConnection();// new socket has been added to "_sockect_clients"
+			for(size_t i = prev_size; i < vectSocketClient.size(); i++){
+				_fdSel[_nFdServ] = vectSocketClient[i];
+				_nFdServ++;
+			}
+		}
+		else if ((std::find(vectSocketClient.begin(), vectSocketClient.end(), _fdSel[index])) != vectSocketClient.end())
+		{
+			//std::cout << "========= handle existing connection ===============" << std::endl;
+			_closeConnexion = curServer.runServer(&_fdSel[index]); // return true if the connection is closed
+			if (_closeConnexion == true)
+				_compressFdSel = true;// In this case the array  poll will be  squeeze
+		}
+	}
+}
 
 
 /* This function triggered when a signal ctrl-c was sended

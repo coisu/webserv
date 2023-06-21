@@ -30,20 +30,20 @@ TcpServer::TcpServer():_port(8080){}
 
 TcpServer::TcpServer( std::string ipAddress, int port ): _sIpAddress(ipAddress),
 _port( port ), _serverSocket(), _clientSocket(), _serverIncomingMessage(),
- _socketSet(), _maxSocket(), _socketAddressLen( sizeof(_serverSocketAddress) ), _serverMessage(buildResponse(200, "hello worldywoo!")){
+ _socketSet(), _maxSocket(), _addressLen( sizeof(_address) ), _serverMessage(buildResponse(200, "hello worldywoo!")){
     setUpServer();
 }
 
 void    TcpServer::setUpServer(){
 
         startServer();
-        _serverSocketAddress.sin_family = AF_INET; // for IPv4
-        memset(&_serverSocketAddress.sin_zero, 0, sizeof(_serverSocketAddress.sin_zero));
-        _serverSocketAddress.sin_port = htons(_port); // call htons to ensure that the port is stored in network byte order
-        _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
+        _address.sin_family = AF_INET; // for IPv4
+        memset(&_address.sin_zero, 0, sizeof(_address.sin_zero));
+        _address.sin_port = htons(_port); // call htons to ensure that the port is stored in network byte order
+        _address.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
         _timeout.tv_sec = 3 * 60;
         _timeout.tv_usec = 0;
-        if (bind(_serverSocket,(struct sockaddr *)&_serverSocketAddress, _socketAddressLen) < 0)
+        if (bind(_serverSocket,(struct sockaddr *)&_address, _addressLen) < 0)
             exitWithError("Cannot connect socket to address");//ATTENTION need to be manage correctly
         _maxSocket = _serverSocket;
         inet_addr(_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
@@ -73,7 +73,7 @@ TcpServer   &TcpServer::operator=( const TcpServer& src ){
     this->_maxSocket = src._maxSocket;
     this->_socketSet = src._socketSet;
     this->_serverIncomingMessage = src._serverIncomingMessage;
-    this->_socketAddressLen = src._socketAddressLen;
+    this->_addressLen = src._addressLen;
     return *this;
 }
 
@@ -118,8 +118,8 @@ void TcpServer::startListen()
         exitWithError("Socket non-blocking failed");
     std::ostringstream ss;
     ss << "\n*** Listening on ADDRESS: " 
-        << inet_ntoa(_serverSocketAddress.sin_addr) // convert the IP address (binary) in string
-        << " PORT: " << ntohs(_serverSocketAddress.sin_port) // invert octets, beacause network have big endians before and we want to have little endians before
+        << inet_ntoa(_address.sin_addr) // convert the IP address (binary) in string
+        << " PORT: " << ntohs(_address.sin_port) // invert octets, beacause network have big endians before and we want to have little endians before
         << " ***\n\n";
     log(ss.str());
     FD_ZERO(&_socketSet);
@@ -128,43 +128,47 @@ void TcpServer::startListen()
 
 void TcpServer::acceptConnection(){
 
-    //     // New connexion is comming
-        _clientSocket = accept(_serverSocket, (struct sockaddr *)&_serverSocketAddress, (socklen_t*)&_socketAddressLen);
+    // New connexion is comming
+    int newClientSocket = 0;
+
+    while (newClientSocket != ERROR){
+        
+        newClientSocket = accept(_serverSocket, (struct sockaddr *)&_address, (socklen_t*)&_addressLen);
         // std::cout << "client_socket" << _clientSocket << std::endl;
-        if (_clientSocket < 0){
+        if (newClientSocket < 0){
             std::ostringstream ss;
             ss << 
             "Server failed to accept incoming connection from ADDRESS: " 
-            << inet_ntoa(_serverSocketAddress.sin_addr) << "; PORT: " 
-            << ntohs(_serverSocketAddress.sin_port);
+            << inet_ntoa(_address.sin_addr) << "; PORT: " 
+            << ntohs(_address.sin_port);
             exitWithError(ss.str());
         }
         // if (fcntl(_clientSocket, F_SETFL, O_NONBLOCK) < 0)
         //     exitWithError("webserv: fcntl error");
         // + new socket
-        FD_SET(_clientSocket, &_socketSet);
-        if (_clientSocket > _maxSocket)
-            _maxSocket = _clientSocket;
+        FD_SET(newClientSocket, &_socketSet);
+        if (newClientSocket > _maxSocket)
+            _maxSocket = newClientSocket;
 
-        std::cout << "New connexion comming: " << inet_ntoa(_serverSocketAddress.sin_addr) << ":" << ntohs(_serverSocketAddress.sin_port) << std::endl;
+        std::cout << "New connexion comming: " << inet_ntoa(_address.sin_addr) << ":" << ntohs(_address.sin_port) << std::endl;
+    }    
 }
 
-void    TcpServer::runServer(){
+void    TcpServer::runServer( std::vector<int> fdSel ){
     
     ssize_t bytesReceived;
     long    bytesSent;
     fd_set  tempSet;
-    int     activity;
-	char	buffer[1024];
+    //int     activity;
     // std::vector<int>    _fds;
 
     FD_ZERO(&tempSet);
     memcpy(&tempSet, &_socketSet, sizeof(_socketSet));
-    activity = select(_maxSocket + 1, &tempSet, NULL, NULL, &_timeout);
-    //_fds.push_back(select(_maxSocket + 1, &tempSet, NULL, NULL, &_timeout));
-    if (activity == -1)//_fds.back() == -1)
+    //activity = select(_maxSocket + 1, &tempSet, NULL, NULL, &_timeout);
+    fdSel.push_back(select(_maxSocket + 1, &tempSet, NULL, NULL, &_timeout));
+    if (fdSel.back() == -1)
         exitWithError("Error calling select()");
-    if (activity == 0) {
+    if (fdSel.back() == 0) {
         exitWithError("Timeout reached, no activity on sockets");
         return;
     }
@@ -213,14 +217,15 @@ void    TcpServer::runServer(){
 
 void    TcpServer::closeServer(){
     close(_serverSocket);
-    close(_clientSocket);
+    //close(_clientSocket);
     exit(0);
 }
 
 /* ------------------------ Getters ------------------------------ */
 
-int     TcpServer::getServerSocketFd(){ return(_serverSocket); }
-int     TcpServer::getPort(){ return(_port); }
+int                 TcpServer::getServerSocketFd(){ return(_serverSocket); }
+int                 TcpServer::getPort(){ return(_port); }
+std::vector<int>&   TcpServer::getClientSockets( void ){ return(_clientSocket); }
 
 /* ------------------------ Setters ------------------------------ */
 

@@ -22,35 +22,42 @@ class TcpServer
         TcpServer( void );
         TcpServer( std::string ip_adress, int port );
         TcpServer( const TcpServer& copy );
+
     // Destructor
         ~TcpServer();
+
     // Assignement Operator
         TcpServer& operator=( const TcpServer& src );
-        
-        void    runServer( void );
-        void    acceptConnection( void );
-        int     getPort( void );
-        int     getServerSocketFd( void );
+
+    // Public Methods   
+        void                runServer( std::vector<int> fdSel );
+        void                acceptConnection();
+    
+    // Public Getters
+        int                 getPort( void );
+        int                 getServerSocketFd( void );
+        std::vector<int>    &getClientSockets( void );
 
     // Setters
-        void    setPort( int port );
-        void    setUpServer( void );
+        void                setPort( int port );
+        void                setUpServer( void );
 
     private:
+
     // Methods
-        int     startServer( void );
-        void    closeServer( void );
-        void    startListen( void );
+        int                 startServer( void );
+        void                closeServer( void );
+        void                startListen( void );
     
     // Member variable
         std::string         _sIpAddress;
         int                 _port; 
         int                 _serverSocket; // = _server_fd
-        int					_clientSocket; //this vector will store  socket clients which reached server 
+        std::vector<int>    _clientSocket; //this vector will store  socket clients which reached server 
         long                _serverIncomingMessage;
         fd_set              _socketSet;
         int                 _maxSocket;
-        // char				_buffer[BUFFER_SIZE + 1];
+        char				_buffer[BUFFER_SIZE + 1];
         bool                _closeConnexion;
 
         //private:
@@ -60,8 +67,8 @@ class TcpServer
 		//bool					_hasError;
     
     // Server address
-        struct sockaddr_in  _serverSocketAddress;
-        unsigned int        _socketAddressLen;
+        struct sockaddr_in  _address;
+        unsigned int        _addressLen;
         std::string         _serverMessage;
     
     // Timeout

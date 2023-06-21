@@ -90,7 +90,7 @@ class ParseConfig
             std::string                             _fileName;
             std::string                             _configFile;
             bool                                    _errorHappened;
-            std::map<std::string, std::string>		_defautConfig;
+            std::map<std::string, std::string>		_defaultConfig;
             std::string                             _pwd;
             int                                     _bracketCounter;
             tokenType                               _previousToken;

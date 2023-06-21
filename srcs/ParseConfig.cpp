@@ -55,7 +55,7 @@ int     ParseConfig::getStartProcess( void ){
 		_indexConfigFile = 0;
 		_isLocation = false;
 		setDefaultConfig();
-		_newServer = _defautConfig;
+		_newServer = _defaultConfig;
 		//parse();
 		std::cout << ">> Config File [ OK ]" << std::endl;
 	} catch(char const * errorMsg){
@@ -113,7 +113,7 @@ std::vector<int>	&ParseConfig::getPorts(){
 }
 
 std::map<std::string, std::string>	&ParseConfig::getDefaultConfigInterface(){
-	return(_defautConfig);
+	return(_defaultConfig);
 }
 
 std::map<std::string, std::string>   &ParseConfig::getDefaultConfig(){
@@ -144,7 +144,7 @@ t_single_list	ParseConfig::getSingleList(){ return(_sigleList); }
 
 bool	ParseConfig::getIsLocation(){ return(_isLocation); }
 
-std::map<std::string, std::string>	ParseConfig::getDefaultNewServer(){ return(_defautConfig); }
+std::map<std::string, std::string>	ParseConfig::getDefaultNewServer(){ return(_defaultConfig); }
 
 std::string	ParseConfig::getDirectory(){ return(_pwd); }
 
@@ -152,20 +152,20 @@ std::string	ParseConfig::getDirectory(){ return(_pwd); }
 
 void	ParseConfig::setDefaultConfig( void ){
 	
-    _defautConfig["allow"] = "PUT GET DELETE POST";
-	_defautConfig["listen"] = "8080";
-	_defautConfig["client_max_size"] = "5000000";
-	_defautConfig["error page"] = " 404 error.html";
-	_defautConfig["server_name"] = "banana";
-	_defautConfig["index"] = "index.html";
-	_defautConfig["cgi_pass"] = "/usr/bin/php-cgi";
-	_defautConfig["autoindex"] = "on";
+    _defaultConfig["allow"] = "PUT GET DELETE POST";
+	_defaultConfig["listen"] = "8080";
+	_defaultConfig["client_max_size"] = "5000000";
+	_defaultConfig["error page"] = " 404 error.html";
+	_defaultConfig["server_name"] = "banana";
+	_defaultConfig["index"] = "index.html";
+	_defaultConfig["cgi_pass"] = "/usr/bin/php-cgi";
+	_defaultConfig["autoindex"] = "on";
 	char *pwd = getcwd(NULL, 0);
 	if (pwd)
 	{
 		_pwd = pwd;
-		_defautConfig["root"] = pwd;
-		_defautConfig["root"] += "/www";
+		_defaultConfig["root"] = pwd;
+		_defaultConfig["root"] += "/www";
 		free(pwd);
 	}
 }

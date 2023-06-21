@@ -10,7 +10,7 @@
 #include <fstream>
 #include <unistd.h>
 
-#include "Method.hpp"
+#include "Request.hpp"
 #include "serverConfig.hpp"
 #include "Mime.hpp"
 #include "statusCode.hpp"

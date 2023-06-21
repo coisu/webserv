@@ -122,8 +122,11 @@ Response::Response()
 	body = "";
 	body_len = 0;
 	auto_index = false;
+	redirect_code_ = 0;
+	redirect_ = false;
 	code = 0;
 	response_content = "";
+	header_size_ = 0;
 }
 
 Response::Response(Request &request) : request(request)
@@ -133,8 +136,11 @@ Response::Response(Request &request) : request(request)
 	body = "";
 	body_len = 0;
 	auto_index = false;
+	redirect_code_ = 0;
+	redirect_ = false;
 	code = request.code;
 	response_content = "";
+	header_size_ = 0;
 }
 
 Response::~Response() {}
@@ -182,12 +188,12 @@ std::vector<Location>::iterator Response::matchLocation(std::string path, std::v
 	return ret;
 }
 
-int Response::checkAllowedMethods()
+int Response::checkAllowedMethods(Location &matchLoc)
 {
 	std::vector<int>methods = matchLoc.getAllowedMethods();
-	if (request.getMethod() == GET && !methods.find(method.begin(), method.end(), GET)
-		|| request.getMethod() == POST && !methods.find(method.begin(), method.end(), POST)
-		|| request.getMethod() == DELETE && !methods.find(method.begin(), method.end(), DELETE))
+	if (request.getMethod() == GET && !methods.find(methods.begin(), methods.end(), GET)
+		|| request.getMethod() == POST && !methods.find(methods.begin(), methods.end(), POST)
+		|| request.getMethod() == DELETE && !methods.find(methods.begin(), methods.end(), DELETE))
 		return (1);
 	return  (0);
 }
@@ -204,11 +210,11 @@ int	Response::checkMaxBody(Location &loc)
 // a permanent redirect with the code 301 will be returned to the requested URI with the slash appended.
 int	Response::checkReturn(Location &loc)
 {
-	if (loc.getReturn().empty() == 0)
+	if (!loc.getReturn().empty())
 	{
 		location = loc.getReturn();
-		if (locaition[0] != '/')
-			location.insert(0, '/');
+		if (location.front() != '/')
+			location.insert(0, "/");
 		return (1);
 	}
 	return (0);
@@ -220,7 +226,7 @@ int	Response::checkCgi(std::string path_loc, Location &loc)
 	std::string extn;
 	int	pos;
 
-	if (path_req[0] && path_req[0] == '/')
+	if (path_req[0] && path_req.front() == '/')
 		path_req = path_req.substr(1);
 
 	std::string indexStr;
@@ -245,11 +251,12 @@ int Response::checkLocation()
 	
 	if (matchedPath.length())
 	{
-		if (checkAllowedMethods())
+		if (checkAllowedMethods(matchLoc))
 		{
 			Code = 405;
 			return (1);
 		}
+		header["Allow"] = getMethodList();
 	        // throw serverConfig::ErrorStatus(405);
 		if (checkMaxBody(matchLoc))
 		{
@@ -264,7 +271,7 @@ int Response::checkLocation()
 		}
 		if (isCgi(matchLoc) && checkCgi(matchedPath, matchLoc))
 		{
-			return (1)
+			return (1);
 		}
 			// throw serverConfig::ErrorStatus(301);
 	}
@@ -274,7 +281,11 @@ int Response::checkLocation()
 int	Response::buildBody()
 {
 	if (request.getBody().length() > server.client_max_body_size)
-		throw serverConfig::ErrorStatus(413);
+	{
+		Code = 413;
+		return (1);
+	}
+		// throw serverConfig::ErrorStatus(413);
 	if (checkLocation())
 		return (1);
 
@@ -300,23 +311,29 @@ void	Response::setDate()
 	std::string date;
 	time_t cur = time(0);
 	struct tm *gmt = gmtime(&cur);
-	strftime(const_cast<char*>(date.c_str()), sizeof(date), "Date: %a, %d %b %Y %H:%M:%S %Z", gmt);
-	response_content.append(date);
-	response_content.append("\r\n");
+	// strftime(const_cast<char*>(date.c_str()), sizeof(date), "Date: %a, %d %b %Y %H:%M:%S %Z", gmt);
+	
+	strftime(const_cast<char*>(date.c_str()), sizeof(date), "%a, %d %b %Y %H:%M:%S %Z", gmt);
+	header["Date"] = date + "\r\n";
+	// response_content.append(date);
+	// response_content.append("\r\n");
 	
 }
 
 // Content-Type: application/json; charset=UTF-8
 void	Response::setContentType()
 {
-	response_content.append("Content-Type: ");
+	std::string tmp;
+	
+	tmp.append("Content-Type: ");
 	int extnPos = path.rfind(".", std::string::npos);
 
 	if(extnPos != std::string::npos && e_code == 200)
-        response_content.append(mimeList.getMimeType(path.substr(extnPos)));
+        tmp.append(mimeList.getMimeType(path.substr(extnPos)));
     else
-    	response_content.append(mimeList.getMimeType("default"));
-    response_content.append("\r\n");
+    	tmp.append(mimeList.getMimeType("default"));
+    tmp.append("\r\n");
+	header["Content-Type"] = tmp;
 }
 
 // Content-Length: 155
@@ -328,24 +345,58 @@ void	Response::setContentLength()
 	ss << body.length();
 	ss >> body_len;
 
-	response_content.append("Content-Length: ");
-	response_content.append(body_len);
-	response_content.append("\r\n");
+	header["Content-Length"] = body_len + "\r\n";
+	// response_content.append("Content-Length: ");
+	// response_content.append(body_len);
+	// response_content.append("\r\n");
 }
 
 // Server: BestServ (Unix) (Red-Hat/Linux)
 void	Response::setServer()
 {
-	response_content.append("Server: nginx 1.0.15\r\n");
+	header["Server"] = "nginx 1.0.15\r\n";
+	// response_content.append("Server: nginx 1.0.15\r\n");
 }
 
 // Connection: close / keep-alive
 void	Response::setConnection()
 {
     if(request.parse_request[Connection] == "keep-alive")
-        response_content.append("Connection: keep-alive\r\n");
+		header["Connection"] = "keep-alive\r\n";
+        // response_content.append("Connection: keep-alive\r\n");
 	else
-		response_content.append("Connection: colse\r\n");
+		header["Connection"] = "colse\r\n";
+		// response_content.append("Connection: colse\r\n");
+}
+
+std::string	Response::getMethodList(Location &matchLoc)
+{
+	std::vector<int>methods = matchLoc.getAllowedMethods();
+	std::string tmp;
+	int	i = 0;
+
+	while (i < methods.size())
+	{
+		if (i > 0)
+			tmp.append(", ");
+		if (methods.find(methods.begin(), methods.end(), i))
+		{
+			switch(i)
+			{
+				case 0:
+					tmp.append("GET");
+				case 1:
+					tmp.append("POST");
+				case 2:
+				{
+					tmp.append("DELETE");
+					break;
+				}
+			}
+		}
+		i++;
+	}
+	return (tmp);
 }
 
 

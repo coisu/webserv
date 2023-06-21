@@ -23,7 +23,11 @@ class Response
         std::string     body;
         size_t          body_len;           // content-Length
         bool            auto_index;
+        bool            redirect;
+        std::string     redirect_target_;
         int             Code;
+        std::map<std::string, std::string> headers;
+        size_t          header_size_;
 
     public:
         Code            statusCode;

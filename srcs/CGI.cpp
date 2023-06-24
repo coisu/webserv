@@ -69,19 +69,28 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request)
 	env["SERVER_PORT"] = SSTR(temp_config.host_port);
 	env["REQUEST_METHOD"] = request.getMethodStr();
 	env["PATH_INFO"] = extractPathInfo(urlvec);
-	env["PATH_TRANSLATED"] = temp_config.root + env["PATH_INFO"];
+	if (!env["PATH_INFO"].empty())
+		env["PATH_TRANSLATED"] = temp_config.root + env["PATH_INFO"];
 	env["SCRIPT_NAME"] = extractScriptName(urlvec);
 	env["QUERY_STRING"] = extractQueryString(urlvec);
-	env["REMOTE_HOST"] = "banana";
-	env["REMOTE_ADDR"] = "banana";
-	env["AUTH_TYPE"] = "banana";
-	env["REMOTE_IDENT"] = "banana";
-	env["CONTENT_TYPE"] = "banana";
-	env["CONTENT_LENGTH"] = "banana";
-	env["HTTP_ACCEPT"] = "banana";
-	env["HTTP_ACCEPT_LANGUAGE"] = "banana";
-	env["HTTP_USER_AGENT"] = "banana";
-	env["HTTP_COOKIE"] = "banana";
+	env["REMOTE_HOST"] = "";
+	env["REMOTE_ADDR"] = "";
+	env["AUTH_TYPE"] = "";
+	env["REMOTE_IDENT"] = "";
+	env["CONTENT_TYPE"] = "";
+	env["CONTENT_LENGTH"] = "";
+	env["HTTP_ACCEPT"] = "";
+	env["HTTP_ACCEPT_LANGUAGE"] = "";
+	env["HTTP_USER_AGENT"] = "";
+	env["HTTP_COOKIE"] = "";
+	std::map<std::string, std::string>::iterator it = env.begin();
+	while( it != env.end())
+	{
+		if (it->second.empty())
+			env.erase(it++);
+		else
+			it++;
+	}
 	return (env);
 }
 

@@ -20,12 +20,13 @@ class CGI
 	public:
 		//OCCF
 		CGI(Request& request);
-		virtual ~CGI();
+		virtual ~CGI( void );
 		CGI(const CGI& copy);
 		CGI&	operator = (const CGI& copy);
 		
 		//public methods
-		char**	getCharEnv( void );
+		char**		getCharEnv( void );
+		std::string	exec_cgi( void );
 
 		//public attributes
 		// char const**	cgi_env;
@@ -37,6 +38,7 @@ class CGI
 		std::map<std::string, std::string>	construct_env(Request& request);
 		std::string	_query;
 		std::map<std::string, std::string>	_env;
+		std::string	_program;
 };
 
 #endif

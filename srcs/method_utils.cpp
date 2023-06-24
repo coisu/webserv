@@ -11,17 +11,6 @@ e_method	extractMethodType(std::string info)
 	type = info.substr(0, n);
 	while (!methods[i].empty() && methods[i] != type)
 		i++;
-	// switch (i)
-	// {
-	// 	case 0:
-	// 		return (GET);
-	// 	case 1:
-	// 		return (POST);
-	// 	case 2:
-	// 		return (DELETE);
-	// 	default:
-	// 		return (UNDEFINED);
-	// }
 	return ((t_method)i);
 }
 
@@ -32,8 +21,6 @@ std::string	extractURL(std::string info)
 	i = info.find_first_of('/');
 	while (!std::isspace(info[i + n]))
 		n++;
-	// if (n > 0 && info[i + n - 1] == '/')
-	// 	n--;
 	return (info.substr(i, n));
 }
 

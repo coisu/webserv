@@ -10,7 +10,21 @@
 #include <sstream>
 #include <vector>
 
-#define EXAMPLE_INPUT "GET / HTTP/1.1 \
+#define EXAMPLE_RESPONSE "HTTP/1.1 200 OK \
+\nDate: Mon, 27 Jul 2009 12:28:53 GMT \
+\nServer: Apache/2.2.14 (Win32) \
+\nLast-Modified: Wed, 22 Jul 2009 19:15:56 GMT \
+\nContent-Length: 88 \
+\nContent-Type: text/html \
+\nConnection: Closed \
+\n\n \
+\n<html> \
+\n<body> \
+\n<h1>Hello, World!</h1> \
+\n</body> \
+\n</html>"
+
+#define EXAMPLE_REQUEST "GET / HTTP/1.1 \
 \nHost: 127.0.0.1:8080 \
 \nConnection: keep-alive \
 \nsec-ch-ua: \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"114\" \

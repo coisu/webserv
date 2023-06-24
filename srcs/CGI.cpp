@@ -62,16 +62,17 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request)
 	std::string	url = request.getURL();
 	std::vector<std::string>	urlvec = split_url(url);
 
-	env["SERVER_SOFTWARE"] = "Jisu, Yoel and Amanda's Software ;)";
+	env["SERVER_SOFTWARE"] = "Jisu-Yoel-Amanda-Softwre";
 	env["SERVER_NAME"] = temp_config.name;
-	env["GATEWAY_INTERFACE"] = "CGI/1.1";
-	env["SERVER_PROTOCOL"] = "HTML/1.1";
+	env["GATEWAY_INTERFACE"] = "CGI/1\\.1";
+	env["SERVER_PROTOCOL"] = "HTTP/1\\.1";
 	env["SERVER_PORT"] = SSTR(temp_config.host_port);
 	env["REQUEST_METHOD"] = request.getMethodStr();
 	env["PATH_INFO"] = extractPathInfo(urlvec);
 	if (!env["PATH_INFO"].empty())
 		env["PATH_TRANSLATED"] = temp_config.root + env["PATH_INFO"];
 	env["SCRIPT_NAME"] = extractScriptName(urlvec);
+	this->_program = temp_config.root + env["SCRIPT_NAME"];
 	env["QUERY_STRING"] = extractQueryString(urlvec);
 	env["REMOTE_HOST"] = "";
 	env["REMOTE_ADDR"] = "";
@@ -115,4 +116,34 @@ char**	CGI::getCharEnv( void )
 	}
 	std::cout << "\n\n-----------------\n" << std::endl;
 	return (char_env);
+}
+
+std::string	CGI::exec_cgi( void )
+{
+	const char*	cmd;
+	std::string	strcmd;
+	char		buffer[128];
+	std::string	envline;
+
+	for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
+		envline += (it->first + "=" + it->second + " ");
+	strcmd = envline + this->_program;
+	cmd = strcmd.c_str();
+	std::cout << strcmd << std::endl;
+	std::string result = "";
+	FILE* pipe = popen(cmd, "r");
+	if (!pipe)
+		throw std::runtime_error("popen() failed!");
+	try
+	{
+		while (fgets(buffer, sizeof buffer, pipe) != NULL)
+			result += buffer;
+	}
+	catch (...)
+	{
+		pclose(pipe);
+		throw ;
+	}
+	pclose(pipe);
+	return result;
 }

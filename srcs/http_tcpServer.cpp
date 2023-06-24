@@ -174,12 +174,21 @@ void    TcpServer::runServer(){
 						Request	request(buffer);
 						// CGI		cgi(request);
 						if (request.getCGI())
+						{
 							request.getCGI()->getCharEnv();
-                        bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
-                        if (bytesSent == (long int)_serverMessage.size())
-                            log("------ Server Response sent to client check------\n\n");
-                        else
-                            log("Error sending response to client");
+							// std::string	cgi_response = request.getCGI()->exec_cgi();
+							std::string	cgi_response = EXAMPLE_RESPONSE;
+							bytesSent = send(socket, cgi_response.c_str(), cgi_response.size(), 0);
+							std::cout << "\nRESPONSE: " << cgi_response << std::endl;
+							// while(true);
+						}
+						else
+							bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
+                        // if (bytesSent == (long int)_serverMessage.size())
+                            // log("------ Server Response sent to client check------\n\n");
+                        // else
+                            // log("Error sending response to client");
+						(void)bytesSent;
                         close(socket);
                         FD_CLR(socket, &_socketSet);
                     }

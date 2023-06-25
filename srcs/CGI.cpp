@@ -55,11 +55,20 @@ std::vector<std::string>	splitUrl(std::string url)
 	return (vec);
 }
 
-void	identifyCGI(std::vector<std::string> urlvec)
+void	CGI::identifyCGI(std::vector<std::string> urlvec)
 {
-	this->_script = temp_config.root + extractScriptName(urlvec);
-	this->_postfix = 
-	this->_program = temp_config.cgi_types[];
+	for (size_t i = 0; i < urlvec.size(); i++)
+	{
+		for (std::map<std::string, std::string>::iterator it = temp_config.cgi_types.begin(); \
+		it != temp_config.cgi_types.end(); it++)
+		{
+			if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
+				this->_script = temp_config.root + "/" + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
+		}
+	}
+	if (this->_script.empty())
+		throw 501;
+	this->_program = temp_config.cgi_types[this->_postfix];
 }
 
 std::map<std::string, std::string>	CGI::constructEnv(Request& request)
@@ -138,7 +147,7 @@ std::string	CGI::exec_cgi( void )
 
 	for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
 		envline += (it->first + "=" + it->second + " ");
-	strcmd = "echo hello |" + envline + this->_program + this->_script;
+	strcmd = "echo hello |" + envline + this->_program + " " + this->_script;
 	cmd = strcmd.c_str();
 	std::cout << strcmd << std::endl;
 	std::string result = "";

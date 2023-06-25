@@ -9,6 +9,7 @@
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include <map>
 
 #define EXAMPLE_RESPONSE "HTTP/1.1 200 OK \
 \nDate: Mon, 27 Jul 2009 12:28:53 GMT \

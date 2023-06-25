@@ -36,9 +36,12 @@ class CGI
 
 		//private attributes
 		std::map<std::string, std::string>	constructEnv(Request& request);
-		std::string	_query;
+		void	identifyCGI(std::vector<std::string> urlvec)
+;		std::string	_query;
 		std::map<std::string, std::string>	_env;
 		std::string	_program;
+		std::string	_script;
+		std::string	_postfix;
 		char *_av[3];
 };
 

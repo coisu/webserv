@@ -39,6 +39,7 @@ class CGI
 		std::string	_query;
 		std::map<std::string, std::string>	_env;
 		std::string	_program;
+		char *_av[3];
 };
 
 #endif

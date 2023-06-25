@@ -176,14 +176,15 @@ void    TcpServer::runServer(){
 						if (request.getCGI())
 						{
 							request.getCGI()->getCharEnv();
-							// std::string	cgi_response = request.getCGI()->exec_cgi();
-							std::string	cgi_response = EXAMPLE_RESPONSE;
+							std::string	cgi_response = request.getCGI()->exec_cgi();
+							// std::string	cgi_response = EXAMPLE_RESPONSE;
 							bytesSent = send(socket, cgi_response.c_str(), cgi_response.size(), 0);
-							std::cout << "\nRESPONSE: " << cgi_response << std::endl;
+							std::cout << "\n" << bytesSent << "RESPONSE: " << cgi_response << std::endl;
 							// while(true);
 						}
 						else
 							bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
+						std::cout << "\n servmsg: " << _serverMessage << std::endl;
                         // if (bytesSent == (long int)_serverMessage.size())
                             // log("------ Server Response sent to client check------\n\n");
                         // else

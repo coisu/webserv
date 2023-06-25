@@ -2,7 +2,7 @@
 
 CGI::CGI(Request& request)// : _env(construct_env(request))
 {
-	_env = construct_env(request);
+	this->_env = constructEnv(request);
 	std::cout << "CGI created\n";
 }
 
@@ -36,7 +36,7 @@ std::string	extractScriptName(std::vector<std::string> urlvec)
 	return (script_name);
 }
 
-std::vector<std::string>	split_url(std::string url)
+std::vector<std::string>	splitUrl(std::string url)
 {
 	std::vector<std::string>	vec;
 
@@ -55,12 +55,19 @@ std::vector<std::string>	split_url(std::string url)
 	return (vec);
 }
 
-std::map<std::string, std::string>	CGI::construct_env(Request& request)
+void	identifyCGI(std::vector<std::string> urlvec)
+{
+	this->_script = temp_config.root + extractScriptName(urlvec);
+	this->_postfix = 
+	this->_program = temp_config.cgi_types[];
+}
+
+std::map<std::string, std::string>	CGI::constructEnv(Request& request)
 {
 	(void)request;
 	std::map<std::string, std::string>	env;
 	std::string	url = request.getURL();
-	std::vector<std::string>	urlvec = split_url(url);
+	std::vector<std::string>	urlvec = splitUrl(url);
 
 	env["SERVER_SOFTWARE"] = "Jisu-Yoel-Amanda-Softwre";
 	env["SERVER_NAME"] = temp_config.name;
@@ -72,18 +79,17 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request)
 	// if (!env["PATH_INFO"].empty())
 		// env["PATH_TRANSLATED"] = temp_config.root + env["PATH_INFO"];
 	// env["SCRIPT_NAME"] = temp_config.root + extractScriptName(urlvec);
-	this->_program = temp_config.root + extractScriptName(urlvec);//env["SCRIPT_NAME"];
 	env["QUERY_STRING"] = extractQueryString(urlvec);
-	env["REMOTE_HOST"] = "";
-	env["REMOTE_ADDR"] = "";
-	env["AUTH_TYPE"] = "";
-	env["REMOTE_IDENT"] = "";
-	env["CONTENT_TYPE"] = "";
-	env["CONTENT_LENGTH"] = "";
-	env["HTTP_ACCEPT"] = "";
-	env["HTTP_ACCEPT_LANGUAGE"] = "";
-	env["HTTP_USER_AGENT"] = "";
-	env["HTTP_COOKIE"] = "";
+	// env["REMOTE_HOST"] = "";
+	// env["REMOTE_ADDR"] = "";
+	// env["AUTH_TYPE"] = "";
+	// env["REMOTE_IDENT"] = "";
+	// env["CONTENT_TYPE"] = "";
+	// env["CONTENT_LENGTH"] = "";
+	// env["HTTP_ACCEPT"] = "";
+	// env["HTTP_ACCEPT_LANGUAGE"] = "";
+	// env["HTTP_USER_AGENT"] = "";
+	// env["HTTP_COOKIE"] = "";
 	std::map<std::string, std::string>::iterator it = env.begin();
 	while( it != env.end())
 	{
@@ -92,10 +98,10 @@ std::map<std::string, std::string>	CGI::construct_env(Request& request)
 		else
 			it++;
 	}
-	this->_av[0] = const_cast<char*>(std::string("/bin/bash").c_str());
-	this->_av[1] = const_cast<char*>(env["SCRIPT_NAME"].c_str());
-	this->_av[3] = NULL;
-	// env["PATH_INFO"] = "/foo/bar";
+	identifyCGI(urlvec);
+	// this->_av[0] = const_cast<char*>(std::string("/bin/bash").c_str());
+	// this->_av[1] = const_cast<char*>(env["SCRIPT_NAME"].c_str());
+	// this->_av[3] = NULL;
 	return (env);
 }
 
@@ -128,11 +134,11 @@ std::string	CGI::exec_cgi( void )
 	std::string	strcmd;
 	char		buffer[128];
 	std::string	envline;
-	std::string	ext("");
+	// std::string	ext("/usr/bin/python3 ");
 
 	for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
 		envline += (it->first + "=" + it->second + " ");
-	strcmd = "echo hello |" + envline + ext + " " + this->_program;
+	strcmd = "echo hello |" + envline + this->_program + this->_script;
 	cmd = strcmd.c_str();
 	std::cout << strcmd << std::endl;
 	std::string result = "";
@@ -159,11 +165,7 @@ std::string	CGI::exec_cgi( void )
 // 	int	pipe_out[2];
 // 	int	pid;
 // 	int	exit_status;
-// 	// if (this->_argv[0] == NULL || this->_argv[1] == NULL)
-// 	// {
-// 	// 	error_code = 500;
-// 	// 	return ;
-// 	// }
+
 // 	if (pipe(pipe_in) < 0)
 // 		std::cerr << "pipe() failed" << std::endl, throw 500;
 // 	if (pipe(pipe_out) < 0)

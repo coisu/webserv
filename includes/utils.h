@@ -64,6 +64,7 @@ typedef struct TempConfig
 	std::string	cgi_folder;
 	std::string	name;
 	int			host_port;
+	std::map<std::string, std::string> cgi_types;
 } Tconfig;
 
 extern Tconfig	temp_config;

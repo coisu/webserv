@@ -146,8 +146,8 @@ std::string	CGI::exec_cgi( void )
 	// std::string	ext("/usr/bin/python3 ");
 
 	for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
-		envline += (it->first + "=" + it->second + " ");
-	strcmd = "echo hello |" + envline + this->_program + " " + this->_script;
+		envline += (it->first + "=\'" + it->second + "\' ");
+	strcmd = "echo \"" + this->_env["QUERY_STRING"] + "\" hello |" + envline + this->_program + " " + this->_script;
 	cmd = strcmd.c_str();
 	std::cout << strcmd << std::endl;
 	std::string result = "";

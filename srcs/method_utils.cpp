@@ -24,14 +24,20 @@ std::string	extractURL(std::string info)
 	return (info.substr(i, n));
 }
 
+bool	fileExists(std::string path)
+{
+	struct stat		statbuf;
+	return (stat((temp_config.root + path).c_str(), &statbuf) == 0);
+
+}
+
 bool	extractDirStatus(std::string url)
 {
 	struct stat		statbuf;
 
-	if (stat((temp_config.root + url).c_str(), &statbuf) == 0)
-		return (S_ISDIR(statbuf.st_mode));
-	perror("stat");
-	return (0);
+	return ((stat((temp_config.root + url).c_str(), &statbuf) == 0) ? (S_ISDIR(statbuf.st_mode)) : throw 404);
+	// throw 404;
+	// return (0);
 }
 
 std::string	extractPathInfo(std::vector<std::string> urlvec)

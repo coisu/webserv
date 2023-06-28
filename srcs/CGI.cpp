@@ -108,9 +108,9 @@ std::map<std::string, std::string>	CGI::constructEnv(Request& request)
 			it++;
 	}
 	identifyCGI(urlvec);
-	// this->_av[0] = const_cast<char*>(std::string("/bin/bash").c_str());
-	// this->_av[1] = const_cast<char*>(env["SCRIPT_NAME"].c_str());
-	// this->_av[3] = NULL;
+	this->_av[0] = const_cast<char*>(this->_program.c_str());
+	this->_av[1] = const_cast<char*>(this->_script.c_str());
+	this->_av[3] = NULL;
 	return (env);
 }
 
@@ -143,7 +143,6 @@ std::string	CGI::exec_cgi( void )
 	std::string	strcmd;
 	char		buffer[128];
 	std::string	envline;
-	// std::string	ext("/usr/bin/python3 ");
 
 	for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
 		envline += (it->first + "=\'" + it->second + "\' ");
@@ -170,6 +169,7 @@ std::string	CGI::exec_cgi( void )
 
 // std::string	CGI::exec_cgi( void )
 // {
+// 	// char	buffer[1024];
 // 	int	pipe_in[2];
 // 	int	pipe_out[2];
 // 	int	pid;
@@ -196,5 +196,5 @@ std::string	CGI::exec_cgi( void )
 // 	}
 // 	else if (pid < 0)
 // 		std::cout << "Fork failed" << std::endl, throw 500;
-// 	return ()
+// 	return (res);
 // }

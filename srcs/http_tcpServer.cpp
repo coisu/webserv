@@ -128,6 +128,11 @@ void TcpServer::acceptConnection(){
         std::cout << "New connexion comming: " << inet_ntoa(_serverSocketAddress.sin_addr) << ":" << ntohs(_serverSocketAddress.sin_port) << std::endl;
 }
 
+// Request	process_request(char* buffer)
+// {
+
+// }
+
 void    TcpServer::runServer(){
     
     ssize_t bytesReceived;
@@ -171,24 +176,35 @@ void    TcpServer::runServer(){
                     } else {
                         std::cout << "we got data" << std::endl;
 						// std::cout << buffer << std::endl;
-						Request	request(buffer);
-						// CGI		cgi(request);
-						if (request.getCGI())
+						// Request request = process_request(buffer);
+						try
 						{
-							request.getCGI()->getCharEnv();
-							std::string	cgi_response = request.getCGI()->exec_cgi();
-							// std::string	cgi_response = EXAMPLE_RESPONSE;
-							bytesSent = send(socket, cgi_response.c_str(), cgi_response.size(), 0);
-							std::cout << "\n" << bytesSent << "RESPONSE: " << cgi_response << std::endl;
-							// while(true);
+							Request	request(buffer);
+							if (request.getCGI())
+							{
+								request.getCGI()->getCharEnv();
+								std::string	cgi_response = request.getCGI()->exec_cgi();
+								// std::string	cgi_response = EXAMPLE_RESPONSE;
+								bytesSent = send(socket, cgi_response.c_str(), cgi_response.size(), 0);
+								std::cout << "\n" << bytesSent << "RESPONSE: " << cgi_response << std::endl;
+								// while(true);
+							}
+							else
+								bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
+							std::cout << "\n servmsg: " << _serverMessage << std::endl;
+							// if (bytesSent == (long int)_serverMessage.size())
+								// log("------ Server Response sent to client check------\n\n");
+							// else
+								// log("Error sending response to client");
 						}
-						else
-							bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
-						std::cout << "\n servmsg: " << _serverMessage << std::endl;
-                        // if (bytesSent == (long int)_serverMessage.size())
-                            // log("------ Server Response sent to client check------\n\n");
-                        // else
-                            // log("Error sending response to client");
+						catch(int errcode)
+						{
+							std::cerr << "error code: " << errcode << std::endl;
+							std::string	errorbod(buildResponse(404, "error code"));
+
+							bytesSent = send(socket, errorbod.c_str(), errorbod.size(), 0);
+						}
+						
 						(void)bytesSent;
                         close(socket);
                         FD_CLR(socket, &_socketSet);

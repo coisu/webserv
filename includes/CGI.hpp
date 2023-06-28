@@ -33,10 +33,14 @@ class CGI
 
 	protected:
 		//private methods
+		std::map<std::string, std::string>	constructEnv(Request& request);
+		std::vector<std::string>	splitUrl(std::string url);
+		void	identifyCGI(std::vector<std::string> urlvec);
+		std::string	extractScriptName(std::vector<std::string> urlvec);
+		std::string	extractPathInfo(std::vector<std::string> urlvec);
+		std::string	extractQueryString(std::vector<std::string> urlvec);
 
 		//private attributes
-		std::map<std::string, std::string>	constructEnv(Request& request);
-		void	identifyCGI(std::vector<std::string> urlvec)
 ;		std::string	_query;
 		std::map<std::string, std::string>	_env;
 		std::string	_program;

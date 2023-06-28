@@ -199,8 +199,9 @@ void    TcpServer::runServer(){
 						}
 						catch(int errcode)
 						{
+							// std::string	code(SSTR(errcode));
 							std::cerr << "error code: " << errcode << std::endl;
-							std::string	errorbod(buildResponse(404, "error code"));
+							std::string	errorbod(buildResponse(404, "error code: " + SSTR(errcode)));
 
 							bytesSent = send(socket, errorbod.c_str(), errorbod.size(), 0);
 						}

@@ -27,50 +27,6 @@ CGI&	CGI::operator = (const CGI& copy)
 	return (*this);
 }
 
-std::string	extractScriptName(std::vector<std::string> urlvec)
-{
-	std::string	script_name;
-	
-	if (urlvec.size() >= 2)
-		script_name = urlvec[0] + urlvec[1];
-	return (script_name);
-}
-
-std::vector<std::string>	splitUrl(std::string url)
-{
-	std::vector<std::string>	vec;
-
-	std::size_t prev = 0, pos;
-	while ((pos = url.find_first_of("/?", prev)) != std::string::npos)
-	{
-		if (pos > prev && prev > 0)
-			vec.push_back(url.substr(prev - 1, pos - prev + 1));
-		prev = pos + 1;
-	}
-	if (prev < url.length() && prev > 0)
-		vec.push_back(url.substr(prev - 1, std::string::npos));
-	// std::cout << "\n-----VEC-----\n";
-	for (long unsigned int i = 0; i < vec.size(); i++)
-		std::cout << "vec: " << vec[i] << std::endl;
-	return (vec);
-}
-
-void	CGI::identifyCGI(std::vector<std::string> urlvec)
-{
-	for (size_t i = 0; i < urlvec.size(); i++)
-	{
-		for (std::map<std::string, std::string>::iterator it = temp_config.cgi_types.begin(); \
-		it != temp_config.cgi_types.end(); it++)
-		{
-			if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
-				this->_script = temp_config.root + "/" + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
-		}
-	}
-	if (this->_script.empty())
-		throw 501;
-	this->_program = temp_config.cgi_types[this->_postfix];
-}
-
 std::map<std::string, std::string>	CGI::constructEnv(Request& request)
 {
 	(void)request;
@@ -198,3 +154,72 @@ std::string	CGI::exec_cgi( void )
 // 		std::cout << "Fork failed" << std::endl, throw 500;
 // 	return (res);
 // }
+
+std::vector<std::string>	CGI::splitUrl(std::string url)
+{
+	std::vector<std::string>	vec;
+
+	std::size_t prev = 0, pos;
+	while ((pos = url.find_first_of("/?", prev)) != std::string::npos)
+	{
+		if (pos > prev && prev > 0)
+			vec.push_back(url.substr(prev - 1, pos - prev + 1));
+		prev = pos + 1;
+	}
+	if (prev < url.length() && prev > 0)
+		vec.push_back(url.substr(prev - 1, std::string::npos));
+	// std::cout << "\n-----VEC-----\n";
+	for (long unsigned int i = 0; i < vec.size(); i++)
+		std::cout << "vec: " << vec[i] << std::endl;
+	return (vec);
+}
+
+void	CGI::identifyCGI(std::vector<std::string> urlvec)
+{
+	for (size_t i = 0; i < urlvec.size(); i++)
+	{
+		for (std::map<std::string, std::string>::iterator it = temp_config.cgi_types.begin(); \
+		it != temp_config.cgi_types.end(); it++)
+		{
+			if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
+				this->_script = temp_config.root + "/" + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
+		}
+	}
+	if (this->_script.empty())
+		throw 501;
+	this->_program = temp_config.cgi_types[this->_postfix];
+}
+
+std::string	CGI::extractScriptName(std::vector<std::string> urlvec)
+{
+	std::string	script_name;
+	
+	if (urlvec.size() >= 2)
+		script_name = urlvec[0] + urlvec[1];
+	return (script_name);
+}
+
+std::string	CGI::extractPathInfo(std::vector<std::string> urlvec)
+{
+	std::string	path_info;
+
+	if (urlvec.size() > 2)
+	{
+		size_t i = 2;
+		while (i < urlvec.size() && urlvec[i][0] != '?')
+			path_info += urlvec[i++];
+	}
+	return (path_info);
+}
+
+std::string	CGI::extractQueryString(std::vector<std::string> urlvec)
+{
+	std::string	query;
+
+	for (size_t i = 0; i < urlvec.size(); i++)
+	{
+		if (urlvec[i][0] == '?')
+			return (urlvec[i].substr(1));
+	}
+	return (query);
+}

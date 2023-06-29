@@ -1,17 +1,18 @@
 #include "Request.hpp"
 
-Request::Request(std::string request) : _head(parseRequest(request))// : _body(extractBody))
+Request::Request(std::string request) : _full_request(request), _head(parseRequest(request))//, _body(extractBody)
 {
 	// std::cout << "Request created\n";
+	printRequest();
 	this->_cgi = NULL;
 	if (this->_is_cgi)
 		std::cout << "\n----MAKING CGI----\n", this->_cgi = new CGI(*this);
 }
 
-Request::Request(std::map<std::string, std::string>	head) : _head(head)
-{
-	// std::cout << "Request created\n";
-}
+// Request::Request(std::map<std::string, std::string>	head) : _head(head)
+// {
+// 	// std::cout << "Request created\n";
+// }
 
 Request::~Request()
 {
@@ -36,6 +37,11 @@ Request&	Request::operator = (const Request& copy)
 	return (*this);
 }
 
+// std::string	Request::extractBody(std::string request)
+// {
+	
+// }
+
 std::map<std::string, std::string>	Request::parseRequest(std::string request)
 {
 	std::map<std::string, std::string> m;
@@ -49,28 +55,32 @@ std::map<std::string, std::string>	Request::parseRequest(std::string request)
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
 	this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 1);
-	// std::cout << "\nSIZE OF URL: " << this->_url.size() << " SIZE OF CGI: " << temp_config.cgi_folder.size() << std::endl;
-	// std::cout << "URL: " << this->_url << " CGI: "<< temp_config.cgi_folder << std::endl;
 	if (this->_is_cgi && this->_url.size() <= temp_config.cgi_folder.size() + 1)
 		std::cerr << "\n\n----------ERROR-CGI-FOLDER----------\n\n", this->_is_cgi = false;
 	this->_is_dir = (this->_is_cgi) ? false : extractDirStatus(this->_url);
 
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-		m[key] = val.substr(0, val.size() - 2);
+		m[key] = val.substr(0, val.size() - 1);
 
 	return m;
 }
 
-void	Request::printHead( void )
+void	Request::printRequest( void )
 {
 	std::map<std::string, std::string>::iterator it = this->_head.begin();
 
+	std::cout << "\n\n-------FULL-------\n" << std::endl;
+	std::cout << this->_full_request << std::endl;
+	std::cout << "\n--------END---------\n" << std::endl;
 	std::cout << "\n\n-------HEAD-------\n" << std::endl;
 	while (it != this->_head.end())
 	{
 		std::cout << "[" << it->first << " : " << it->second << "]" << std::endl;
 		++it;
 	}
+	std::cout << "\n--------END---------\n" << std::endl;
+	std::cout << "\n\n-------BODY-------\n" << std::endl;
+	std::cout << this->_body << std::endl;
 	std::cout << "\n--------END---------\n" << std::endl;
 }
 

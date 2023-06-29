@@ -19,13 +19,13 @@ class Request
 	public:
 		//OCCF
 		Request(std::string request);
-		Request(std::map<std::string, std::string>	head);
+		// Request(std::map<std::string, std::string>	head);
 		virtual ~Request();
 		Request(const Request& copy);
 		Request&	operator = (const Request& copy);
 		
 		//public methods
-		void	printHead();
+		void	printRequest();
 		//getters
 		CGI*		getCGI() const;
 		std::string	getBody();
@@ -52,13 +52,14 @@ class Request
 		//private attributes
 		bool		_is_cgi;
 		bool		_is_dir;
-		std::string	_body;
 		t_method	_method_enum;
 		std::string	_method_str;
 		std::string	_info;
 		std::string	_url;
-		std::map<std::string, std::string>	_head;
 		CGI*		_cgi;
+		std::string	_full_request;
+		std::map<std::string, std::string>	_head;
+		std::string	_body;
 		// std::string	_location;
 		// std::string	_query;
 };

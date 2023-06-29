@@ -53,12 +53,6 @@ typedef enum e_method
 	UNDEFINED
 } t_method;
 
-e_method	extractMethodType(std::string info);
-std::string	extractURL(std::string info);
-bool		extractDirStatus(std::string url);
-std::string	extractPathInfo(std::vector<std::string> urlvec);
-std::string	extractQueryString(std::vector<std::string> urlvec);
-
 typedef struct TempConfig
 {
 	std::string	root;
@@ -69,5 +63,7 @@ typedef struct TempConfig
 } Tconfig;
 
 extern Tconfig	temp_config;
+
+bool	fileExists(std::string path);
 
 #endif

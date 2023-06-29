@@ -26,7 +26,7 @@
 
 bool	fileExists(std::string path)
 {
-	struct stat		statbuf;
+	struct stat	statbuf;
 	return (stat((temp_config.root + path).c_str(), &statbuf) == 0);
 
 }

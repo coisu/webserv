@@ -110,11 +110,8 @@ std::string	Request::extractURL(std::string info)
 
 bool	Request::extractDirStatus(std::string url)
 {
-	struct stat		statbuf;
-
+	struct stat	statbuf;
 	return ((stat((temp_config.root + url).c_str(), &statbuf) == 0) ? (S_ISDIR(statbuf.st_mode)) : throw 404);
-	// throw 404;
-	// return (0);
 }
 
 //GETTERS

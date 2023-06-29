@@ -3,7 +3,7 @@
 Request::Request(std::string request) : _full_request(request), _head(parseRequest(request))//, _body(extractBody)
 {
 	// std::cout << "Request created\n";
-	printRequest();
+	// printRequest();
 	this->_cgi = NULL;
 	if (this->_is_cgi)
 		std::cout << "\n----MAKING CGI----\n", this->_cgi = new CGI(*this);
@@ -54,11 +54,10 @@ std::map<std::string, std::string>	Request::parseRequest(std::string request)
 	this->_method_enum = extractMethodType(this->_info);
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
-	this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 1);
-	if (this->_is_cgi && this->_url.size() <= temp_config.cgi_folder.size() + 1)
-		std::cerr << "\n\n----------ERROR-CGI-FOLDER----------\n\n", this->_is_cgi = false;
-	this->_is_dir = (this->_is_cgi) ? false : extractDirStatus(this->_url);
-
+	this->_is_dir = extractDirStatus(this->_url.substr(0, this->_url.find_first_of('?')));
+	this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
+	// if (this->_url.length() > 2)
+	// 	raise(SIGINT);
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
 		m[key] = val.substr(0, val.size() - 1);
 
@@ -108,10 +107,16 @@ std::string	Request::extractURL(std::string info)
 	return (info.substr(i, n));
 }
 
+// std::string	Request::extractUrlNoQuery(std::string url)
+// {
+// 	return (url.substr(0, url.find_first_of('?')));
+// }
+
 bool	Request::extractDirStatus(std::string url)
 {
 	struct stat	statbuf;
-	return ((stat((temp_config.root + url).c_str(), &statbuf) == 0) ? (S_ISDIR(statbuf.st_mode)) : throw 404);
+	return ((stat((temp_config.root + url).c_str(), &statbuf) == 0) \
+	? (S_ISDIR(statbuf.st_mode)) : (throw 404, 1));
 }
 
 //GETTERS

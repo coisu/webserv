@@ -182,7 +182,7 @@ void	CGI::identifyCGI(std::vector<std::string> urlvec)
 		it != temp_config.cgi_types.end(); it++)
 		{
 			if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
-				this->_script = temp_config.root + "/" + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
+				this->_script = temp_config.root + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
 		}
 	}
 	if (this->_script.empty())

@@ -3,7 +3,7 @@
 #include "Request.hpp"
 
 std::map<std::string, std::string>	cgi_types;
-Tconfig	temp_config = (Tconfig){"/workspaces/webserv", "cgi-bin", "127.0.0.1", 8080, cgi_types};
+Tconfig	temp_config = (Tconfig){"/workspaces/webserv", "/cgi-bin", "127.0.0.1", 8080, cgi_types};
 
 int main(int ac, char **av) {
 	temp_config.cgi_types[".sh"] = "/bin/bash", temp_config.cgi_types[".py"] = "/usr/bin/python3";

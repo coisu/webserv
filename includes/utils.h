@@ -8,8 +8,24 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
+#include <vector>
+#include <map>
 
-#define EXAMPLE_INPUT "GET / HTTP/1.1 \
+#define EXAMPLE_RESPONSE "HTTP/1.1 200 OK \
+\nDate: Mon, 27 Jul 2009 12:28:53 GMT \
+\nServer: Apache/2.2.14 (Win32) \
+\nLast-Modified: Wed, 22 Jul 2009 19:15:56 GMT \
+\nContent-Length: 88 \
+\nContent-Type: text/html \
+\nConnection: Closed \
+\n\n \
+\n<html> \
+\n<body> \
+\n<h1>Hello, World!</h1> \
+\n</body> \
+\n</html>"
+
+#define EXAMPLE_REQUEST "GET / HTTP/1.1 \
 \nHost: 127.0.0.1:8080 \
 \nConnection: keep-alive \
 \nsec-ch-ua: \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"114\" \
@@ -37,20 +53,17 @@ typedef enum e_method
 	UNDEFINED
 } t_method;
 
-e_method	extractMethodType(std::string info);
-std::string	extractURL(std::string info);
-bool		extractDirStatus(std::string url);
-std::string	extractPathInfo(std::string url);
-
-
 typedef struct TempConfig
 {
 	std::string	root;
 	std::string	cgi_folder;
 	std::string	name;
 	int			host_port;
+	std::map<std::string, std::string> cgi_types;
 } Tconfig;
 
 extern Tconfig	temp_config;
+
+bool	fileExists(std::string path);
 
 #endif

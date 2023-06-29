@@ -1,17 +1,18 @@
 #include "Request.hpp"
 
-Request::Request(std::string request) : _head(parse_request(request))
+Request::Request(std::string request) : _full_request(request), _head(parseRequest(request))//, _body(extractBody)
 {
 	// std::cout << "Request created\n";
+	printRequest();
 	this->_cgi = NULL;
 	if (this->_is_cgi)
-		this->_cgi = new CGI(*this);
+		std::cout << "\n----MAKING CGI----\n", this->_cgi = new CGI(*this);
 }
 
-Request::Request(std::map<std::string, std::string>	head) : _head(head)
-{
-	// std::cout << "Request created\n";
-}
+// Request::Request(std::map<std::string, std::string>	head) : _head(head)
+// {
+// 	// std::cout << "Request created\n";
+// }
 
 Request::~Request()
 {
@@ -36,7 +37,12 @@ Request&	Request::operator = (const Request& copy)
 	return (*this);
 }
 
-std::map<std::string, std::string>	Request::parse_request(std::string request)
+// std::string	Request::extractBody(std::string request)
+// {
+	
+// }
+
+std::map<std::string, std::string>	Request::parseRequest(std::string request)
 {
 	std::map<std::string, std::string> m;
 	std::string key, val;
@@ -49,18 +55,23 @@ std::map<std::string, std::string>	Request::parse_request(std::string request)
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
 	this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 1);
-	this->_is_dir = (this->_is_cgi) ? true : extractDirStatus(this->_url);
+	if (this->_is_cgi && this->_url.size() <= temp_config.cgi_folder.size() + 1)
+		std::cerr << "\n\n----------ERROR-CGI-FOLDER----------\n\n", this->_is_cgi = false;
+	this->_is_dir = (this->_is_cgi) ? false : extractDirStatus(this->_url);
 
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-		m[key] = val.substr(0, val.size() - 2);
+		m[key] = val.substr(0, val.size() - 1);
 
 	return m;
 }
 
-void	Request::printHead( void )
+void	Request::printRequest( void )
 {
 	std::map<std::string, std::string>::iterator it = this->_head.begin();
 
+	std::cout << "\n\n-------FULL-------\n" << std::endl;
+	std::cout << this->_full_request << std::endl;
+	std::cout << "\n--------END---------\n" << std::endl;
 	std::cout << "\n\n-------HEAD-------\n" << std::endl;
 	while (it != this->_head.end())
 	{
@@ -68,8 +79,40 @@ void	Request::printHead( void )
 		++it;
 	}
 	std::cout << "\n--------END---------\n" << std::endl;
+	std::cout << "\n\n-------BODY-------\n" << std::endl;
+	std::cout << this->_body << std::endl;
+	std::cout << "\n--------END---------\n" << std::endl;
 }
 
+e_method	Request::extractMethodType(std::string info)
+{
+	size_t		i = 0, n = 0;
+	std::string methods[3] = {"GET", "POST", "DELETE"};
+	std::string	type;
+
+	while (!std::isspace(info[n]))
+		n++;
+	type = info.substr(0, n);
+	while (!methods[i].empty() && methods[i] != type)
+		i++;
+	return ((t_method)i);
+}
+
+std::string	Request::extractURL(std::string info)
+{
+	size_t	i, n = 0;
+
+	i = info.find_first_of('/');
+	while (!std::isspace(info[i + n]))
+		n++;
+	return (info.substr(i, n));
+}
+
+bool	Request::extractDirStatus(std::string url)
+{
+	struct stat	statbuf;
+	return ((stat((temp_config.root + url).c_str(), &statbuf) == 0) ? (S_ISDIR(statbuf.st_mode)) : throw 404);
+}
 
 //GETTERS
 

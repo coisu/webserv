@@ -235,6 +235,8 @@ int	Response::checkCgi(std::string path_loc, Location &loc)
 	indexStr.append(loc.getIndex())
 	path_req.append(indexStr);
 
+ file = data.root.substr(0, data.root.size() - 1) + request.header("Path") + loc._index;
+ ret.setBodyCGI(cgi(request, loc, data, file).getOutput());
 }
 
 int	Response::isCgi(Location &loc)
@@ -288,7 +290,6 @@ int	Response::buildBody()
 		// throw serverConfig::ErrorStatus(413);
 	if (checkLocation())
 		return (1);
-
 }
 
 void	Response::setStatusLine()
@@ -398,9 +399,6 @@ std::string	Response::getMethodList(Location &matchLoc)
 	}
 	return (tmp);
 }
-
-
-
 
 
 

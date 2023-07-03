@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 # define UTILS_H
 #include <iostream>
+#include <string>
+#include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
@@ -65,6 +67,9 @@ typedef struct TempConfig
 
 extern Tconfig	temp_config;
 
-bool	fileExists(std::string path);
+bool						pathExists(std::string path);
+std::string					readFile(std::string location);
+std::vector<std::string>	splitUrl(std::string url);
+bool						pathIsDir(std::string path);
 
 #endif

@@ -18,7 +18,7 @@ std::string buildResponse(int code, std::string body)
     std::stringstream ss;
 
     ss << "HTTP/1.1 " << code << " OK\r\n"
-          << "Content-Type: text/plain\r\n"
+          << "Content-Type: text/html\r\n" //text/plain\r\n"
           << "Content-Length: " << body.size() << "\r\n"
           << "\n" << body << "\r\n";
     // std::cout << ss.str();
@@ -186,12 +186,16 @@ void    TcpServer::runServer(){
 								std::string	cgi_response = request.getCGI()->exec_cgi();
 								// std::string	cgi_response = EXAMPLE_RESPONSE;
 								bytesSent = send(socket, cgi_response.c_str(), cgi_response.size(), 0);
-								std::cout << "\n" << bytesSent << "RESPONSE: " << cgi_response << std::endl;
+								// std::cout << "\n" << bytesSent << "RESPONSE: " << cgi_response << std::endl;
 								// while(true);
 							}
 							else
-								bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
-							std::cout << "\n servmsg: " << _serverMessage << std::endl;
+							{
+								std::string	msg = buildResponse(200, request.getBody());
+								bytesSent = send(socket, msg.c_str(), msg.size(), 0);
+							}
+								// bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
+							// std::cout << "\n servmsg: " << _serverMessage << std::endl;
 							// if (bytesSent == (long int)_serverMessage.size())
 								// log("------ Server Response sent to client check------\n\n");
 							// else
@@ -200,7 +204,7 @@ void    TcpServer::runServer(){
 						catch(int errcode)
 						{
 							// std::string	code(SSTR(errcode));
-							std::cerr << "error code: " << errcode << std::endl;
+							// std::cerr << "error code: " << errcode << std::endl;
 							std::string	errorbod(buildResponse(404, "error code: " + SSTR(errcode)));
 
 							bytesSent = send(socket, errorbod.c_str(), errorbod.size(), 0);

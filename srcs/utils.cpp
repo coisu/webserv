@@ -24,43 +24,44 @@
 // 	return (info.substr(i, n));
 // }
 
-bool	fileExists(std::string path)
+bool	pathExists(std::string path)
 {
 	struct stat	statbuf;
 	return (stat((temp_config.root + path).c_str(), &statbuf) == 0);
 
 }
 
-// bool	extractDirStatus(std::string url)
-// {
-// 	struct stat		statbuf;
+std::string	readFile(std::string location)
+{
+	std::ifstream t(location.c_str());
+	std::stringstream buffer;
+	buffer << t.rdbuf();
+	std::cout << "buff: " << buffer << "\nloc: " << location << std::endl;
+	return (buffer.str());
+}
 
-// 	return ((stat((temp_config.root + url).c_str(), &statbuf) == 0) ? (S_ISDIR(statbuf.st_mode)) : throw 404);
-// 	// throw 404;
-// 	// return (0);
-// }
+std::vector<std::string>	splitUrl(std::string url)
+{
+	std::vector<std::string>	vec;
 
-// std::string	CGI::extractPathInfo(std::vector<std::string> urlvec)
-// {
-// 	std::string	path_info;
+	std::size_t prev = 0, pos;
+	while ((pos = url.find_first_of("/?", prev)) != std::string::npos)
+	{
+		if (pos > prev && prev > 0)
+			vec.push_back(url.substr(prev - 1, pos - prev + 1));
+		prev = pos + 1;
+	}
+	if (prev < url.length() && prev > 0)
+		vec.push_back(url.substr(prev - 1, std::string::npos));
+	// std::cout << "\n-----VEC-----\n";
+	// for (long unsigned int i = 0; i < vec.size(); i++)
+	// 	std::cout << "vec: " << vec[i] << std::endl;
+	return (vec);
+}
 
-// 	if (urlvec.size() > 2)
-// 	{
-// 		size_t i = 2;
-// 		while (i < urlvec.size() && urlvec[i][0] != '?')
-// 			path_info += urlvec[i++];
-// 	}
-// 	return (path_info);
-// }
-
-// std::string	CGI::extractQueryString(std::vector<std::string> urlvec)
-// {
-// 	std::string	query;
-
-// 	for (size_t i = 0; i < urlvec.size(); i++)
-// 	{
-// 		if (urlvec[i][0] == '?')
-// 			return (urlvec[i].substr(1));
-// 	}
-// 	return (query);
-// }
+bool	pathIsDir(std::string path)
+{
+	struct stat	statbuf;
+	return ((stat(path.c_str(), &statbuf) == 0) \
+	? (S_ISDIR(statbuf.st_mode)) : (throw 404, 1));
+}

@@ -3,7 +3,7 @@
 CGI::CGI(Request& request)// : _env(construct_env(request))
 {
 	this->_env = constructEnv(request);
-	std::cout << "CGI created\n";
+	// std::cout << "CGI created\n";
 }
 
 CGI::~CGI()
@@ -82,14 +82,14 @@ char**	CGI::getCharEnv( void )
 		strcpy(char_env[i], elem.c_str());
 	}
 	char_env[i] = NULL;
-	std::cout << "\n\n-------ENV-------\n" << std::endl;
-	i = 0;
-	for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
-	{
-		std::cout << char_env[i] << std::endl;
-		i++;
-	}
-	std::cout << "\n\n-----------------\n" << std::endl;
+	// std::cout << "\n\n-------ENV-------\n" << std::endl;
+	// i = 0;
+	// for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
+	// {
+	// 	std::cout << char_env[i] << std::endl;
+	// 	i++;
+	// }
+	// std::cout << "\n\n-----------------\n" << std::endl;
 	return (char_env);
 }
 
@@ -104,7 +104,7 @@ std::string	CGI::exec_cgi( void )
 		envline += (it->first + "=\'" + it->second + "\' ");
 	strcmd = "echo \"" + this->_env["QUERY_STRING"] + "\" hello |" + envline + this->_program + " " + this->_script;
 	cmd = strcmd.c_str();
-	std::cout << strcmd << std::endl;
+	// std::cout << strcmd << std::endl;
 	std::string result = "";
 	FILE* pipe = popen(cmd, "r");
 	if (!pipe)
@@ -154,25 +154,6 @@ std::string	CGI::exec_cgi( void )
 // 		std::cout << "Fork failed" << std::endl, throw 500;
 // 	return (res);
 // }
-
-std::vector<std::string>	CGI::splitUrl(std::string url)
-{
-	std::vector<std::string>	vec;
-
-	std::size_t prev = 0, pos;
-	while ((pos = url.find_first_of("/?", prev)) != std::string::npos)
-	{
-		if (pos > prev && prev > 0)
-			vec.push_back(url.substr(prev - 1, pos - prev + 1));
-		prev = pos + 1;
-	}
-	if (prev < url.length() && prev > 0)
-		vec.push_back(url.substr(prev - 1, std::string::npos));
-	// std::cout << "\n-----VEC-----\n";
-	for (long unsigned int i = 0; i < vec.size(); i++)
-		std::cout << "vec: " << vec[i] << std::endl;
-	return (vec);
-}
 
 void	CGI::identifyCGI(std::vector<std::string> urlvec)
 {

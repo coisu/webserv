@@ -47,7 +47,7 @@ class Request
 		std::map<std::string, std::string>	parseRequest(std::string request);
 		e_method	extractMethodType(std::string info);
 		std::string	extractURL(std::string info);
-		bool		extractDirStatus(std::string url);
+		// bool		extractDirStatus(std::string url);
 
 		//private attributes
 		bool		_is_cgi;
@@ -55,7 +55,8 @@ class Request
 		t_method	_method_enum;
 		std::string	_method_str;
 		std::string	_info;
-		std::string	_url;
+	std::string	_url;
+		std::string	_location;
 		CGI*		_cgi;
 		std::string	_full_request;
 		std::map<std::string, std::string>	_head;

@@ -1,6 +1,7 @@
 #include "http_tcpServer.h"
 #include "utils.h"
 #include "Request.hpp"
+#include "ParseConfig.hpp"
 
 std::map<std::string, std::string>	cgi_types;
 Tconfig	temp_config = (Tconfig){"/workspaces/webserv", "/cgi-bin", "127.0.0.1", 8080, cgi_types};
@@ -13,7 +14,7 @@ int main(int ac, char **av) {
 	if (ac > 1)
 		temp_config.host_port = atoi(av[1]);
 	TcpServer	server = TcpServer("0.0.0.0", temp_config.host_port);
-
+	ParseConfig	config("./resources/default.conf");
     while (true)
         server.runServer();
     return 0;

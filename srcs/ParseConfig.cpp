@@ -4,11 +4,11 @@
 // this construct it called when there is no one given parameter to the program
 ParseConfig::ParseConfig(): _fileName("./resources/default.conf"), _configFile(std::string()), _errorHappened(false){
 
-    std::cout << "-----------\tRun with default file\t----------"
+    std::cout << "-----------\tRun with default file\t----------"<< std::endl;
     setDefaultConfig();
     int res = getStartProcess();
     if (res == ERROR)
-        _errorHappened(true);
+        _errorHappened = true;
 }
 
 ParseConfig & ParseConfig::	getInstance(std::string fileName)
@@ -37,31 +37,14 @@ ParseConfig::ParseConfig ( const ParseConfig &copy ){
 }
         
 // Assignement Operator
-void operator=( ParseConfig &other ){
+void ParseConfig::operator=( ParseConfig &other ){
     (void)other;
 }
 
-void	ParseConfig::setDefaultConfig( void ){
-	
-    _defautConfig["allow"] = "PUT GET DELETE POST";
-	_defautConfig["listen"] = "8080";
-	_defautConfig["client_max_size"] = "5000000";
-	_defautConfig["error page"] = " 404 error.html";
-	_defautConfig["server_name"] = "banana";
-	_defautConfig["index"] = "index.html";
-	_defautConfig["cgi_pass"] = "/usr/bin/php-cgi";
-	_defautConfig["autoindex"] = "on";
-	char *pwd = getcwd(NULL, 0);
-	if (pwd)
-	{
-		_pwd = pwd;
-		_defautConfig["root"] = pwd;
-		_defautConfig["root"] += "/www";
-		free(pwd);
-	}
-}
+// Destructor
+ParseConfig::~ParseConfig(){}
 
-// Getters
+// ----------------------------- Getters -------------------------------------
 
 int     ParseConfig::getStartProcess( void ){
     
@@ -70,9 +53,9 @@ int     ParseConfig::getStartProcess( void ){
 		_bracketCounter = 0;
 		_previousToken = INIT;
 		_indexConfigFile = 0;
-		_location = false;
+		_isLocation = false;
 		setDefaultConfig();
-		_blockServer = _defautConfig;
+		_newServer = _defaultConfig;
 		//parse();
 		std::cout << ">> Config File [ OK ]" << std::endl;
 	} catch(char const * errorMsg){
@@ -81,7 +64,6 @@ int     ParseConfig::getStartProcess( void ){
 	}
 	return (SUCCESS);
 }
-
 
 /* Get the File object
  * get file and store it in std::string _configFile
@@ -97,7 +79,7 @@ void	ParseConfig:: getFile()
 		while (getline (myReadFile, line)) 
 		{
 			_configFile.append(line);
-			handleCommentes(_configFile);
+			handleComments(_configFile);
 			_configFile.append("\n");
 		}
 		myReadFile.close();
@@ -114,11 +96,11 @@ t_double_list &ParseConfig::getList(){
 	return(getInstance(severFileName).getListInterface());
 }
 
-std::map<std::string, std:string>	&ParseConfig::getGlobalConfig(){
+std::map<std::string, std::string>	&ParseConfig::getGlobalConfig(){
 	return(getInstance(severFileName).getGlobalConfigInterface());
 }
 
-std::map<std::string, std:string>   &ParseConfig::getGlobalConfigInterface(){
+std::map<std::string, std::string>   &ParseConfig::getGlobalConfigInterface(){
 	return(_globalConfig);
 }
 
@@ -130,17 +112,88 @@ std::vector<int>	&ParseConfig::getPorts(){
 	return(getInstance(severFileName).getPortsInterface());
 }
 
-std::map<std::string, std:string>	&ParseConfig::getDefaultConfigInterface(){
-	return(_defautConfig);
+std::map<std::string, std::string>	&ParseConfig::getDefaultConfigInterface(){
+	return(_defaultConfig);
 }
 
-std::map<std::string, std:string>   &ParseConfig::getDefaultConfig(){
+std::map<std::string, std::string>   &ParseConfig::getDefaultConfig(){
 	return(getInstance(severFileName).getDefaultConfigInterface());
 }
 
-bool	Parse_config_file::	getErrorHappened(){return (_errorHappened);}
+bool	ParseConfig::getErrorHappened(){ return (_errorHappened); }
 
-// Methods
+tokenType	ParseConfig::getPrevToken(){ return(_previousToken); }
+
+std::string	ParseConfig::getDirectiveName(){ return(_directiveName); }
+
+std::string	ParseConfig::getDirectiveValue(){ return(_directiveValue); }
+
+std::map<std::string, std::string>	ParseConfig::getNewServer(){ return(_newServer); }
+
+std::map<std::string, std::string>	ParseConfig::getNewLocation(){ return(_newLocation); }
+
+int	ParseConfig::getNewBracket(){ return(_bracketCounter); }
+
+std::string	ParseConfig::getWord(){ return(_curWord); }
+
+std::string	ParseConfig::getConfigFile(){ return(_configFile); }
+
+size_t	ParseConfig::getIndexConfig(){ return(_indexConfigFile); }
+
+t_single_list	ParseConfig::getSingleList(){ return(_sigleList); }
+
+bool	ParseConfig::getIsLocation(){ return(_isLocation); }
+
+std::map<std::string, std::string>	ParseConfig::getDefaultNewServer(){ return(_defaultConfig); }
+
+std::string	ParseConfig::getDirectory(){ return(_pwd); }
+
+//---------------------------- Setters -----------------------------------
+
+void	ParseConfig::setDefaultConfig( void ){
+	
+    _defaultConfig["allow"] = "PUT GET DELETE POST";
+	_defaultConfig["listen"] = "8080";
+	_defaultConfig["client_max_size"] = "5000000";
+	_defaultConfig["error page"] = " 404 error.html";
+	_defaultConfig["server_name"] = "banana";
+	_defaultConfig["index"] = "index.html";
+	_defaultConfig["cgi_pass"] = "/usr/bin/php-cgi";
+	_defaultConfig["autoindex"] = "on";
+	char *pwd = getcwd(NULL, 0);
+	if (pwd)
+	{
+		_pwd = pwd;
+		_defaultConfig["root"] = pwd;
+		_defaultConfig["root"] += "/www";
+		free(pwd);
+	}
+}
+
+void    ParseConfig::setPrevToken( tokenType tokenToSet ){ _previousToken = tokenToSet; }
+
+void    ParseConfig::setDirectiveName( std::string name ){ _directiveName = name; }
+
+void    ParseConfig::setDirectiveValue( std::string value ){ _directiveValue = value; }
+
+void    ParseConfig::setNewServer( std::string name, std::string value ){ _newServer[name] = value; }
+
+void    ParseConfig::setNewServer( std::map<std::string, std::string> newServer ){ _newServer = newServer; }
+
+void    ParseConfig::setNewLocation( std::string name, std::string value ){ _newServer[name] = value; }
+
+void    ParseConfig::setNewLocation( std::map<std::string, std::string> newLocation ){ _newLocation = newLocation; }
+
+void    ParseConfig::setNewBracket( int value ){ _bracketCounter = value; }
+
+void    ParseConfig::setWord( std::string word ){ _curWord = word; }
+
+void    ParseConfig::setSigleList( t_single_list sList ){ _sigleList = sList; }
+
+void    ParseConfig::setIsLocation( bool act ){ _isLocation = act; }
+
+
+// --------------------------- Methods -----------------------------------
 
 /* This function remove comments line in give string 
  * comment line start with "#"
@@ -154,17 +207,18 @@ void	ParseConfig::handleComments(std::string &line)
 }
 
 size_t	ParseConfig::numberOfServer( void ){
-	return(getInstance(severFileName).NumberOfServerInterface());
+	return(getInstance(severFileName).numberOfServerInterface());
 }
 
 size_t	ParseConfig::numberOfServerInterface( void ){
-	return(_serverList.size())
+	return(_serverList.size());
 }
 
 /* Returns true if given string in parameter is a number else return false
  * param str the given string to parse each character if is a digit character
  * return true  if given string in parameter is a number
  * return false if given string in parameter is not a number */
+
 bool	ParseConfig::isNumber(std::string &str)
 {
 	int res;
@@ -190,34 +244,65 @@ void	ParseConfig::checkPort(std::string &strPort)
 	_ports.push_back(intPort);
 }
 
-// /**
-//  * @brief Get the Piece Of string it is a token it return a token on each call
-//  * the goal is to get a word from string this word will be stored in @pieceOfString
-//  * this word came from '_configFile'
-//  * @_configFile is the config file
-//  * @start is the begin of word 
-//  * @nbCharacterTocopy number of character to copy from @start
-//  * @param i is index of string _configFile 
-//  * @return std::string 
-//  */
-// std::string	Parse_config_file::								create_token(size_t &i)
-// {
-// 	size_t	nbCharacterTocopy = 0;
-// 	size_t start = i;
+/* Get the Part Of string that is a token it return a token on each call
+ * the goal is to get a word from string, an than this word will be stored in @partOfStr
+ * this word came from '_configFile'
+ * _configFile is the config file
+ * start is the begin of word 
+ * toCopy number of character to copy from start
+ * param 'i' is index of string _configFile 
+ * return partOfStr */
+std::string	ParseConfig::createToken(size_t &i)
+{
+	size_t	toCopy = 0;
+	size_t	start = i;
 
-// 	if (_configFile[i] == '{' || _configFile[i] == '}' || _configFile[i] == ';')//if { or } or ; is the first character i going to catch that piece Of String
-// 	{
-// 		i++;
-// 		nbCharacterTocopy++;
-// 	}
-// 	else
-// 	{
-// 		while (!isspace(_configFile[i]) && (_configFile[i] != '{' && _configFile[i] != '}') && _configFile[i] != ';') // { or } or ; and whitespace character are delimiter
-// 		{
-// 			nbCharacterTocopy++;
-// 			i++;
-// 		}
-// 	}
-// 	std::string pieceOfString = _configFile.substr(start, nbCharacterTocopy);
-// 	return (pieceOfString);
+	if (_configFile[i] == '{' || _configFile[i] == '}' || _configFile[i] == ';')
+	{
+		i++;
+		toCopy++;
+	}
+	else
+	{
+		while (!isspace(_configFile[i]) && (_configFile[i] != '{' && _configFile[i] != '}') && _configFile[i] != ';')
+		{
+			toCopy++;
+			i++;
+		}
+	}
+	std::string partOfStr = _configFile.substr(start, toCopy);
+	return (partOfStr);
+}
+
+// static bool	isKeyWord(std::string &word)
+// {
+// 	if (word.compare("listen") == 0)
+// 		return (true);
+// 	if (word.compare("server_name") == 0)
+// 		return (true);
+// 	if (word.compare("root") == 0)
+// 		return (true);
+// 	if (word.compare("error_page") == 0)
+// 		return (true);
+// 	if (word.compare("autoindex") == 0)
+// 		return (true);
+// 	if (word.compare("client_body") == 0)
+// 		return (true);
+// 	if (word.compare("index") == 0)
+// 		return (true);
+// 	if (word.compare("methods") == 0)
+// 		return (true);
+// 	if (word.compare("allow") == 0)
+// 		return (true);
+// 	if (word.compare("cgi") == 0)
+// 		return (true);
+// 	if (word.compare("fastcgi_pass") == 0)
+// 		return (true);
+// 	if (word.compare("fastcgi_param") == 0)
+// 		return (true);
+// 	if (word.compare("return") == 0)
+// 		return (true);
+// 	if (word.compare("cgi_pass") == 0)
+// 		return (true);
+// 	return (false);
 // }

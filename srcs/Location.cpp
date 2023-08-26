@@ -18,6 +18,5 @@ Location::Location( Location& src )
 
 Location& Location::operator=( const Location& src )
 {
-    return(src);
-
+    return (src);
 }

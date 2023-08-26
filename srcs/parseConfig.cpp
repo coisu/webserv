@@ -24,12 +24,15 @@ bool    validLocation( std::string line )
 {
     std::vector<std::string>    loc;
     std::string                 word;
+    std::ifstream               ss(line.c_str());
 
     while (std::getline(ss, word))
         loc.push_back(word);
     if (loc.size() != 3)
         return false;
-            
+    if (loc[0] != "location") return false;
+    if (loc[1][0] != '/') return false;
+    if (loc [2] != "{") return false;
 }
 
 std::vector<Server> parseConfig( std::string configPath )
@@ -59,15 +62,16 @@ std::vector<Server> parseConfig( std::string configPath )
         else if (trim(line) == "server {")
         {
             brackets++;
-            Server  server(serverBlock);
-            Location    location(locationBlock);
-            server.addLocation(location);
-            while (std::getline(infile, line))
+            // Server  server(serverBlock);
+            // Location    location(locationBlock);
+            // server.addLocation(location);
+            while (std::getline(infile, line) && line.find("}") == line.npos)
             {
-                if (startsWith(trim(line), "location /"))
+                if (startsWith(trim(line), "location"))
                 {
+                    brackets++;
                     if (!validLocation(trim(line)))
-                        throw std::runtime_error("expected: \"location /* {\" got: \"" + line + "\"");
+                        throw std::runtime_error("expected: \"location /foo/bar {\" got: \"" + line + "\"");
                 }
             }
         }

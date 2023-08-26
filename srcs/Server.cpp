@@ -6,10 +6,10 @@ Server::~Server( void ) {}
 
 Server::Server(std::string serverBlock)
 {
-    (void)serverBlock;
+    std::cout << "server block: " << serverBlock << std::endl;
 }
 
-Server::Server( Server& src )
+Server::Server( const Server& src )
 {
     *this = src;
 
@@ -17,6 +17,8 @@ Server::Server( Server& src )
 
 Server& Server::operator=( const Server& src )
 {
-    return (src);
+    if (this != &src)
+	{}
+	return (*this);
 
 }

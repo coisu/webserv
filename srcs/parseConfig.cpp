@@ -33,18 +33,16 @@ bool    validLocation( std::string line )
     if (loc[0] != "location") return false;
     if (loc[1][0] != '/') return false;
     if (loc [2] != "{") return false;
+    return (true);
 }
 
 std::vector<Server> parseConfig( std::string configPath )
 {
     std::ifstream       infile(configPath.c_str());
-    char                ch;
-    unsigned int        brackets = 0;
+    // char                ch;
+    int                 brackets = 0;
     std::string         line;
-    std::vector<Server> servers;
-
-    if (!infile.is_open())
-        throw std::runtime_error("failed to open config file.");
+    std::vector<Server> serverList;
     // while(infile.get(ch))
     // {
     //     if (ch == '{')
@@ -56,26 +54,52 @@ std::vector<Server> parseConfig( std::string configPath )
     //         brackets--;
     //     }
     // }
+
+    // check if the config file opened correctly
+    if (!infile.is_open())
+        throw std::runtime_error("failed to open config file.");
+    // move line by line until something other than a comment or an empty line is found
     while (std::getline(infile, line))
     {
-        if (line == "\n") continue ;
-        else if (trim(line) == "server {")
+        while (line == "\n" || trim(line)[0] == '#')
+            std::getline(infile, line);
+        if (trim(line) == "server {") // check that the line is the start of a server block
         {
+            std::string             serverBlock;
+            std::vector<Location>   locationList;
             brackets++;
-            // Server  server(serverBlock);
-            // Location    location(locationBlock);
-            // server.addLocation(location);
-            while (std::getline(infile, line) && line.find("}") == line.npos)
+            while (std::getline(infile, line) && brackets > 0) // enter server block
             {
-                if (startsWith(trim(line), "location"))
+                if (line == "\n" || trim(line)[0] == '#') continue ; //skip comments and empty lines
+                if (line.find("}") != line.npos) // check for closing bracket and exit loop
                 {
-                    brackets++;
-                    if (!validLocation(trim(line)))
-                        throw std::runtime_error("expected: \"location /foo/bar {\" got: \"" + line + "\"");
+                    brackets--;
+                    break ;
                 }
+                if (startsWith(trim(line), "location")) // check that the line is the start of a location block
+                {
+                    std::string locationBlock(line);
+                    brackets++;
+                    if (validLocation(trim(line)))
+                        throw std::runtime_error("expected: \"location /foo/bar {\" got: \"" + line + "\"");
+                    while (std::getline(infile, line) && brackets > 1) // enter location block
+                    {
+                        if (line == "\n" || trim(line)[0] == '#') continue ; //skip comments and empty lines
+                        if (line.find("}") != line.npos) // check for closing bracket and exit loop
+                        {
+                            brackets--;
+                            break ;
+                        }
+                        locationBlock += trim(line);
+                    }
+                    locationList.push_back(Location(locationBlock));
+                }
+                serverBlock += trim(line);
             }
+            serverList.push_back(Server(serverBlock));
         }
         else
             throw std::runtime_error("expected: \"server {\" got: \"" + line + "\"");
     }
+    return (serverList);
 }

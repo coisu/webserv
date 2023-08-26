@@ -11,7 +11,7 @@ class Location
         Location( void );
         ~Location( void );
         Location( std::string locationBlock );
-        Location( Location& src );
+        Location( const Location& src );
         Location& operator=( const Location& src );
     /*attributes*/
     /*methods*/

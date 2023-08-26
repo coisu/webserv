@@ -6,17 +6,17 @@ Location::~Location( void ) {}
 
 Location::Location( std::string locationBlock )
 {
-    (void)locationBlock;
-
+    std::cout << "location block: " << locationBlock << std::endl;
 }
 
-Location::Location( Location& src )
+Location::Location( const Location& src )
 {
     *this = src;
-
 }
 
 Location& Location::operator=( const Location& src )
 {
-    return (src);
+    if (this != &src)
+    {}
+	return (*this);
 }

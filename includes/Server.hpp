@@ -5,6 +5,7 @@
 #include <iostream> 
 #include <string>
 #include <map>
+#include <vector>
 #include "Location.hpp"
 
 class Server
@@ -14,7 +15,7 @@ class Server
         Server( void );
         ~Server( void );
         Server( std::string serverBlock );
-        Server( Server& src );
+        Server( const Server& src );
         Server& operator=( const Server& src );
 
     /*attributes*/

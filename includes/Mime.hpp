@@ -1,7 +1,7 @@
 # ifndef MIME_HPP
 #define MIME_HPP
 
-#include "http_tcpServer.h"
+#include "http_tcpServer.hpp"
 
 class Mime
 {

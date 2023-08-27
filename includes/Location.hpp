@@ -16,9 +16,11 @@ class Location
     /*attributes*/
     /*methods*/
     //getters
+        std::string getBlock() const;
     //setters
     private:
-    //attributes
+        //attributes
+        std::string _block;
     //methods
 
 };

@@ -22,7 +22,8 @@ std::string trim( const std::string &str )
 // helper function to verify location line e.g: "location /foo/bar {"
 bool    validLocation( std::string line )
 {
-    std::cout << "\nLOCATION:\n" << line << "\n\n";
+    // std::cout << "\nLOCATION:\n" << line << "\n\n";
+    (void)line;
     // std::vector<std::string>    loc;
     // std::string                 word;
     // std::ifstream               ss(line.c_str());
@@ -49,8 +50,13 @@ std::string removeSpaces(const std::string& input) {
 
 std::string cut(std::string str, size_t start, size_t end)
 {
-    if (start >= str.size() || end >= str.size())
+    // if (start >= str.size() || end >= str.size())
+        // throw std::runtime_error("cut out of range.");
+    if (start >= str.size())
         throw std::runtime_error("cut out of range.");
+        // start = str.size() - 1;
+    if (end >= str.size())
+        end = str.size() - 1;
     return (std::string(&str[start], &str[end]));
 }
 
@@ -60,7 +66,7 @@ std::vector<Server> parseConfig( std::string configPath )
     // std::stringstream   buff;
     std::string         file;// = readFile(configPath);
     std::string         line;
-    std::vector<Server> serverList;
+    std::vector<Server> serverVec;
 
     // buff << infile.rdbuf();
     // file = buff.str();
@@ -74,11 +80,13 @@ std::vector<Server> parseConfig( std::string configPath )
     }
     size_t  start = 0;
     int     brackets = 0;
+    bool    inLocation = false;
+    // bool    inServer = false;
+    std::string             serverBlock;
+    std::vector<Location>   locationVec;
     for (size_t i = 0; i < file.size(); i++)
     {
-        std::string             serverBlock;
-        std::string             locationBlock;
-        std::vector<Location>   locationList;
+        // std::string             locationBlock;
         
         if (brackets < 0 || brackets > 2)
             throw std::runtime_error("unmatched brackets");
@@ -89,32 +97,45 @@ std::vector<Server> parseConfig( std::string configPath )
             {
                 if ((line = cut(file, start, i)) != "server")
                     throw std::runtime_error("expected: \"server {\" got: \"" + line + "\".");
-                start = i;
             }
             else if (brackets == 2)
             {
                 size_t  lastSeperator = file.find_last_of(";}", i);
-                if (!validLocation(line = cut(file, lastSeperator + 1, i)))// std::string(&file[lastSeperator + 1], &file[i])))//file.substr(lastSeperator, i)))
+                if (!validLocation(line = cut(file, lastSeperator+1, i)))// std::string(&file[lastSeperator + 1], &file[i])))//file.substr(lastSeperator, i)))
                     throw std::runtime_error("expected: \"location /foo/bar {\" got: \"" + line + "\"");
-                serverBlock = cut(file, start, lastSeperator);
-                std::cout << "server block: \"" << serverBlock << "\"\n";
+                if (!inLocation)
+                {
+                    // std::cout << "server block1: \"" << serverBlock << "\"\n";
+                    serverBlock += cut(file, start+1, lastSeperator+1);
+                    // std::cout << "server block2: \"" << serverBlock << "\"\n";
+                }
+                inLocation = true;
             }
+            start = i;
         }
         else if (file[i] == '}')
         {
             brackets--;
             if (brackets == 0)
-                serverList.push_back(Server(serverBlock));
+            {
+                serverVec.push_back(Server(serverBlock, locationVec));
+                inLocation = false;
+                serverBlock.clear();
+                std::cout << "\nCLEAR\n";
+            }
             else if (brackets == 1)
             {
                 size_t openBrace = file.find_last_of("{", i);
-                locationList.push_back(Location(file.substr(openBrace, i)));
+
+                locationVec.push_back(Location(line + ";" + cut(file, openBrace+1, i)));
+                inLocation = false;
             }
             else
                 throw std::runtime_error("unmatched closing bracket");
+            start = i;
         }
     }
-    return (serverList);
+    return (serverVec);
 }
 
 // std::vector<Server> parseConfig( std::string configPath )

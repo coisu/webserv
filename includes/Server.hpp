@@ -14,14 +14,15 @@ class Server
         /*OCCF*/
         Server( void );
         ~Server( void );
-        Server( std::string serverBlock );
+        Server( std::string serverBlock, std::vector<Location> locationVec );
         Server( const Server& src );
         Server& operator=( const Server& src );
 
-    /*attributes*/
-    /*methods*/
-    //getters
-    //setters
+        /*attributes*/
+        /*methods*/
+        //getters
+        //setters
+        void    setLocations( std::vector<Location> locationVec );
     private:
         /*attributes*/
         unsigned int                _port;
@@ -31,6 +32,7 @@ class Server
         std::map<int, std::string>  _errorPages;
         std::vector<Location>       _locations;
         int                         _listenFd;
+        std::string                 _block;
 
 };
 

@@ -116,7 +116,7 @@ std::ostream& operator<<(std::ostream& os, const Server& server)
     os << "serverName: " << server._serverName << std::endl;
     os << "errorPages: [";
     for (std::map<int, std::string>::const_iterator it = server._errorPages.begin(); it != server._errorPages.end(); it++)
-        os << it->first << ", " << it->second;
+        os << it->first << ", " << it->second << " ";
     os << "]\n";
     os << "client body size: " << server._clientBodySize << std::endl;
     os << "root: " << server._root << std::endl;

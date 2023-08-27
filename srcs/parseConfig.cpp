@@ -23,19 +23,9 @@ std::string trim( const std::string &str )
 bool    validLocation( std::string line )
 {
     // std::cout << "\nLOCATION:\n" << line << "\n\n";
-    (void)line;
-    // std::vector<std::string>    loc;
-    // std::string                 word;
-    // std::ifstream               ss(line.c_str());
+    std::string                 word("location/");
 
-    // while (std::getline(ss, word))
-    //     loc.push_back(word);
-    // if (loc.size() != 3)
-    //     return false;
-    // if (loc[0] != "location") return false;
-    // if (loc[1][0] != '/') return false;
-    // if (loc [2] != "{") return false;
-    return (true);
+    return (line.substr(0, word.size()) == word);
 }
 
 std::string removeSpaces(const std::string& input) {
@@ -84,8 +74,6 @@ std::vector<Server> parseConfig( std::string configPath )
     std::vector<Location>   locationVec;
     for (size_t i = 0; i < file.size(); i++)
     {
-        // std::string             locationBlock;
-        
         if (brackets < 0 || brackets > 2)
             throw std::runtime_error("unmatched brackets");
         if (file[i] == '{')
@@ -119,9 +107,9 @@ std::vector<Server> parseConfig( std::string configPath )
             }
             else if (brackets == 1)
             {
-                size_t openBrace = file.find_last_of("{", i);
+                size_t openBracket = file.find_last_of("{", i);
 
-                locationVec.push_back(Location(line + ";" + cut(file, openBrace, i)));
+                locationVec.push_back(Location(line + ";" + cut(file, openBracket, i)));
                 inLocation = false;
             }
             else
@@ -129,5 +117,7 @@ std::vector<Server> parseConfig( std::string configPath )
             start = i;
         }
     }
+    if (brackets != 0)
+        throw std::runtime_error("unmatched brackets");
     return (serverVec);
 }

@@ -38,6 +38,22 @@ Location& Location::operator=( const Location& src )
 	return (*this);
 }
 
+std::ostream& operator<<(std::ostream& os, const Location& location)
+{
+    os << "path: " << location._path << std::endl;
+    os << "root: " << location._root << std::endl;
+    os << "index: " << location._index << std::endl;
+    os << "retrn: " << location._retrn << std::endl;
+    for (size_t i = 0; i < location._allow_method.size(); i++)
+        os << "allow_method: " << location._allow_method[i] << std::endl;
+    for (size_t i = 0; i < location._cgi_path.size(); i++)
+        os << "cgi_path: " << location._cgi_path[i] << std::endl;
+    for (size_t i = 0; i < location._cgi_ext.size(); i++)
+        os << "cgi_ext: " << location._cgi_ext[i] << std::endl;
+    os << "block: " << location._block << std::endl;
+    return os;
+}
+
 std::string Location::getBlock() const
 {
     return (this->_block);

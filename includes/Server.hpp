@@ -11,20 +11,22 @@
 class Server
 {
     public:
-        /*OCCF*/
+    /*OCCF*/
         Server( void );
         ~Server( void );
         Server( std::string serverBlock, std::vector<Location> locationVec );
         Server( const Server& src );
         Server& operator=( const Server& src );
 
-        /*attributes*/
-        /*methods*/
+    /*attributes*/
+
+    /*methods*/
+        friend std::ostream& operator<<(std::ostream& os, const Server& server);
         //getters
         //setters
         void    setLocations( std::vector<Location> locationVec );
     private:
-        /*attributes*/
+    /*attributes*/
         unsigned int                _port;
         in_addr_t                   _host;
         std::string                 _serverName;
@@ -35,5 +37,6 @@ class Server
         std::string                 _block;
 
 };
+
 
 #endif

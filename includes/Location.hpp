@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <ostream>
 
 class Location
 {
@@ -18,6 +19,7 @@ class Location
     /*attributes*/
 
     /*methods*/
+        friend std::ostream& operator<<(std::ostream& os, const Location& location);
         //getters
         std::string getBlock() const;
         //setters

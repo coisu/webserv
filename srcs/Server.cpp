@@ -6,7 +6,8 @@ Server::~Server( void ) {}
 
 Server::Server(std::string serverBlock)
 {
-    std::cout << "server block: " << serverBlock << std::endl;
+    (void)serverBlock;
+    // std::cout << "server block: " << serverBlock << std::endl;
 }
 
 Server::Server( const Server& src )

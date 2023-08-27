@@ -26,6 +26,7 @@ class Server
     /*methods*/
         friend std::ostream& operator<<(std::ostream& os, const Server& server);
         //getters
+        std::string getRoot() const;
         //setters
         void    setLocations( std::vector<Location> locationVec );
     private:

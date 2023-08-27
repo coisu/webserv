@@ -11,12 +11,12 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 
     this->_locations = locationVec;
     this->_block = serverBlock;
-    std::cout << "server block: " << serverBlock << std::endl;
-    for (size_t i = 0; i < this->_locations.size(); i++)
-    {
-        std::cout << "location " << i << ":\n" << this->_locations[i].getBlock() << std::endl;
-    }
-    std::cout << "\npush server\n";
+    // std::cout << "server block: " << serverBlock << std::endl;
+    // for (size_t i = 0; i < this->_locations.size(); i++)
+    // {
+    //     std::cout << "location " << i << ":\n" << this->_locations[i].getBlock() << std::endl;
+    // }
+    // std::cout << "\npush server\n";
     while (std::getline(ss, part, ';'))
     {
         std::string key = part.substr(0, part.find(':'));
@@ -45,22 +45,30 @@ void    Server::setAttributes(std::string key, std::string value)
     {
     case 0:
         initPort(value);
+        break;
     case 1:
         initHost(value);
+        break;
     case 2:
         initServerName(value);
+        break;
     case 3:
         initErrorPage(value);
+        break;
     case 4:
         initClientBodySize(value);
+        break;
     case 5:
         initRoot(value);
+        break;
     case 6:
         initIndex(value);
+        break;
     case 7:
         initAutoIndex(value);
+        break;
     default:
-        throw std::runtime_error("unrecognised server key.");
+        throw std::runtime_error("unrecognised server key: " + key);
     }
 }
 
@@ -69,8 +77,11 @@ Server::Server( const Server& src )
     this->_port = src._port;
     this->_host = src._host;
     this->_serverName = src._serverName;
-    this->_autoIndex = src._autoIndex;
     this->_errorPages = src._errorPages;
+    this->_clientBodySize = src._clientBodySize;
+    this->_root = src._root;
+    this->_index = src._index;
+    this->_autoIndex = src._autoIndex;
     this->_locations = src._locations;
     this->_listenFd = src._listenFd;
     this->_block = src._block;
@@ -84,8 +95,11 @@ Server& Server::operator=( const Server& src )
         this->_port = src._port;
         this->_host = src._host;
         this->_serverName = src._serverName;
-        this->_autoIndex = src._autoIndex;
         this->_errorPages = src._errorPages;
+        this->_clientBodySize = src._clientBodySize;
+        this->_root = src._root;
+        this->_index = src._index;
+        this->_autoIndex = src._autoIndex;
         this->_locations = src._locations;
         this->_listenFd = src._listenFd;
         this->_block = src._block;
@@ -97,18 +111,23 @@ Server& Server::operator=( const Server& src )
 std::ostream& operator<<(std::ostream& os, const Server& server)
 {
     // os << "Server Info:" << std::endl;
-    os << "port " << server._port << std::endl;
-    os << "host " << server._host << std::endl;
-    os << "serverName " << server._serverName << std::endl;
-    os << "autoIndex " << server._autoIndex << std::endl;
+    os << "port: " << server._port << std::endl;
+    os << "host: " << server._host << std::endl;
+    os << "serverName: " << server._serverName << std::endl;
     os << "errorPages: [";
     for (std::map<int, std::string>::const_iterator it = server._errorPages.begin(); it != server._errorPages.end(); it++)
-        os << it->first << " ";
-    os << "]";
+        os << it->first << ", " << it->second;
+    os << "]\n";
+    os << "client body size: " << server._clientBodySize << std::endl;
+    os << "root: " << server._root << std::endl;
+    os << "index: " << server._index << std::endl;
+    os << "autoIndex: " << server._autoIndex << std::endl;
+    os << "------------LOCATIONS-------------\n";
     for (size_t i = 0; i < server._locations.size(); i++)
-        os << "locations " << server._locations[i] << std::endl;
-    os << "listenFd " << server._listenFd << std::endl;
-    os << "block " << server._block << std::endl;    
+        os << "location " << i + 1 << ":\n" << server._locations[i] << std::endl;
+    os << "----------------------------------\n";
+    // os << "listenFd " << server._listenFd << std::endl;
+    // os << "block " << server._block << std::endl;    
     return os;
 }
 
@@ -162,4 +181,9 @@ void Server::initIndex(std::string value)
 void Server::initAutoIndex(std::string value)
 {
     this->_autoIndex = (value == "on") ? true : false;
+}
+
+std::string Server::getRoot() const
+{
+    return (this->_root);
 }

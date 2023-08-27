@@ -52,25 +52,23 @@ std::string cut(std::string str, size_t start, size_t end)
 {
     // if (start >= str.size() || end >= str.size())
         // throw std::runtime_error("cut out of range.");
+    start++;
     if (start >= str.size())
         throw std::runtime_error("cut out of range.");
         // start = str.size() - 1;
     if (end >= str.size())
         end = str.size() - 1;
+    // std::cout << "start: " << start << "end " << end << std::endl;
     return (std::string(&str[start], &str[end]));
 }
 
 std::vector<Server> parseConfig( std::string configPath )
 {
     std::ifstream       infile(configPath.c_str());
-    // std::stringstream   buff;
     std::string         file;// = readFile(configPath);
     std::string         line;
     std::vector<Server> serverVec;
 
-    // buff << infile.rdbuf();
-    // file = buff.str();
-    // check if the config file opened correctly
     if (!infile.is_open())
         throw std::runtime_error("failed to open config file.");
     while (std::getline(infile, line))
@@ -78,7 +76,7 @@ std::vector<Server> parseConfig( std::string configPath )
         if (removeSpaces(line)[0] == '#') continue ;
         file += removeSpaces(line);
     }
-    size_t  start = 0;
+    size_t  start = -1;
     int     brackets = 0;
     bool    inLocation = false;
     // bool    inServer = false;
@@ -101,14 +99,10 @@ std::vector<Server> parseConfig( std::string configPath )
             else if (brackets == 2)
             {
                 size_t  lastSeperator = file.find_last_of(";}", i);
-                if (!validLocation(line = cut(file, lastSeperator+1, i)))// std::string(&file[lastSeperator + 1], &file[i])))//file.substr(lastSeperator, i)))
+                if (!validLocation(line = cut(file, lastSeperator, i)))// std::string(&file[lastSeperator + 1], &file[i])))//file.substr(lastSeperator, i)))
                     throw std::runtime_error("expected: \"location /foo/bar {\" got: \"" + line + "\"");
                 if (!inLocation)
-                {
-                    // std::cout << "server block1: \"" << serverBlock << "\"\n";
-                    serverBlock += cut(file, start+1, lastSeperator+1);
-                    // std::cout << "server block2: \"" << serverBlock << "\"\n";
-                }
+                    serverBlock += cut(file, start, lastSeperator+1);
                 inLocation = true;
             }
             start = i;
@@ -121,13 +115,13 @@ std::vector<Server> parseConfig( std::string configPath )
                 serverVec.push_back(Server(serverBlock, locationVec));
                 inLocation = false;
                 serverBlock.clear();
-                std::cout << "\nCLEAR\n";
+                locationVec.clear();
             }
             else if (brackets == 1)
             {
                 size_t openBrace = file.find_last_of("{", i);
 
-                locationVec.push_back(Location(line + ";" + cut(file, openBrace+1, i)));
+                locationVec.push_back(Location(line + ";" + cut(file, openBrace, i)));
                 inLocation = false;
             }
             else
@@ -137,71 +131,3 @@ std::vector<Server> parseConfig( std::string configPath )
     }
     return (serverVec);
 }
-
-// std::vector<Server> parseConfig( std::string configPath )
-// {
-//     std::ifstream       infile(configPath.c_str());
-//     // char                ch;
-//     int                 brackets = 0;
-//     std::string         line;
-//     std::vector<Server> serverList;
-//     // while(infile.get(ch))
-//     // {
-//     //     if (ch == '{')
-//     //         brackets++;
-//     //     else if (ch == '}')
-//     //     {
-//     //         if (brackets == 0)
-//     //             throw std::runtime_error("unmatched closing bracket.");
-//     //         brackets--;
-//     //     }
-//     // }
-
-//     // check if the config file opened correctly
-//     if (!infile.is_open())
-//         throw std::runtime_error("failed to open config file.");
-//     // move line by line until something other than a comment or an empty line is found
-//     while (std::getline(infile, line))
-//     {
-//         while (line == "\n" || trim(line)[0] == '#')
-//             std::getline(infile, line);
-//         if (trim(line) == "server {") // check that the line is the start of a server block
-//         {
-//             std::string             serverBlock;
-//             std::vector<Location>   locationList;
-//             brackets++;
-//             while (std::getline(infile, line) && brackets > 0) // enter server block
-//             {
-//                 if (line == "\n" || trim(line)[0] == '#') continue ; //skip comments and empty lines
-//                 if (line.find("}") != line.npos) // check for closing bracket and exit loop
-//                 {
-//                     brackets--;
-//                     break ;
-//                 }
-//                 if (startsWith(trim(line), "location")) // check that the line is the start of a location block
-//                 {
-//                     std::string locationBlock(line);
-//                     brackets++;
-//                     if (validLocation(trim(line)))
-//                         throw std::runtime_error("expected: \"location /foo/bar {\" got: \"" + line + "\"");
-//                     while (std::getline(infile, line) && brackets > 1) // enter location block
-//                     {
-//                         if (line == "\n" || trim(line)[0] == '#') continue ; //skip comments and empty lines
-//                         if (line.find("}") != line.npos) // check for closing bracket and exit loop
-//                         {
-//                             brackets--;
-//                             break ;
-//                         }
-//                         locationBlock += trim(line);
-//                     }
-//                     locationList.push_back(Location(locationBlock));
-//                 }
-//                 serverBlock += trim(line);
-//             }
-//             serverList.push_back(Server(serverBlock));
-//         }
-//         else
-//             throw std::runtime_error("expected: \"server {\" got: \"" + line + "\"");
-//     }
-//     return (serverList);
-// }

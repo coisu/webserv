@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 class Location
 {
@@ -13,15 +14,24 @@ class Location
         Location( std::string locationBlock );
         Location( const Location& src );
         Location& operator=( const Location& src );
+
     /*attributes*/
+
     /*methods*/
-    //getters
+        //getters
         std::string getBlock() const;
-    //setters
+        //setters
     private:
-        //attributes
-        std::string _block;
-    //methods
+    /*attributes*/
+        std::string                 _path;
+        std::string                 _root;
+        std::string                 _index;
+        std::string                 _retrn;
+        std::vector<int>            _allow_method;
+        std::vector<std::string>    _cgi_path;
+        std::vector<std::string>    _cgi_ext;
+        std::string                 _block;
+    /*methods*/
 
 };
 

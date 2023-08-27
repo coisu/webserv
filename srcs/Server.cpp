@@ -20,14 +20,30 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 
 Server::Server( const Server& src )
 {
-    *this = src;
+    this->_port = src._port;
+    this->_host = src._host;
+    this->_serverName = src._serverName;
+    this->_autoIndex = src._autoIndex;
+    this->_errorPages = src._errorPages;
+    this->_locations = src._locations;
+    this->_listenFd = src._listenFd;
+    this->_block = src._block;
 
 }
 
 Server& Server::operator=( const Server& src )
 {
     if (this != &src)
-	{}
+	{
+        this->_port = src._port;
+        this->_host = src._host;
+        this->_serverName = src._serverName;
+        this->_autoIndex = src._autoIndex;
+        this->_errorPages = src._errorPages;
+        this->_locations = src._locations;
+        this->_listenFd = src._listenFd;
+        this->_block = src._block;
+    }
 	return (*this);
 
 }

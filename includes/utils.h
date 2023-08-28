@@ -48,6 +48,10 @@
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
+#define ERROR		-1
+#define SUCCESS		0
+#define BUFFER_SIZE	1024
+
 typedef enum e_method
 {
 	GET,

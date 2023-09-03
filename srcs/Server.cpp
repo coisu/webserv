@@ -188,16 +188,16 @@ void Server::initErrorPage(std::string value)
         int stat = atoi(code.c_str());
         if (stat > 599 || stat < 400)
             throw std::runtime_error("error codes must be in the range: 400-599.");
+        if (path[0] != '/')
+            throw std::runtime_error("error page path must start with \'/\' - path: " + path);
+        if (path.at(path.length() - 1) == '/' && path.size() > 1)
+            throw std::runtime_error("error page path must *not* end with \'/\' - path: " + path);
         this->_errorPages[stat] = path;
     }
 }
 
 void Server::initClientBodySize(std::string value)
 {
-    // std::cout << "size_t max:\t" << std::numeric_limits<size_t>::max() << std::endl \
-    //           << "long long max:\t" << std::numeric_limits<long long>::max() << std::endl \
-    //           << "u long long:\t" << std::numeric_limits<unsigned long long>::max() << std::endl \
-    //           << "u :\t" << std::string("9223372036854775807").size() << std::endl;
     if (value.size() > 18 || value.find_first_not_of("0123456789") != value.npos)
         throw std::runtime_error("bad client body size.");
     this->_clientBodySize = static_cast<size_t>(atoll(value.c_str()));
@@ -205,8 +205,12 @@ void Server::initClientBodySize(std::string value)
 
 void Server::initRoot(std::string value)
 {
+    if (value[0] != '/')
+        throw std::runtime_error("root path must start with \'/\' - path: " + value);
+    if (value.at(value.length() - 1) == '/' && value.size() > 1)
+        throw std::runtime_error("root path must *not* end with \'/\' - path: " + value);
     if (!pathIsDir(value))
-        throw std::runtime_error("invalid root path.");
+        throw std::runtime_error("root path is not a valid directory - path: " + value);
     this->_root = value;
 }
 

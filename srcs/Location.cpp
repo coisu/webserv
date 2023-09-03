@@ -119,11 +119,19 @@ std::string Location::getBlock() const
 
 void Location::initPath(std::string value)
 {
+    if (value.size() < 1 || value[0] != '/')
+        throw std::runtime_error("location routes must start with \'/\' - route: " + value);
+    if (value.at(value.length() - 1) == '/' && value.size() > 1)
+        throw std::runtime_error("location route must *not* end with \'/\' - route: " + value);
     this->_path = value;
 }
 
 void Location::initAlias(std::string value)
 {
+    if (value[0] != '/')
+        throw std::runtime_error("alias path must start with \'/\' - path: " + value);
+    if (value.at(value.length() - 1) == '/' && value.size() > 1)
+        throw std::runtime_error("alias path must *not* end with \'/\' - path: " + value);
     this->_alias = value;
 }
 
@@ -134,6 +142,8 @@ void Location::initIndex(std::string value)
 
 void Location::initAutoIndex(std::string value)
 {
+    if (value != "on" && value != "off")
+        throw std::runtime_error("autoindex must be \"on\" or \"off\".");
     this->_autoIndex = (value == "on") ? true : false;
 }
 

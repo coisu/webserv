@@ -138,7 +138,12 @@ void    Server::setLocations( std::vector<Location> locationVec )
 
 void Server::initPort(std::string value)
 {
-    this->_port = htons(atoi(value.c_str()));
+    if (value.find_first_not_of("0123456789") != value.npos)
+        throw std::runtime_error("invalid port in server block.");
+    int val = atoi(value.c_str());
+    if (val < 1 || val > 65535)
+        throw std::runtime_error("port must be between 1 and 65,535.");
+    this->_port = htons(val);
 }
 
 void Server::initHost(std::string value)

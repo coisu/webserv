@@ -26,7 +26,7 @@ void    Location::setAttributes(std::string key, std::string value)
 {
     size_t      N = 7;
     std::string keys[N] = {"location", 
-                          "root", 
+                          "alias", 
                           "index", 
                           "autoindex",
                           "return",
@@ -41,7 +41,7 @@ void    Location::setAttributes(std::string key, std::string value)
         initPath(value);
         break;
     case 1:
-        initRoot(value);
+        initAlias(value);
         break;
     case 2:
         initIndex(value);
@@ -67,7 +67,7 @@ void    Location::setAttributes(std::string key, std::string value)
 Location::Location( const Location& src )
 {
     this->_path = src._path;
-    this->_root = src._root;
+    this->_alias = src._alias;
     this->_index = src._index;
     this->_autoIndex = src._autoIndex;
     this->_ret = src._ret;
@@ -82,7 +82,7 @@ Location& Location::operator=( const Location& src )
     if (this != &src)
     {
         this->_path = src._path;
-        this->_root = src._root;
+        this->_alias = src._alias;
         this->_index = src._index;
         this->_autoIndex = src._autoIndex;
         this->_ret = src._ret;
@@ -96,7 +96,7 @@ Location& Location::operator=( const Location& src )
 std::ostream& operator<<(std::ostream& os, const Location& location)
 {
     os << "path: " << location._path << std::endl;
-    os << "root: " << location._root << std::endl;
+    os << "alias: " << location._alias << std::endl;
     os << "index: " << location._index << std::endl;
     os << "autoIndex: " << location._autoIndex << std::endl;
     os << "return: " << location._ret << std::endl;
@@ -122,9 +122,9 @@ void Location::initPath(std::string value)
     this->_path = value;
 }
 
-void Location::initRoot(std::string value)
+void Location::initAlias(std::string value)
 {
-    this->_root = value;
+    this->_alias = value;
 }
 
 void Location::initIndex(std::string value)

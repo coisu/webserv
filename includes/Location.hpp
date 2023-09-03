@@ -30,7 +30,7 @@ class Location
     /*methods*/
         void    setAttributes(std::string key, std::string value);
         void    initPath(std::string value);
-        void    initRoot(std::string value);
+        void    initAlias(std::string value);
         void    initIndex(std::string value);
         void    initAutoIndex(std::string value);
         void    initRet(std::string value);
@@ -39,7 +39,7 @@ class Location
 
     /*attributes*/
         std::string                         _path;
-        std::string                         _root;
+        std::string                         _alias;
         std::string                         _index;
         bool                                _autoIndex;
         std::string                         _ret;

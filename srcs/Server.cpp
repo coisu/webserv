@@ -138,7 +138,7 @@ void    Server::setLocations( std::vector<Location> locationVec )
 
 void Server::initPort(std::string value)
 {
-    if (value.find_first_not_of("0123456789") != value.npos)
+    if (value.find_first_not_of("0123456789") != value.npos || value.size() > 5)
         throw std::runtime_error("invalid port in server block.");
     int val = atoi(value.c_str());
     if (val < 1 || val > 65535)
@@ -148,6 +148,25 @@ void Server::initPort(std::string value)
 
 void Server::initHost(std::string value)
 {
+  	std::string part;
+	std::string ip[4];
+	std::stringstream ss(value);
+    int i = 0;
+    if (value.find_first_not_of("0123456789.") != value.npos || value.size() > 15)
+        throw std::runtime_error("(1) invalid host address in server block.");
+    while (std::getline(ss, part, '.'))
+    {
+        if (i == 4)
+            throw std::runtime_error("(2) invalid host address in server block.");
+        ip[i++] = part;
+    }
+    for (int j = 0; j < 4; j++)
+    {
+        if (ip[j].size() == 0)
+            throw std::runtime_error("(3) invalid host address in server block.");
+        if (atoi(ip[j].c_str()) > 255 || atoi(ip[j].c_str()) < 0)
+            throw std::runtime_error("(4) invalid host address in server block.");
+    }
     this->_host = inet_addr(value.c_str());
 }
 

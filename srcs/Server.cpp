@@ -11,20 +11,19 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 
     this->_locations = locationVec;
     this->_block = serverBlock;
-    // std::cout << "server block: " << serverBlock << std::endl;
-    // for (size_t i = 0; i < this->_locations.size(); i++)
-    // {
-    //     std::cout << "location " << i << ":\n" << this->_locations[i].getBlock() << std::endl;
-    // }
-    // std::cout << "\npush server\n";
+
+    /*Fill Server Values*/
     while (std::getline(ss, part, ';'))
     {
         std::string key = part.substr(0, part.find(':'));
         std::string value = part.substr(part.find(':')+1);
-        // std::cout << "key: \"" << key << "\" value: \"" << value << "\"\n";
         setAttributes(key, value);
     }
-    // std::cout << "SERVER:\n" << *this << std::endl;
+
+    /*Verify Server and Location values*/
+    //verify error pages
+    // if ()
+
 }
 
 void    Server::setAttributes(std::string key, std::string value)
@@ -211,6 +210,8 @@ void Server::initRoot(std::string value)
         throw std::runtime_error("root path must *not* end with \'/\' - path: " + value);
     if (!pathIsDir(value))
         throw std::runtime_error("root path is not a valid directory - path: " + value);
+    // if (!pathExists(value))
+    //     throw std::runtime_error("bananaaaaaaaaaaaaa");
     this->_root = value;
 }
 

@@ -9,6 +9,7 @@
 #include <vector>
 #include <sstream>
 #include <cstdlib>
+#include <limits>
 #include "Location.hpp"
 
 class Server
@@ -38,8 +39,8 @@ class Server
         void    initErrorPage(std::string value);
         void    initClientBodySize(std::string value);
         void    initRoot(std::string value);
-        void    initIndex(std::string value);
-        void    initAutoIndex(std::string value);
+        // void    initIndex(std::string value);
+        // void    initAutoIndex(std::string value);
 
     /*attributes*/
         unsigned int                _port;
@@ -48,8 +49,8 @@ class Server
         std::map<int, std::string>  _errorPages;
         size_t                      _clientBodySize;
         std::string                 _root;
-        std::string                 _index;
-        bool                        _autoIndex;
+        // std::string                 _index;
+        // bool                        _autoIndex;
         std::vector<Location>       _locations;
         int                         _listenFd;
         std::string                 _block;

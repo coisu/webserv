@@ -62,6 +62,6 @@ std::vector<std::string>	splitUrl(std::string url)
 bool	pathIsDir(std::string path)
 {
 	struct stat	statbuf;
-	return ((stat(path.c_str(), &statbuf) == 0) \
-	? (S_ISDIR(statbuf.st_mode)) : (throw 404, 1));
+	if (stat(path.c_str(), &statbuf) != 0) return 0;
+	return (S_ISDIR(statbuf.st_mode));
 }

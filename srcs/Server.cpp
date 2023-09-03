@@ -29,15 +29,15 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 
 void    Server::setAttributes(std::string key, std::string value)
 {
-    size_t      N = 8;
+    size_t      N = 6;
     std::string keys[N] = {"port", 
                           "host", 
                           "server_name", 
                           "error_page", 
                           "client_body_size", 
-                          "root", 
-                          "index", 
-                          "autoindex"};
+                          "root"}; 
+                        //   "index", 
+                        //   "autoindex"};
     size_t i = 0;
     while (i < N && keys[i] != key)
         i++;
@@ -61,12 +61,12 @@ void    Server::setAttributes(std::string key, std::string value)
     case 5:
         initRoot(value);
         break;
-    case 6:
-        initIndex(value);
-        break;
-    case 7:
-        initAutoIndex(value);
-        break;
+    // case 6:
+    //     initIndex(value);
+    //     break;
+    // case 7:
+    //     initAutoIndex(value);
+    //     break;
     default:
         throw std::runtime_error("unrecognised server key: " + key);
     }
@@ -80,8 +80,8 @@ Server::Server( const Server& src )
     this->_errorPages = src._errorPages;
     this->_clientBodySize = src._clientBodySize;
     this->_root = src._root;
-    this->_index = src._index;
-    this->_autoIndex = src._autoIndex;
+    // this->_index = src._index;
+    // this->_autoIndex = src._autoIndex;
     this->_locations = src._locations;
     this->_listenFd = src._listenFd;
     this->_block = src._block;
@@ -98,8 +98,8 @@ Server& Server::operator=( const Server& src )
         this->_errorPages = src._errorPages;
         this->_clientBodySize = src._clientBodySize;
         this->_root = src._root;
-        this->_index = src._index;
-        this->_autoIndex = src._autoIndex;
+        // this->_index = src._index;
+        // this->_autoIndex = src._autoIndex;
         this->_locations = src._locations;
         this->_listenFd = src._listenFd;
         this->_block = src._block;
@@ -116,12 +116,12 @@ std::ostream& operator<<(std::ostream& os, const Server& server)
     os << "serverName: " << server._serverName << std::endl;
     os << "errorPages: [";
     for (std::map<int, std::string>::const_iterator it = server._errorPages.begin(); it != server._errorPages.end(); it++)
-        os << it->first << ", " << it->second << " ";
+        os << it->first << ", " << it->second << " | ";
     os << "]\n";
     os << "client body size: " << server._clientBodySize << std::endl;
     os << "root: " << server._root << std::endl;
-    os << "index: " << server._index << std::endl;
-    os << "autoIndex: " << server._autoIndex << std::endl;
+    // os << "index: " << server._index << std::endl;
+    // os << "autoIndex: " << server._autoIndex << std::endl;
     os << "------------LOCATIONS-------------\n";
     for (size_t i = 0; i < server._locations.size(); i++)
         os << "location " << i + 1 << ":\n" << server._locations[i] << std::endl;
@@ -183,29 +183,42 @@ void Server::initErrorPage(std::string value)
     
     while (std::getline(ss, code, ',') && std::getline(ss, path, ','))
     {
-        this->_errorPages[atoi(code.c_str())] = path;
+        if (code.size() > 3 || code.find_first_not_of("0123456789") != code.npos)
+            throw std::runtime_error("invalid error page code.");
+        int stat = atoi(code.c_str());
+        if (stat > 599 || stat < 400)
+            throw std::runtime_error("error codes must be in the range: 400-599.");
+        this->_errorPages[stat] = path;
     }
 }
 
 void Server::initClientBodySize(std::string value)
 {
-    this->_clientBodySize = atoi(value.c_str());
+    // std::cout << "size_t max:\t" << std::numeric_limits<size_t>::max() << std::endl \
+    //           << "long long max:\t" << std::numeric_limits<long long>::max() << std::endl \
+    //           << "u long long:\t" << std::numeric_limits<unsigned long long>::max() << std::endl \
+    //           << "u :\t" << std::string("9223372036854775807").size() << std::endl;
+    if (value.size() > 18 || value.find_first_not_of("0123456789") != value.npos)
+        throw std::runtime_error("bad client body size.");
+    this->_clientBodySize = static_cast<size_t>(atoll(value.c_str()));
 }
 
 void Server::initRoot(std::string value)
 {
+    if (!pathIsDir(value))
+        throw std::runtime_error("invalid root path.");
     this->_root = value;
 }
 
-void Server::initIndex(std::string value)
-{
-    this->_index = value;
-}
+// void Server::initIndex(std::string value)
+// {
+//     this->_index = value;
+// }
 
-void Server::initAutoIndex(std::string value)
-{
-    this->_autoIndex = (value == "on") ? true : false;
-}
+// void Server::initAutoIndex(std::string value)
+// {
+//     this->_autoIndex = (value == "on") ? true : false;
+// }
 
 std::string Server::getRoot() const
 {

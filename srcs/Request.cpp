@@ -1,12 +1,12 @@
 #include "Request.hpp"
 
-Request::Request(std::string request) : _full_request(request), _head(parseRequest(request))//, _body(extractBody)
+Request::Request(std::string request, Server& serv) : server(serv) _full_request(request), _head(parseRequest(request))//, _body(extractBody)
 {
 	// std::cout << "Request created\n";
 	// printRequest();
 	this->_cgi = NULL;
 	if (this->_is_cgi)
-		this->_cgi = new CGI(*this);
+		this->_cgi = new CGI(*this, serv);
 	else
 		_body = readFile(this->_location);
 }

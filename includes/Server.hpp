@@ -25,11 +25,22 @@ class Server
 
     /*methods*/
         friend std::ostream& operator<<(std::ostream& os, const Server& server);
-        //getters
-        std::string getRoot() const;
+        //getters		
+        unsigned int                getPort() const;
+        in_addr_t                   getHost() const;
+        std::string                 getServerName() const;
+        std::map<int, std::string>  getErrorPages() const;
+        size_t                      getClientBodySize() const;
+        std::string                 getRoot() const;
+        std::string                 getIndex() const;
+        bool                        getAutoIndex() const;
+        std::vector<Location>       getLocations() const;
+        int                         getListenFd() const;
+        std::string                 getBlock() const;
         //setters
         void    setLocations( std::vector<Location> locationVec );
-    private:
+    
+	private:
     /*methods*/
         void    setAttributes(std::string key, std::string value);
         void    initPort(std::string value);

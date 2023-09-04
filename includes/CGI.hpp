@@ -1,5 +1,6 @@
 #ifndef CGI_HPP
 # define CGI_HPP
+
 #include <map>
 #include <vector>
 #include <iostream>
@@ -12,6 +13,7 @@
 #include "Request.hpp"
 #include "http_tcpServer.hpp"
 #include "utils.h"
+#include "Server.hpp"
 
 class	Request;
 
@@ -19,7 +21,7 @@ class CGI
 {
 	public:
 		//OCCF
-		CGI(Request& request);
+		CGI(Request& request, Server& serv);
 		virtual ~CGI( void );
 		CGI(const CGI& copy);
 		CGI&	operator = (const CGI& copy);
@@ -29,6 +31,7 @@ class CGI
 		std::string	exec_cgi( void );
 
 		//public attributes
+		const Server&	server;
 		// char const**	cgi_env;
 
 	protected:

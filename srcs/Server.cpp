@@ -29,7 +29,7 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 
 void    Server::setAttributes(std::string key, std::string value)
 {
-    size_t      N = 8;
+    const int N = 8;
     std::string keys[N] = {"port", 
                           "host", 
                           "server_name", 
@@ -183,7 +183,57 @@ void Server::initAutoIndex(std::string value)
     this->_autoIndex = (value == "on") ? true : false;
 }
 
-std::string Server::getRoot() const
+unsigned int	Server::getPort() const
 {
-    return (this->_root);
+	return (this->_port);
+}
+
+in_addr_t	Server::getHost() const
+{
+	return (this->_host);
+}
+
+std::string	Server::getServerName() const
+{
+	return (this->_serverName);
+}
+
+std::map<int, std::string>	Server::getErrorPages() const
+{
+	return (this->_errorPages);
+}
+
+size_t	Server::getClientBodySize() const
+{
+	return (this->_clientBodySize);
+}
+
+std::string	Server::getRoot() const
+{
+	return (this->_root);
+}
+
+std::string	Server::getIndex() const
+{
+	return (this->_index);
+}
+
+bool	Server::getAutoIndex() const
+{
+	return (this->_autoIndex);
+}
+
+std::vector<Location>	Server::getLocations() const
+{
+	return (this->_locations);
+}
+
+int	Server::getListenFd() const
+{
+	return (this->_listenFd);
+}
+
+std::string	Server::getBlock() const
+{
+	return (this->_block);
 }

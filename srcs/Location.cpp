@@ -24,7 +24,7 @@ Location::Location( std::string locationBlock )
 
 void    Location::setAttributes(std::string key, std::string value)
 {
-    size_t      N = 7;
+    const int N = 7;
     std::string keys[N] = {"location", 
                           "root", 
                           "index", 

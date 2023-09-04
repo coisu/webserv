@@ -60,16 +60,16 @@ typedef enum e_method
 	UNDEFINED
 } t_method;
 
-typedef struct TempConfig
-{
-	std::string	root;
-	std::string	cgi_folder;
-	std::string	name;
-	int			host_port;
-	std::map<std::string, std::string> cgi_types;
-} Tconfig;
+// typedef struct TempConfig
+// {
+// 	std::string	root;
+// 	std::string	cgi_folder;
+// 	std::string	name;
+// 	int			host_port;
+// 	std::map<std::string, std::string> cgi_types;
+// } Tconfig;
 
-extern Tconfig	temp_config;
+// extern Tconfig	temp_config;
 
 bool						pathExists(std::string path);
 std::string					readFile(std::string location);

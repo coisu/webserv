@@ -179,7 +179,7 @@ void    TcpServer::runServer(){
 						// Request request = process_request(buffer);
 						try
 						{
-							Request	request(buffer);
+							Request	request(buffer, *this);
 							if (request.getCGI())
 							{
 								request.getCGI()->getCharEnv();

@@ -12,7 +12,7 @@
 class Location
 {
     public:
-        /*OCCF*/
+	/*OCCF*/
         Location( void );
         ~Location( void );
         Location( std::string locationBlock );

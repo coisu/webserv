@@ -25,6 +25,9 @@ class Location
         friend std::ostream& operator<<(std::ostream& os, const Location& location);
         //getters
         std::string getBlock() const;
+		std::string getPath() const;
+		bool		getIsCGI() const;
+		std::map<std::string, std::string>		getCGI() const;
         //setters
     private:
     /*methods*/
@@ -46,6 +49,7 @@ class Location
         std::vector<int>                    _allowMethods;
         std::map<std::string, std::string>  _cgi;
         std::string                         _block;
+		bool								_is_cgi;
 };
 
 #endif

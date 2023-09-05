@@ -32,6 +32,7 @@ class CGI
 
 		//public attributes
 		const Server&	server;
+		const Request&	request;
 		// char const**	cgi_env;
 
 	protected:

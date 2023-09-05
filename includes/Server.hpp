@@ -24,6 +24,7 @@ class Server
     /*attributes*/
 
     /*methods*/
+		void    runServer();
         friend std::ostream& operator<<(std::ostream& os, const Server& server);
         //getters		
         unsigned int                getPort() const;
@@ -42,6 +43,11 @@ class Server
     
 	private:
     /*methods*/
+		int		startServer();
+		void	startListen();
+		void	acceptConnection();
+		void    closeServer();
+
         void    setAttributes(std::string key, std::string value);
         void    initPort(std::string value);
         void    initHost(std::string value);
@@ -64,6 +70,22 @@ class Server
         std::vector<Location>       _locations;
         int                         _listenFd;
         std::string                 _block;
+
+		std::string         _sIpAddress;
+        int                 _serverPort; // = _port
+        int                 _serverSocket; // = _server_fd
+        int					_clientSocket; //this vector will store  socket clients which reached server 
+        long                _serverIncomingMessage;
+        fd_set              _socketSet;
+        int                 _maxSocket;
+
+    // Server address
+        struct sockaddr_in  _serverSocketAddress;
+        unsigned int        _socketAddressLen;
+        std::string         _serverMessage;
+    
+    // Timeout
+        struct timeval      _timeout;
 
 };
 

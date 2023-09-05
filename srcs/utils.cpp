@@ -27,7 +27,7 @@
 bool	pathExists(std::string path)
 {
 	struct stat	statbuf;
-	return (stat((temp_config.root + path).c_str(), &statbuf) == 0);
+	return (stat((path).c_str(), &statbuf) == 0);
 
 }
 

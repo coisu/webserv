@@ -1,10 +1,10 @@
 #include "Location.hpp"
 
-Location::Location( void ) {}
+Location::Location( void ) : _is_cgi(false) {}
 
 Location::~Location( void ) {}
 
-Location::Location( std::string locationBlock )
+Location::Location( std::string locationBlock ) : _is_cgi(false)
 {
     std::stringstream   ss(locationBlock);
     std::string         part;
@@ -74,7 +74,7 @@ Location::Location( const Location& src )
     this->_allowMethods = src._allowMethods;
     this->_cgi = src._cgi;
     this->_block = src._block;
-
+	this->_is_cgi = src._is_cgi;
 }
 
 Location& Location::operator=( const Location& src )
@@ -89,6 +89,7 @@ Location& Location::operator=( const Location& src )
         this->_allowMethods = src._allowMethods;
         this->_cgi = src._cgi;
         this->_block = src._block;
+		this->_is_cgi = src._is_cgi;
     }
 	return (*this);
 }
@@ -110,11 +111,6 @@ std::ostream& operator<<(std::ostream& os, const Location& location)
     os << "]\n";
     // os << "block: " << location._block << std::endl;
     return os;
-}
-
-std::string Location::getBlock() const
-{
-    return (this->_block);
 }
 
 void Location::initPath(std::string value)
@@ -176,9 +172,30 @@ void Location::initCGI(std::string value)
     std::string         cgiPath;
     std::string         suffix;
     
+	this->_is_cgi = true;
     while (std::getline(ss, cgiPath, ',') && std::getline(ss, suffix, ','))
     {
         this->_cgi[cgiPath] = suffix;
     }
+}
+
+std::string Location::getBlock() const
+{
+    return (this->_block);
+}
+
+std::string	Location::getPath() const
+{
+	return (this->_path);
+}
+
+bool	Location::getIsCGI() const
+{
+	return (this->_is_cgi);
+}
+
+std::map<std::string, std::string>	Location::getCGI() const
+{
+	return (this->_cgi);
 }
 

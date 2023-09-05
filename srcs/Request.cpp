@@ -1,6 +1,6 @@
 #include "Request.hpp"
 
-Request::Request(std::string request, Server& serv) : server(serv) _full_request(request), _head(parseRequest(request))//, _body(extractBody)
+Request::Request(std::string request, Server& serv) : server(serv), _full_request(request), _head(parseRequest(request))//, _body(extractBody)
 {
 	// std::cout << "Request created\n";
 	// printRequest();
@@ -8,13 +8,8 @@ Request::Request(std::string request, Server& serv) : server(serv) _full_request
 	if (this->_is_cgi)
 		this->_cgi = new CGI(*this, serv);
 	else
-		_body = readFile(this->_location);
+		_body = readFile(this->_locPath);
 }
-
-// Request::Request(std::map<std::string, std::string>	head) : _head(head)
-// {
-// 	// std::cout << "Request created\n";
-// }
 
 Request::~Request()
 {
@@ -23,7 +18,7 @@ Request::~Request()
 	// std::cout << "Request destroyed\n";
 }
 
-Request::Request(const Request& copy) : _cgi(copy.getCGI())
+Request::Request(const Request& copy) : server(copy.server), _cgi(copy.getCGI())
 {
 	std::cout << "Request is being copied\n";
 	*this = copy;
@@ -39,10 +34,18 @@ Request&	Request::operator = (const Request& copy)
 	return (*this);
 }
 
-// std::string	Request::extractBody(std::string request)
-// {
-	
-// }
+Location*	Request::extractLocation(const Server& server, std::string locPath)
+{
+	std::vector<Location> locations = server.getLocations();
+
+	for (std::vector<Location>::iterator it = locations.begin(); \
+	it != server.getLocations().end(); it++)
+	{
+		if ((*it).getPath() == locPath)
+			this->_location = new Location(*it);
+	}
+	return (NULL);
+}
 
 std::map<std::string, std::string>	Request::parseRequest(std::string request)
 {
@@ -57,9 +60,11 @@ std::map<std::string, std::string>	Request::parseRequest(std::string request)
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
 	// std::vector<std::string> urlvec = splitUrl(this->_url);
-	this->_location = temp_config.root + this->_url.substr(0, this->_url.find_first_of('?'));
-	this->_is_dir = pathIsDir(this->_location);
-	this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
+	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
+	this->_location = extractLocation(this->server, this->_locPath);
+	this->_is_dir = pathIsDir(this->_locPath);
+	// this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
+	this->_is_cgi = this->_location->getIsCGI();
 
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
 		m[key] = val.substr(0, val.size() - 1);
@@ -117,47 +122,62 @@ std::string	Request::extractURL(std::string info)
 
 //GETTERS
 
-CGI*	Request::getCGI() const{
+CGI*	Request::getCGI() const
+{
 	return (this->_cgi);
 }
 
-bool	Request::isCGI(){
+bool	Request::isCGI() const
+{
 	return (this->_is_cgi);
 }
 
-bool	Request::UrlIsDir(){
+bool	Request::UrlIsDir() const
+{
 	return (this->_is_dir);
 }
 
-std::string	Request::getBody(){
+std::string	Request::getBody() const
+{
 	return (this->_body);
 }
 
-t_method	Request::getMethodEnum(){
+t_method	Request::getMethodEnum() const
+{
 	return (this->_method_enum);
 }
 
-std::string	Request::getMethodStr(){
+std::string	Request::getMethodStr() const
+{
 	return (this->_method_str);
 }
 
-std::string	Request::getInfo(){
+std::string	Request::getInfo() const
+{
 	return (this->_info);
 }
 
-std::string	Request::getURL(){
+std::string	Request::getURL() const
+{
 	return (this->_url);
 }
 
-// std::string	Request::getLocation(){
+// std::string	Request::getLocation() const
+//{
 // 	return (this->_location);
 // }
 
-// std::string	Request::getQuery(){
+// std::string	Request::getQuery() const
+//{
 // 	return (this->_query);
 // }
 
-std::map<std::string, std::string>	Request::getHead(){
+std::map<std::string, std::string>	Request::getHead() const
+{
 	return (this->_head);
 }
 
+Location*	Request::getLocation() const
+{
+	return (this->_location);
+}

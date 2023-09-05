@@ -26,12 +26,39 @@ std::string buildResponse(int code, std::string body)
     return (ss.str());
 }
 
+void	Server::initDefaults()
+{
+	this->_port = 0;
+	this->_host = 0;
+	this->_serverName = "localhost";
+	// this->_errorPages = ;
+	this->_clientBodySize = std::numeric_limits<size_t>::max();
+	this->_root = "";
+	this->_index = "";
+	this->_autoIndex = false;
+	// this->_locations = ;
+	this->_listenFd = 0;
+	this->_block = "";
+	this->_sIpAddress = "";
+	this->_serverPort = 0;
+	this->_serverSocket = 0;
+	this->_clientSocket = 0;
+	this->_serverIncomingMessage = 0;
+	// this->_socketSet = 0;
+	this->_maxSocket = 0;
+	// this->_serverSocketAddress = ;
+	this->_socketAddressLen = 0;
+	this->_serverMessage = "";
+	// this->_timeout = ;
+}
+
 Server::Server( void ) {}
 
 Server::~Server( void ) {}
 
 Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 {
+	initDefaults();
     std::stringstream   ss(serverBlock);
     std::string         part;
 
@@ -58,12 +85,12 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 	// this->_maxSocket = 
 	this->_socketAddressLen = sizeof(_serverSocketAddress);
 	this->_serverMessage = buildResponse(200, "hello worldywoo!");
-    _serverSocketAddress.sin_family = AF_INET; // for IPv4
-    _serverSocketAddress.sin_port = htons(this->_port); // call htons to ensure that the port is stored in network byte order
-    _serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
-    _timeout.tv_sec = 3 * 60;
-    _timeout.tv_usec = 0;
-    inet_addr(_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
+    this->_serverSocketAddress.sin_family = AF_INET; // for IPv4
+    this->_serverSocketAddress.sin_port = htons(this->_port); // call htons to ensure that the port is stored in network byte order
+    this->_serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
+    this->_timeout.tv_sec = 3 * 60;
+    this->_timeout.tv_usec = 0;
+    inet_addr(this->_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
     startServer();
     startListen();
     // std::cout << "SERVER:\n" << *this << std::endl;

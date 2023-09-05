@@ -8,6 +8,7 @@
 #include <map>
 #include <vector>
 #include <sstream>
+#include <limits>
 #include <cstdlib>
 #include "Location.hpp"
 
@@ -15,7 +16,6 @@ class Server
 {
     public:
     /*OCCF*/
-        Server( void );
         ~Server( void );
         Server( std::string serverBlock, std::vector<Location> locationVec );
         Server( const Server& src );
@@ -42,11 +42,14 @@ class Server
         void    setLocations( std::vector<Location> locationVec );
     
 	private:
+        Server( void );
     /*methods*/
 		int		startServer();
 		void	startListen();
 		void	acceptConnection();
 		void    closeServer();
+
+		void	initDefaults();
 
         void    setAttributes(std::string key, std::string value);
         void    initPort(std::string value);
@@ -88,6 +91,5 @@ class Server
         struct timeval      _timeout;
 
 };
-
 
 #endif

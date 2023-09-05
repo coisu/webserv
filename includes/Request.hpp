@@ -16,7 +16,7 @@
 
 
 class	CGI;
-// class	Server;
+// class	;
 
 class Request
 {

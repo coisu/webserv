@@ -6,6 +6,7 @@ Location::~Location( void ) {}
 
 Location::Location( std::string locationBlock ) : _is_cgi(false)
 {
+	initDefaults();
     std::stringstream   ss(locationBlock);
     std::string         part;
 
@@ -20,6 +21,19 @@ Location::Location( std::string locationBlock ) : _is_cgi(false)
         setAttributes(key, value);
     }
     // std::cout << "SERVER:\n" << *this << std::endl;
+}
+
+void	Location::initDefaults()
+{
+	this->_path = "";
+	this->_root = "";
+	this->_index = "";
+	this->_autoIndex = false;
+	this->_ret = "";
+	// this->_allowMethids 
+	// this->_cgi
+	this->_block = "";
+	this->_is_cgi = false;
 }
 
 void    Location::setAttributes(std::string key, std::string value)
@@ -62,7 +76,6 @@ void    Location::setAttributes(std::string key, std::string value)
         throw std::runtime_error("unrecognised location key: " + key);
     }
 }
-
 
 Location::Location( const Location& src )
 {

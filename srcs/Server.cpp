@@ -86,7 +86,7 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 	this->_socketAddressLen = sizeof(_serverSocketAddress);
 	this->_serverMessage = buildResponse(200, "hello worldywoo!");
     this->_serverSocketAddress.sin_family = AF_INET; // for IPv4
-    this->_serverSocketAddress.sin_port = htons(this->_port); // call htons to ensure that the port is stored in network byte order
+    this->_serverSocketAddress.sin_port = this->_port;
     this->_serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
     this->_timeout.tv_sec = 3 * 60;
     this->_timeout.tv_usec = 0;
@@ -199,7 +199,6 @@ Server& Server::operator=( const Server& src )
 	return (*this);
 
 }
-
 
 // Methods
 int Server::startServer(){

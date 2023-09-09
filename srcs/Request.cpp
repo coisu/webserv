@@ -39,7 +39,7 @@ Location*	Request::extractLocation(const Server& server, std::string locPath)
 	std::vector<Location> locations = server.getLocations();
 
 	for (std::vector<Location>::iterator it = locations.begin(); \
-	it != server.getLocations().end(); it++)
+	it != locations.end(); it++)
 	{
 		if ((*it).getPath() == locPath)
 			this->_location = new Location(*it);

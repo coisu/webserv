@@ -40,6 +40,8 @@ class Location
         void    initAllowMethods(std::string value);
         void    initCGI(std::string value);
 
+		void	initDefaults();
+
     /*attributes*/
         std::string                         _path;
         std::string                         _root;

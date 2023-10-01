@@ -14,26 +14,37 @@
 class Response
 {
     private:
-        std::string     path;
-        std::string     location;
-        std::string     body;
-        size_t          body_len;
-        bool            auto_index;
-        int             e_code;
+        std::string     _target_path;
+        Location        _location;
+        std::string     _body;
+        size_t          _body_len;
+        bool            _auto_index;
+        int             _status;
+        bool            _req_status;
+        std::string     _checkCur;
+        std::map<std::string, std::string>     _headers;
 
     public:
-        Mime            mimeList;
-        Request         request;
-        ServerConfig    server;
-        std::string     response_content;
+        Mime            _mimeList;
+        Request         _request;
+        ServerConfig    _server;
+        
 
 
         Response();
-        Response(Request &request);
+        Response( Request &request, const Server& server );
+        Response( int status, const Server& server );
         ~Response();
 
-        void    buildResponse();
-        void    buildErrorResponse();
+    /* Constructor */
+    void		Response::initHeaders(void);
+    void		Response::initStatusCode(void);
+    /* Process */
+    void    Response::processResponse();
+
+    /* Body Writer */
+
+    /* Header Write */
 
 
 

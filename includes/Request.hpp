@@ -58,18 +58,18 @@ class Request
 
 		//private attributes
 		// bool		_is_cgi;
-		bool		_is_dir;
+		std::string	_full_request;
+		std::string	_info;
 		t_method	_method_enum;
 		std::string	_method_str;
-		std::string	_info;
 		std::string	_url;
+		std::string	_locPath;
+		bool		_isDir;
+		std::map<std::string, std::string>	_head;
 		// std::string	_location;
 		// Location*	_location;
 		// CGI*		_cgi;
-		std::string	_full_request;
-		std::map<std::string, std::string>	_head;
 		std::string	_body;
-		std::string	_locPath;
 		// std::string	_location;
 		// std::string	_query;
 };

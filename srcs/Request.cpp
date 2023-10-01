@@ -4,12 +4,7 @@ Request::Request(std::string request, Server& serv)
 : server(serv), _full_request(request), _head(parseRequest(request))
 {
 	// std::cout << "Request created\n";
-	// printRequest();
-	// this->_cgi = NULL;
-	// if (this->_is_cgi)
-		// this->_cgi = new CGI(*this, serv);
-	// else
-	_body = readFile(this->_locPath);
+	this->_body = readFile(this->_locPath);
 }
 
 Request::~Request()
@@ -61,9 +56,13 @@ std::map<std::string, std::string>	Request::parseRequest(std::string request)
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
 	// std::vector<std::string> urlvec = splitUrl(this->_url);
+	std::cout << "root: " << this->server.getRoot() << std::endl;
+	std::cout << "url: " << this->_url << std::endl;
+	std::cout << "suby: " << this->_url.substr(0, this->_url.find_first_of('?')) << std::endl;
+	this->_locPath = "";
 	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
 	// this->_location = extractLocation(this->server, this->_locPath);
-	this->_is_dir = pathIsDir(this->_locPath);
+	this->_isDir = pathIsDir(this->_locPath);
 	// this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
 	// this->_is_cgi = this->_location->getIsCGI();
 
@@ -135,7 +134,7 @@ std::string	Request::extractURL(std::string info)
 
 bool	Request::UrlIsDir() const
 {
-	return (this->_is_dir);
+	return (this->_isDir);
 }
 
 std::string	Request::getBody() const
@@ -180,5 +179,5 @@ std::map<std::string, std::string>	Request::getHead() const
 
 // Location*	Request::getLocation() const
 // {
-// 	return (this->_location);
+// 	return (this->_location);_is_dir
 // }

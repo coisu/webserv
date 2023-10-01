@@ -74,7 +74,7 @@ bool	pathIsDir(std::string path)
 	}
     else
 	{
-    	throw std::runtime_error(std::string(strerror(errno)));
+    	throw 404;
 	}
 	return true;
 	// return (stat(path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode));

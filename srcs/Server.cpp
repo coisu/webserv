@@ -317,7 +317,7 @@ void    Server::runServer(){
 							// }
 							// else
 							// {
-								std::string	msg = buildResponse(200, request.getBody());
+								std::string	msg = buildResponse(200, "JELLOO\n");
 								bytesSent = send(socket, msg.c_str(), msg.size(), 0);
 							// }
 								// bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);

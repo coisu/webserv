@@ -10,8 +10,8 @@ Response::Response()
 	_auto_index = false;
 	_status = -1;
 	_response_content = "";
-	initialMapStatusCode();
-	initialMapHeaders();
+	initStatusCode();
+	initHeaders();
 }
 
 Response::Response(Request &request, const Server& server ) : _request(request), _server(server)
@@ -156,7 +156,6 @@ void Response::processResponse()
 			_body = writeBodyHtml(_server.getRoot() + _server.getErrorPage().at(_status), mimeList.getMimeType(ext) == "text/html");
 		else
 			_body = makeErrorPage(_status);
-
 		_checkCur = "Close";
 	}
 	// method == post, error page, header create, non-cgi
@@ -187,15 +186,15 @@ bool	Response::checkErrorPage(int  status)
 }
 
 
-std::string		Response::writeBodyHtml(std::string const &filePath, bool isHTML)
+std::string		Response::writeBodyHtml(std::string const &path, bool isHTML)
 {
 	std::string		ret;
-	std::string		filePath_;
+	std::string		filePath;
 	std::ifstream 	ifs;
 	
-	filePath_ = "./" + filePath;
+	filePath = "./" + path;
 
-	ifs.open(const_cast<char*>(filePath_.c_str()));
+	ifs.open(const_cast<char*>(filePath.c_str()));
 	if (ifs.fail())
 	{
 		return makeErrorPage(404);
@@ -204,10 +203,12 @@ std::string		Response::writeBodyHtml(std::string const &filePath, bool isHTML)
 	std::string	str;
 	while (std::getline(ifs, str))
 	{
-		if (isHTML) {
+		if (isHTML)
+		{
 			ret += "\r\n";
 		}
-		else {
+		else
+		{
 			ret += "\n";
 		}
 		ret += str;
@@ -366,19 +367,26 @@ bool	Response::checkSetLocation(std::string path)
 
 std::pair<bool, Location>	Response::getMatchLoc(const std::string& request_path)
 {
+	int match = 0;
 	Location	ret;
-	std::vector<Location>::iterator	curLoc = _server.getLocations.begin();
-	std::vector<Location>::iterator	endLoc = _server.getLocations.end();
 
-	for (; curLoc != endLoc; ++curLoc)
+	for (std::vector<Location>::iterator it = _server.getLocations.begin(); it != _server.getLocations.end(); ++it) 
 	{
-		if (curLoc->getPath().length() <= request_path.length()) 
+		if (request_path.find(it->getPath()) == 0)
 		{
-			if (request_path.compare(0, curLoc->getPath().length(), current_location->getPath()) == 0)
-				return (std::make_pair(true, *curLoc));
+			// if( it->getPath() == "/" || request_path.length() == it->getPath().length() || request_path[it->getPath().length()] == '/')
+			// {
+				if(it->getPath().length() > match)
+				{
+					match = it->getPath().length();
+					ret = *it;
+				}
+			// }
 		}
 	}
-	return (std::make_pair(false, ret));
+	if (match > 0)
+		return (std::make_pair(true, ret));
+	return (std::make_pair(false, ret)); 
 }
 
 void Response::setLocation(Location Loc)
@@ -418,9 +426,9 @@ std::string		Response::makeErrorPage(int	status)
 int	Response::execteDelete(void)
 {
 	int	status(200);
-	std::string		filePath_("./" + _request.getURL());		//check URL contents
+	std::string		filePath("./" + _request.getURL());		//check URL contents
 
-	if (remove(const_cast<char*>(filePath_.c_str())) == -1)
+	if (remove(const_cast<char*>(filePath.c_str())) == -1)
 	{
 		status = 204;
 	}

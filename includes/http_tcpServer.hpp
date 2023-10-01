@@ -60,7 +60,7 @@ class TcpServer
         fd_set              _socketSet;
         int                 _maxSocket;
         // char				_buffer[BUFFER_SIZE + 1];
-        bool                _closeConnexion;
+        // bool                _closeConnexion;
 
         //private:
 		//int						_listen_fd;

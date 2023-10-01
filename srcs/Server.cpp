@@ -1,11 +1,64 @@
 #include "Server.hpp"
 
+// #include <stdio.h>
+#include <fcntl.h>
+#include <errno.h>
+#include "Request.hpp"
+
+void log(const std::string &message){
+    std::cerr << message << std::endl;
+}
+
+void exitWithError(const std::string &errorMessage){
+    log("ERROR: " + errorMessage);
+    exit(1);
+}
+
+std::string buildResponse(int code, std::string body)
+{
+    std::stringstream ss;
+
+    ss << "HTTP/1.1 " << code << " OK\r\n"
+          << "Content-Type: text/html\r\n" //text/plain\r\n"
+          << "Content-Length: " << body.size() << "\r\n"
+          << "\n" << body << "\r\n";
+    // std::cout << ss.str();
+    return (ss.str());
+}
+
+void	Server::initDefaults()
+{
+	this->_port = 0;
+	this->_host = 0;
+	this->_serverName = "localhost";
+	// this->_errorPages = ;
+	this->_clientBodySize = std::numeric_limits<size_t>::max();
+	this->_root = "";
+	this->_index = "";
+	this->_autoIndex = false;
+	// this->_locations = ;
+	this->_listenFd = 0;
+	this->_block = "";
+	this->_sIpAddress = "";
+	this->_serverPort = 0;
+	this->_serverSocket = 0;
+	this->_clientSocket = 0;
+	this->_serverIncomingMessage = 0;
+	// this->_socketSet = 0;
+	this->_maxSocket = 0;
+	// this->_serverSocketAddress = ;
+	this->_socketAddressLen = 0;
+	this->_serverMessage = "";
+	// this->_timeout = ;
+}
+
 Server::Server( void ) {}
 
 Server::~Server( void ) {}
 
 Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 {
+	initDefaults();
     std::stringstream   ss(serverBlock);
     std::string         part;
 
@@ -20,15 +73,29 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
         setAttributes(key, value);
     }
 
-    /*Verify Server and Location values*/
-    //verify error pages
-    // if ()
-
+	this->_serverPort = this->_port;
+	// this->_serverSocket = ();
+	// this->_clientSocket = ();
+	// this->_serverIncomingMessage = (),
+	// this->_socketSet = ();
+	// this->_maxSocket = 
+	this->_socketAddressLen = sizeof(_serverSocketAddress);
+	this->_serverMessage = buildResponse(200, "hello worldywoo!");
+    this->_serverSocketAddress.sin_family = AF_INET; // for IPv4
+    this->_serverSocketAddress.sin_port = this->_port;
+    this->_serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
+    this->_timeout.tv_sec = 3 * 60;
+    this->_timeout.tv_usec = 0;
+    inet_addr(this->_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
+    startServer();
+    startListen();
+    // std::cout << "SERVER:\n" << *this << std::endl;
 }
 
 void    Server::setAttributes(std::string key, std::string value)
 {
     size_t      N = 6;
+
     std::string keys[N] = {"port", 
                           "host", 
                           "server_name", 
@@ -85,6 +152,17 @@ Server::Server( const Server& src )
     this->_listenFd = src._listenFd;
     this->_block = src._block;
 
+	this->_sIpAddress = src._sIpAddress;
+	this->_serverPort = src._serverPort;
+	this->_serverSocket = src._serverSocket;
+	this->_clientSocket = src._clientSocket;
+	this->_serverIncomingMessage = src._serverIncomingMessage;
+	this->_socketSet = src._socketSet;
+	this->_maxSocket = src._maxSocket;
+	this->_serverSocketAddress = src._serverSocketAddress;
+	this->_socketAddressLen = src._socketAddressLen;
+	this->_serverMessage = src._serverMessage;
+	this->_timeout = src._timeout;
 }
 
 Server& Server::operator=( const Server& src )
@@ -102,9 +180,204 @@ Server& Server::operator=( const Server& src )
         this->_locations = src._locations;
         this->_listenFd = src._listenFd;
         this->_block = src._block;
+
+		this->_sIpAddress = src._sIpAddress;
+		this->_serverPort = src._serverPort;
+		this->_serverSocket = src._serverSocket;
+		this->_clientSocket = src._clientSocket;
+		this->_serverIncomingMessage = src._serverIncomingMessage;
+		this->_socketSet = src._socketSet;
+		this->_maxSocket = src._maxSocket;
+		this->_serverSocketAddress = src._serverSocketAddress;
+		this->_socketAddressLen = src._socketAddressLen;
+		this->_serverMessage = src._serverMessage;
+		this->_timeout = src._timeout;
     }
 	return (*this);
 
+}
+
+// Methods
+int Server::startServer(){
+    _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (_serverSocket < 0)
+    {
+        exitWithError("Cannot create socket");
+        return 1;
+    }
+    if (bind(_serverSocket,(struct sockaddr *)&_serverSocketAddress, _socketAddressLen) < 0)
+    {
+        exitWithError("Cannot connect socket to address");
+        return 1;
+    }
+    _maxSocket = _serverSocket;
+    return 0;
+}
+
+void Server::startListen()
+{
+    int yes = 1;
+
+    if (listen(_serverSocket, 10) < 0)
+        exitWithError("Socket listen failed");
+    if (setsockopt(_serverSocket,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes) == -1) {
+        perror("setsockopt");
+        exit(1);
+    } 
+    if (fcntl(_serverSocket, F_SETFL, O_NONBLOCK) < 0)
+        exitWithError("Socket non-blocking failed");
+    std::ostringstream ss;
+    ss << "\n*** Listening on ADDRESS: " 
+        << inet_ntoa(_serverSocketAddress.sin_addr) // convert the IP address (binary) in string
+        << " PORT: " << ntohs(_serverSocketAddress.sin_port) // invert octets, beacause network have big endians before and we want to have little endians before
+        << " ***\n\n";
+    log(ss.str());
+    FD_ZERO(&_socketSet);
+    FD_SET(_serverSocket, &_socketSet);
+}
+
+void Server::acceptConnection(){
+
+    //     // New connexion is comming
+        _clientSocket = accept(_serverSocket, (struct sockaddr *)&_serverSocketAddress, (socklen_t*)&_socketAddressLen);
+        // std::cout << "client_socket" << _clientSocket << std::endl;
+        if (_clientSocket < 0){
+            std::ostringstream ss;
+            ss << 
+            "Server failed to accept incoming connection from ADDRESS: " 
+            << inet_ntoa(_serverSocketAddress.sin_addr) << "; PORT: " 
+            << ntohs(_serverSocketAddress.sin_port);
+            exitWithError(ss.str());
+        }
+        // if (fcntl(_clientSocket, F_SETFL, O_NONBLOCK) < 0)
+        //     exitWithError("webserv: fcntl error");
+        // + new socket
+        FD_SET(_clientSocket, &_socketSet);
+        if (_clientSocket > _maxSocket)
+            _maxSocket = _clientSocket;
+
+        std::cout << "New connexion comming: " << inet_ntoa(_serverSocketAddress.sin_addr) << ":" << ntohs(_serverSocketAddress.sin_port) << std::endl;
+}
+
+void    Server::runServer(){
+    
+    ssize_t bytesReceived;
+    long    bytesSent;
+    fd_set  tempSet;
+    int     activity;
+	char	buffer[1024];
+
+    FD_ZERO(&tempSet);
+    memcpy(&tempSet, &_socketSet, sizeof(_socketSet));
+    activity = select(_maxSocket + 1, &tempSet, NULL, NULL, &_timeout);
+    if (activity == -1)
+        exitWithError("Error calling select()");
+    if (activity == 0) {
+        exitWithError("Timeout reached, no activity on sockets");
+        return;
+    }
+    for (int socket = 0; socket <= _maxSocket; socket++){
+        // std::cout << "max_socket" << _maxSocket << std::endl;
+            if (FD_ISSET(socket, &tempSet)) {
+                if (socket == _serverSocket){
+                    // memset(buffer, 0, sizeof(buffer));
+                    acceptConnection();
+                    //accept connection
+                } else {
+                    std::cout << "RECEIVING DATA FROM CLIENT: " << socket << std::endl;
+                    // std::cout << "My buffer is: " << buffer << "\n\n"; 
+                    bytesReceived = recv(socket, buffer, sizeof(buffer), 0);
+                    // std::cout << buffer << std::endl;
+                    if (bytesReceived <= 0)
+                    {
+                        if (bytesReceived == 0)
+                        {
+                            std::cout << "connection closed from socket: " << socket << std::endl;
+                        }
+                        else {
+                            std::cout << "error with socket: " << socket << std::endl;
+                        }
+                        close(socket);
+                        FD_CLR(socket, &_socketSet);
+                    } else {
+                        std::cout << "we got data" << std::endl;
+						// std::cout << buffer << std::endl;
+						// Request request = process_request(buffer);
+						try
+						{
+							Request	request(buffer, *this);
+							if (request.getCGI())
+							{
+								request.getCGI()->getCharEnv();
+								std::string	cgi_response = request.getCGI()->exec_cgi();
+								// std::string	cgi_response = EXAMPLE_RESPONSE;
+								bytesSent = send(socket, cgi_response.c_str(), cgi_response.size(), 0);
+								// std::cout << "\n" << bytesSent << "RESPONSE: " << cgi_response << std::endl;
+								// while(true);
+							}
+							else
+							{
+								std::string	msg = buildResponse(200, request.getBody());
+								bytesSent = send(socket, msg.c_str(), msg.size(), 0);
+							}
+								// bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
+							// std::cout << "\n servmsg: " << _serverMessage << std::endl;
+							// if (bytesSent == (long int)_serverMessage.size())
+								// log("------ Server Response sent to client check------\n\n");
+							// else
+								// log("Error sending response to client");
+						}
+						catch(int errcode)
+						{
+							// std::string	code(SSTR(errcode));
+							// std::cerr << "error code: " << errcode << std::endl;
+							std::string	errorbod(buildResponse(404, "error code: " + SSTR(errcode)));
+
+							bytesSent = send(socket, errorbod.c_str(), errorbod.size(), 0);
+						}
+						
+						(void)bytesSent;
+                        close(socket);
+                        FD_CLR(socket, &_socketSet);
+                    }
+                    // bytesReceived = recv(socket, buffer, sizeof(buffer), 0);
+                    // std::cout << bytesReceived << " " << sizeof(buffer) << std::endl;
+                    // if (bytesReceived <= 0){
+                    //     if (bytesReceived == 0){
+                    //         // perror("Erreur lors de la réception des données 2");
+                    //         std::ostringstream ss;
+                    //         ss << "Desconexion of socket: " << socket << ": " << buffer;
+                    //         exitWithError(ss.str());
+                    //     } else
+                    //         perror("Erreur lors de la réception des données");
+                    //         // exitWithError("Failed to read bytes from client socket connection");
+                    //     close(socket);
+                    //     FD_CLR(socket, &_socketSet);       
+                    // } else {
+                    //     std::cout << "socket" << socket << std::endl;
+                    //     std::cout << "Data received from the socket " << socket << ": " << buffer << std::endl;
+                    //     for (int socketSent = 0; socketSent <= _maxSocket; socketSent++){
+                    //         if (FD_ISSET(socketSent, &_socketSet)){
+                    //             if (socketSent != _serverSocket && socketSent != socket){
+                    //                 std::cout << _serverMessage.c_str();
+                    //                 bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
+                    //                 if (bytesSent == (long int)_serverMessage.size())
+                    //                     log("------ Server Response sent to client ------\n\n");
+                    //                 else
+                    //                     log("Error sending response to client");
+                    //             }
+                    //         }
+                    //     }
+                    // } 
+                }
+            }
+        } 
+}
+
+void    Server::closeServer(){
+    close(_serverSocket);
+    close(_clientSocket);
+    exit(0);
 }
 
 std::ostream& operator<<(std::ostream& os, const Server& server)
@@ -225,7 +498,57 @@ void Server::initRoot(std::string value)
 //     this->_autoIndex = (value == "on") ? true : false;
 // }
 
-std::string Server::getRoot() const
+unsigned int	Server::getPort() const
 {
-    return (this->_root);
+	return (this->_port);
+}
+
+in_addr_t	Server::getHost() const
+{
+	return (this->_host);
+}
+
+std::string	Server::getServerName() const
+{
+	return (this->_serverName);
+}
+
+std::map<int, std::string>	Server::getErrorPages() const
+{
+	return (this->_errorPages);
+}
+
+size_t	Server::getClientBodySize() const
+{
+	return (this->_clientBodySize);
+}
+
+std::string	Server::getRoot() const
+{
+	return (this->_root);
+}
+
+std::string	Server::getIndex() const
+{
+	return (this->_index);
+}
+
+bool	Server::getAutoIndex() const
+{
+	return (this->_autoIndex);
+}
+
+std::vector<Location>	Server::getLocations() const
+{
+	return (this->_locations);
+}
+
+int	Server::getListenFd() const
+{
+	return (this->_listenFd);
+}
+
+std::string	Server::getBlock() const
+{
+	return (this->_block);
 }

@@ -1,6 +1,6 @@
 #include "CGI.hpp"
 
-CGI::CGI(Request& request)// : _env(construct_env(request))
+CGI::CGI(Request& request, Server& serv) : server(serv), request(request) // : _env(construct_env(request))
 {
 	this->_env = constructEnv(request);
 	// std::cout << "CGI created\n";
@@ -11,7 +11,7 @@ CGI::~CGI()
 	// std::cout << "CGI destroyed\n";
 }
 
-CGI::CGI(const CGI& copy)
+CGI::CGI(const CGI& copy) : server(copy.server), request(copy.request)
 {
 	std::cout << "CGI is being copied\n";
 	*this = copy;
@@ -35,12 +35,12 @@ std::map<std::string, std::string>	CGI::constructEnv(Request& request)
 	std::vector<std::string>	urlvec = splitUrl(url);
 
 	env["SERVER_SOFTWARE"] = "Jisu-Yoel-Amanda-Softwre";
-	env["SERVER_NAME"] = temp_config.name;
+	env["SERVER_NAME"] = this->server.getServerName();
 	env["GATEWAY_INTERFACE"] = "CGI/1.1";
 	env["SERVER_PROTOCOL"] = "HTTP/1.1";
-	env["SERVER_PORT"] = SSTR(temp_config.host_port);
+	env["SERVER_PORT"] = SSTR(this->server.getPort());
 	env["REQUEST_METHOD"] = request.getMethodStr();
-	env["PATH_INFO"] = temp_config.root + extractPathInfo(urlvec);
+	env["PATH_INFO"] = this->server.getRoot() + extractPathInfo(urlvec);
 	// if (!env["PATH_INFO"].empty())
 		// env["PATH_TRANSLATED"] = temp_config.root + env["PATH_INFO"];
 	// env["SCRIPT_NAME"] = temp_config.root + extractScriptName(urlvec);
@@ -157,18 +157,20 @@ std::string	CGI::exec_cgi( void )
 
 void	CGI::identifyCGI(std::vector<std::string> urlvec)
 {
+	std::map<std::string, std::string> cgi = this->request.getLocation()->getCGI();
 	for (size_t i = 0; i < urlvec.size(); i++)
 	{
-		for (std::map<std::string, std::string>::iterator it = temp_config.cgi_types.begin(); \
-		it != temp_config.cgi_types.end(); it++)
+		for (std::map<std::string, std::string>::iterator it = cgi.begin(); \
+		it != cgi.end(); it++)
 		{
 			if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
-				this->_script = temp_config.root + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
+				this->_script = this->server.getRoot() + this->request.getLocation()->getPath() + urlvec[i], this->_postfix = it->first;
+				// this->_script = this->server.getRoot() + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
 		}
 	}
 	if (this->_script.empty())
 		throw 501;
-	this->_program = temp_config.cgi_types[this->_postfix];
+	this->_program = cgi[this->_postfix];
 }
 
 std::string	CGI::extractScriptName(std::vector<std::string> urlvec)

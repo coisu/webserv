@@ -4,25 +4,39 @@
 Response::Response()
 {
 	_target_path = "";
-	_location = "";
 	_body = "";
 	_body_len = 0;
 	_auto_index = false;
-	_status = -1;
-	_response_content = "";
+	_status = 0;
+	_req_status = false;
+	_checkCur = "";
+	// _response_content = "";
 	initStatusCode();
 	initHeaders();
 }
 
 Response::Response(Request &request, const Server& server ) : _request(request), _server(server)
 {
-	_target_path = _request.getURL;
-	_location = "";
+	_target_path = setTargetPath();
 	_body = "";
 	_body_len = 0;
 	_auto_index = false;
-	_status = _request.getCode;
-	_response_content = "";
+	_status = 0;
+	_req_status = false;
+	_checkCur = "";
+	// _response_content = "";
+	initStatusCode();
+	initHeaders();
+}
+
+Response::Response(int status, const Server& server) :  _server(server)
+{
+	_target_path = setTargetPath();
+	_body = "";
+	_body_len = 0;
+	_req_status = true;
+	_status = status;
+	_checkCur = "";
 	initStatusCode();
 	initHeaders();
 }
@@ -38,7 +52,7 @@ bool Response::checkECode()
 	}
 	return (0);
 }
-=
+
 void		Response::initHeaders(void)
 {
 	this->_headers["Allow"] = "";
@@ -54,7 +68,7 @@ void		Response::initHeaders(void)
 	this->_headers["Content-Type"] = "";
 }
 
-void		Response::initStatusCode()
+void		Response::initStatusCode(void)
 {
 	this->_errorPages[100] = "Continue";
 	this->_errorPages[101] = "Switching Protocols";
@@ -80,7 +94,7 @@ void		Response::initStatusCode()
 	this->_errorPages[400] = "Bad Request";
 	this->_errorPages[401] = "Unauthorized";
 	this->_errorPages[402] = "Payment Required";
-	this->_errorPages[403] = "Forbidden";
+	this->_errorPages[403] = "Forbidden"; 	//POST to exit file but without prtmit
 	this->_errorPages[404] = "Not Found";
 	this->_errorPages[405] = "Method Not Allowed";	
 	this->_errorPages[408] = "Request Timeout";	
@@ -152,39 +166,20 @@ void Response::processResponse()
 	}
 	if (_status >= 400)
 	{
-		if (checkErrorPage(_status))
-			_body = writeBodyHtml(_server.getRoot() + _server.getErrorPage().at(_status), mimeList.getMimeType(ext) == "text/html");
+		if (_server.getErrorPages()[_status])
+			_body = writeBodyHtml(_server.getRoot() + _server.getErrorPages()[[_status]], mimeList.getMimeType(ext) == "text/html");
 		else
 			_body = makeErrorPage(_status);
 		_checkCur = "Close";
 	}
-	// method == post, error page, header create, non-cgi
-	if (_request.getMethodEnum() == GET && ext != "php" && _status >= 400)
+	
+
+	/* HEADER MAKE*/
+	if ((_request.getMethodEnum() == GET && ext != "php") || _status >= 400)
 		_headers += buildHeader(_body.size(), _status);
 	else
 		_headers += buildHeaderCgi(_body, _status);				// didn't make it yet
 }
-
-bool	Response::checkErrorPage(int  status)
-{
-	// typedef std::vector<std::string>::const_iterator	it_;
-	if (_server.getErrorPage().empty())
-	{
-		return false;
-	}
-	std::string	status_str = toString(status);
-	std::vector<std::string>	vec_(_server.getErrorPageCode());
-	std::vector<std::string>::const_iterator itBegin = vec_.begin();
-	std::vector<std::string>::const_iterator itEnd = vec_.end();
-
-	for (; itBegin != itEnd; ++itBegin)
-	{	
-		if (status_str == *(itBegin))
-		 return (true);
-	}
-	return false;
-}
-
 
 std::string		Response::writeBodyHtml(std::string const &path, bool isHTML)
 {
@@ -192,7 +187,8 @@ std::string		Response::writeBodyHtml(std::string const &path, bool isHTML)
 	std::string		filePath;
 	std::ifstream 	ifs;
 	
-	filePath = "./" + path;
+	if (path[0] != '/')
+		filePath = "/" + path;
 
 	ifs.open(const_cast<char*>(filePath.c_str()));
 	if (ifs.fail())
@@ -329,16 +325,14 @@ std::string	Response::getExt(std::string const &filename) const
 
 void	Response::setRequestVal(void)
 {
-
 	std::map<std::string, std::string> ReqHead = _request.getHead();
 
 	std::map<std::string, std::string>::iterator	itForHeader;
 	// std::cout << "=============================" << std::endl;
-	for (std::map<std::string, std::string>::iterator it=ReqHead.begin(); it!=ReqHead.end(); ++it)
+	for (std::map<std::string, std::string>::iterator it = ReqHead.begin(); it! = ReqHead.end(); ++it)
 	{
 		itForHeader = _headers.find(it->first);
-		if (itForHeader != _headers.end()
-			&& itForHeader->first != "Content-Length")
+		if (itForHeader != _headers.end() && itForHeader->first != "Content-Length")
 		{
  			_headers[itForHeader->first] = it->second;
 			// std::cout << "[ " << itForHeader->first << " ] : " << it->second << std::endl;

@@ -1,24 +1,25 @@
 #include "Request.hpp"
 
-Request::Request(std::string request, Server& serv) : server(serv), _full_request(request), _head(parseRequest(request))//, _body(extractBody)
+Request::Request(std::string request, Server& serv) 
+: server(serv), _full_request(request), _head(parseRequest(request))
 {
 	// std::cout << "Request created\n";
 	// printRequest();
-	this->_cgi = NULL;
-	if (this->_is_cgi)
-		this->_cgi = new CGI(*this, serv);
-	else
-		_body = readFile(this->_locPath);
+	// this->_cgi = NULL;
+	// if (this->_is_cgi)
+		// this->_cgi = new CGI(*this, serv);
+	// else
+	_body = readFile(this->_locPath);
 }
 
 Request::~Request()
 {
-	if (this->_cgi)
-		delete this->_cgi;
+	// if (this->_cgi)
+		// delete this->_cgi;
 	// std::cout << "Request destroyed\n";
 }
 
-Request::Request(const Request& copy) : server(copy.server), _cgi(copy.getCGI())
+Request::Request(const Request& copy) : server(copy.server)//, _cgi(copy.getCGI())
 {
 	std::cout << "Request is being copied\n";
 	*this = copy;
@@ -34,22 +35,22 @@ Request&	Request::operator = (const Request& copy)
 	return (*this);
 }
 
-Location*	Request::extractLocation(const Server& server, std::string locPath)
-{
-	std::vector<Location> locations = server.getLocations();
+// Location*	Request::extractLocation(const Server& server, std::string locPath)
+// {
+// 	std::vector<Location> locations = server.getLocations();
 
-	for (std::vector<Location>::iterator it = locations.begin(); \
-	it != locations.end(); it++)
-	{
-		if ((*it).getPath() == locPath)
-			this->_location = new Location(*it);
-	}
-	return (NULL);
-}
+// 	for (std::vector<Location>::iterator it = locations.begin(); 
+// 	it != locations.end(); it++)
+// 	{
+// 		if ((*it).getPath() == locPath)
+// 			this->_location = new Location(*it);
+// 	}
+// 	return (NULL);
+// }
 
 std::map<std::string, std::string>	Request::parseRequest(std::string request)
 {
-	std::map<std::string, std::string> m;
+	std::map<std::string, std::string> requestHeader;
 	std::string key, val;
 	std::istringstream iss(request);
 	std::string methods[3] = {"GET", "POST", "DELETE"};
@@ -61,15 +62,15 @@ std::map<std::string, std::string>	Request::parseRequest(std::string request)
 	this->_url = extractURL(this->_info);
 	// std::vector<std::string> urlvec = splitUrl(this->_url);
 	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
-	this->_location = extractLocation(this->server, this->_locPath);
+	// this->_location = extractLocation(this->server, this->_locPath);
 	this->_is_dir = pathIsDir(this->_locPath);
 	// this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
-	this->_is_cgi = this->_location->getIsCGI();
+	// this->_is_cgi = this->_location->getIsCGI();
 
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-		m[key] = val.substr(0, val.size() - 1);
+		requestHeader[key] = val.substr(0, val.size() - 1);
 
-	return m;
+	return requestHeader;
 }
 
 void	Request::printRequest( void )
@@ -122,15 +123,15 @@ std::string	Request::extractURL(std::string info)
 
 //GETTERS
 
-CGI*	Request::getCGI() const
-{
-	return (this->_cgi);
-}
+// CGI*	Request::getCGI() const
+// {
+// 	return (this->_cgi);
+// }
 
-bool	Request::isCGI() const
-{
-	return (this->_is_cgi);
-}
+// bool	Request::isCGI() const
+// {
+// 	return (this->_is_cgi);
+// }
 
 bool	Request::UrlIsDir() const
 {
@@ -177,7 +178,7 @@ std::map<std::string, std::string>	Request::getHead() const
 	return (this->_head);
 }
 
-Location*	Request::getLocation() const
-{
-	return (this->_location);
-}
+// Location*	Request::getLocation() const
+// {
+// 	return (this->_location);
+// }

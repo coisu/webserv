@@ -1,10 +1,10 @@
 #include "Location.hpp"
 
-Location::Location( void ) : _is_cgi(false) {}
+Location::Location( void ) : _isCgi(false) {}
 
 Location::~Location( void ) {}
 
-Location::Location( std::string locationBlock ) : _is_cgi(false)
+Location::Location( std::string locationBlock ) : _isCgi(false)
 {
 	initDefaults();
     std::stringstream   ss(locationBlock);
@@ -26,14 +26,14 @@ Location::Location( std::string locationBlock ) : _is_cgi(false)
 void	Location::initDefaults()
 {
 	this->_path = "";
-	this->_root = "";
+	// this->_root = "";
 	this->_index = "";
 	this->_autoIndex = false;
 	this->_ret = "";
 	// this->_allowMethids 
 	// this->_cgi
 	this->_block = "";
-	this->_is_cgi = false;
+	this->_isCgi = false;
 }
 
 void    Location::setAttributes(std::string key, std::string value)
@@ -85,9 +85,9 @@ Location::Location( const Location& src )
     this->_autoIndex = src._autoIndex;
     this->_ret = src._ret;
     this->_allowMethods = src._allowMethods;
-    this->_cgi = src._cgi;
+    this->_cgiConfig = src._cgiConfig;
     this->_block = src._block;
-	this->_is_cgi = src._is_cgi;
+	this->_isCgi = src._isCgi;
 }
 
 Location& Location::operator=( const Location& src )
@@ -100,9 +100,9 @@ Location& Location::operator=( const Location& src )
         this->_autoIndex = src._autoIndex;
         this->_ret = src._ret;
         this->_allowMethods = src._allowMethods;
-        this->_cgi = src._cgi;
+        this->_cgiConfig = src._cgiConfig;
         this->_block = src._block;
-		this->_is_cgi = src._is_cgi;
+		this->_isCgi = src._isCgi;
     }
 	return (*this);
 }
@@ -119,7 +119,7 @@ std::ostream& operator<<(std::ostream& os, const Location& location)
         os << location._allowMethods[i] << " ";
     os << "]\n";
     os << "cgi: [";
-    for (std::map<std::string, std::string>::const_iterator it = location._cgi.begin(); it != location._cgi.end(); it++)
+    for (std::map<std::string, std::string>::const_iterator it = location._cgiConfig.begin(); it != location._cgiConfig.end(); it++)
         os << it->first << ", " << it->second << " ";
     os << "]\n";
     // os << "block: " << location._block << std::endl;
@@ -195,10 +195,10 @@ void Location::initCGI(std::string value)
     std::string         cgiPath;
     std::string         suffix;
     
-	this->_is_cgi = true;
+	this->_isCgi = true;
     while (std::getline(ss, cgiPath, ',') && std::getline(ss, suffix, ','))
     {
-        this->_cgi[cgiPath] = suffix;
+        this->_cgiConfig[cgiPath] = suffix;
     }
 }
 
@@ -214,11 +214,11 @@ std::string	Location::getPath() const
 
 bool	Location::getIsCGI() const
 {
-	return (this->_is_cgi);
+	return (this->_isCgi);
 }
 
-std::map<std::string, std::string>	Location::getCGI() const
+std::map<std::string, std::string>	Location::getCGIConfig() const
 {
-	return (this->_cgi);
+	return (this->_cgiConfig);
 }
 

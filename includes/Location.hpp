@@ -27,7 +27,7 @@ class Location
         std::string getBlock() const;
 		std::string getPath() const;
 		bool		getIsCGI() const;
-		std::map<std::string, std::string>		getCGI() const;
+		std::map<std::string, std::string>		getCGIConfig() const;
         //setters
     private:
     /*methods*/
@@ -49,9 +49,9 @@ class Location
         bool                                _autoIndex;
         std::string                         _ret;
         std::vector<int>                    _allowMethods;
-        std::map<std::string, std::string>  _cgi;
+        std::map<std::string, std::string>  _cgiConfig;
         std::string                         _block;
-		bool								_is_cgi;
+		bool								_isCgi;
 };
 
 #endif

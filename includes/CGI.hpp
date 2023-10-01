@@ -10,18 +10,15 @@
 #include <arpa/inet.h>
 #include <cstdlib>
 #include <cstring>
-#include "Request.hpp"
 #include "http_tcpServer.hpp"
 #include "utils.h"
 #include "Server.hpp"
-
-class	Request;
 
 class CGI
 {
 	public:
 		//OCCF
-		CGI(Request& request, Server& serv);
+		CGI(Server& serv, std::string RequestUrl, std::string methodString, std::map<std::string, std::string> cgiConfig);
 		virtual ~CGI( void );
 		CGI(const CGI& copy);
 		CGI&	operator = (const CGI& copy);
@@ -32,12 +29,11 @@ class CGI
 
 		//public attributes
 		const Server&	server;
-		const Request&	request;
 		// char const**	cgi_env;
 
 	protected:
 		//private methods
-		std::map<std::string, std::string>	constructEnv(Request& request);
+		std::map<std::string, std::string>	constructEnv(std::string RequestUrl, std::string methodString);
 		// std::vector<std::string>	splitUrl(std::string url);
 		void	identifyCGI(std::vector<std::string> urlvec);
 		std::string	extractScriptName(std::vector<std::string> urlvec);
@@ -47,10 +43,12 @@ class CGI
 		//private attributes
 ;		std::string	_query;
 		std::map<std::string, std::string>	_env;
+		std::map<std::string, std::string>	_cgiConfig;
 		std::string	_program;
 		std::string	_script;
 		std::string	_postfix;
 		char *_av[3];
+
 };
 
 #endif

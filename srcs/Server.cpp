@@ -34,8 +34,8 @@ void	Server::initDefaults()
 	// this->_errorPages = ;
 	this->_clientBodySize = std::numeric_limits<size_t>::max();
 	this->_root = "";
-	this->_index = "";
-	this->_autoIndex = false;
+	// this->_index = "";
+	// this->_autoIndex = false;
 	// this->_locations = ;
 	this->_listenFd = 0;
 	this->_block = "";
@@ -306,20 +306,20 @@ void    Server::runServer(){
 						try
 						{
 							Request	request(buffer, *this);
-							if (request.getCGI())
-							{
-								request.getCGI()->getCharEnv();
-								std::string	cgi_response = request.getCGI()->exec_cgi();
-								// std::string	cgi_response = EXAMPLE_RESPONSE;
-								bytesSent = send(socket, cgi_response.c_str(), cgi_response.size(), 0);
-								// std::cout << "\n" << bytesSent << "RESPONSE: " << cgi_response << std::endl;
-								// while(true);
-							}
-							else
-							{
+							// if (request.getCGI())
+							// {
+							// 	request.getCGI()->getCharEnv();
+							// 	std::string	cgi_response = request.getCGI()->exec_cgi();
+							// 	// std::string	cgi_response = EXAMPLE_RESPONSE;
+							// 	bytesSent = send(socket, cgi_response.c_str(), cgi_response.size(), 0);
+							// 	// std::cout << "\n" << bytesSent << "RESPONSE: " << cgi_response << std::endl;
+							// 	// while(true);
+							// }
+							// else
+							// {
 								std::string	msg = buildResponse(200, request.getBody());
 								bytesSent = send(socket, msg.c_str(), msg.size(), 0);
-							}
+							// }
 								// bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
 							// std::cout << "\n servmsg: " << _serverMessage << std::endl;
 							// if (bytesSent == (long int)_serverMessage.size())
@@ -528,15 +528,15 @@ std::string	Server::getRoot() const
 	return (this->_root);
 }
 
-std::string	Server::getIndex() const
-{
-	return (this->_index);
-}
+// std::string	Server::getIndex() const
+// {
+// 	return (this->_index);
+// }
 
-bool	Server::getAutoIndex() const
-{
-	return (this->_autoIndex);
-}
+// bool	Server::getAutoIndex() const
+// {
+// 	return (this->_autoIndex);
+// }
 
 std::vector<Location>	Server::getLocations() const
 {

@@ -10,12 +10,12 @@
 #include <arpa/inet.h>
 #include <cstdlib>
 #include <cstring>
-#include "CGI.hpp"
+// #include "CGI.hpp"
 #include "utils.h"
 #include "Server.hpp"
 
 
-class	CGI;
+// class	CGI;
 // class	;
 
 class Request
@@ -31,7 +31,7 @@ class Request
 		//public methods
 		void	printRequest();
 		//getters
-		CGI*		getCGI() const;
+		// CGI*		getCGI() const;
 		std::string	getBody() const;
 		t_method	getMethodEnum() const;
 		std::string	getMethodStr() const;
@@ -43,7 +43,7 @@ class Request
 		// std::string	getLocation();
 		// std::string	getQuery();
 		bool	UrlIsDir() const;
-		bool	isCGI() const;
+		// bool	isCGI() const;
 		
 		//public attributes
 		const Server&	server;
@@ -57,15 +57,15 @@ class Request
 		// bool		extractDirStatus(std::string url);
 
 		//private attributes
-		bool		_is_cgi;
+		// bool		_is_cgi;
 		bool		_is_dir;
 		t_method	_method_enum;
 		std::string	_method_str;
 		std::string	_info;
 		std::string	_url;
 		// std::string	_location;
-		Location*	_location;
-		CGI*		_cgi;
+		// Location*	_location;
+		// CGI*		_cgi;
 		std::string	_full_request;
 		std::map<std::string, std::string>	_head;
 		std::string	_body;

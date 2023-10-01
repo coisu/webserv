@@ -64,19 +64,15 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 
     this->_locations = locationVec;
     this->_block = serverBlock;
-    // std::cout << "server block: " << serverBlock << std::endl;
-    // for (size_t i = 0; i < this->_locations.size(); i++)
-    // {
-    //     std::cout << "location " << i << ":\n" << this->_locations[i].getBlock() << std::endl;
-    // }
-    // std::cout << "\npush server\n";
+
+    /*Fill Server Values*/
     while (std::getline(ss, part, ';'))
     {
         std::string key = part.substr(0, part.find(':'));
         std::string value = part.substr(part.find(':')+1);
-        // std::cout << "key: \"" << key << "\" value: \"" << value << "\"\n";
         setAttributes(key, value);
     }
+
 	this->_serverPort = this->_port;
 	// this->_serverSocket = ();
 	// this->_clientSocket = ();
@@ -98,15 +94,16 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 
 void    Server::setAttributes(std::string key, std::string value)
 {
-    const int N = 8;
+    size_t      N = 6;
+
     std::string keys[N] = {"port", 
                           "host", 
                           "server_name", 
                           "error_page", 
                           "client_body_size", 
-                          "root", 
-                          "index", 
-                          "autoindex"};
+                          "root"}; 
+                        //   "index", 
+                        //   "autoindex"};
     size_t i = 0;
     while (i < N && keys[i] != key)
         i++;
@@ -130,12 +127,12 @@ void    Server::setAttributes(std::string key, std::string value)
     case 5:
         initRoot(value);
         break;
-    case 6:
-        initIndex(value);
-        break;
-    case 7:
-        initAutoIndex(value);
-        break;
+    // case 6:
+    //     initIndex(value);
+    //     break;
+    // case 7:
+    //     initAutoIndex(value);
+    //     break;
     default:
         throw std::runtime_error("unrecognised server key: " + key);
     }
@@ -149,8 +146,8 @@ Server::Server( const Server& src )
     this->_errorPages = src._errorPages;
     this->_clientBodySize = src._clientBodySize;
     this->_root = src._root;
-    this->_index = src._index;
-    this->_autoIndex = src._autoIndex;
+    // this->_index = src._index;
+    // this->_autoIndex = src._autoIndex;
     this->_locations = src._locations;
     this->_listenFd = src._listenFd;
     this->_block = src._block;
@@ -178,8 +175,8 @@ Server& Server::operator=( const Server& src )
         this->_errorPages = src._errorPages;
         this->_clientBodySize = src._clientBodySize;
         this->_root = src._root;
-        this->_index = src._index;
-        this->_autoIndex = src._autoIndex;
+        // this->_index = src._index;
+        // this->_autoIndex = src._autoIndex;
         this->_locations = src._locations;
         this->_listenFd = src._listenFd;
         this->_block = src._block;
@@ -391,12 +388,12 @@ std::ostream& operator<<(std::ostream& os, const Server& server)
     os << "serverName: " << server._serverName << std::endl;
     os << "errorPages: [";
     for (std::map<int, std::string>::const_iterator it = server._errorPages.begin(); it != server._errorPages.end(); it++)
-        os << it->first << ", " << it->second << " ";
+        os << it->first << ", " << it->second << " | ";
     os << "]\n";
     os << "client body size: " << server._clientBodySize << std::endl;
     os << "root: " << server._root << std::endl;
-    os << "index: " << server._index << std::endl;
-    os << "autoIndex: " << server._autoIndex << std::endl;
+    // os << "index: " << server._index << std::endl;
+    // os << "autoIndex: " << server._autoIndex << std::endl;
     os << "------------LOCATIONS-------------\n";
     for (size_t i = 0; i < server._locations.size(); i++)
         os << "location " << i + 1 << ":\n" << server._locations[i] << std::endl;
@@ -413,11 +410,35 @@ void    Server::setLocations( std::vector<Location> locationVec )
 
 void Server::initPort(std::string value)
 {
-    this->_port = htons(atoi(value.c_str()));
+    if (value.find_first_not_of("0123456789") != value.npos || value.size() > 5)
+        throw std::runtime_error("invalid port in server block.");
+    int val = atoi(value.c_str());
+    if (val < 1 || val > 65535)
+        throw std::runtime_error("port must be between 1 and 65,535.");
+    this->_port = htons(val);
 }
 
 void Server::initHost(std::string value)
 {
+  	std::string part;
+	std::string ip[4];
+	std::stringstream ss(value);
+    int i = 0;
+    if (value.find_first_not_of("0123456789.") != value.npos || value.size() > 15)
+        throw std::runtime_error("(1) invalid host address in server block.");
+    while (std::getline(ss, part, '.'))
+    {
+        if (i == 4)
+            throw std::runtime_error("(2) invalid host address in server block.");
+        ip[i++] = part;
+    }
+    for (int j = 0; j < 4; j++)
+    {
+        if (ip[j].size() == 0)
+            throw std::runtime_error("(3) invalid host address in server block.");
+        if (atoi(ip[j].c_str()) > 255 || atoi(ip[j].c_str()) < 0)
+            throw std::runtime_error("(4) invalid host address in server block.");
+    }
     this->_host = inet_addr(value.c_str());
 }
 
@@ -434,29 +455,48 @@ void Server::initErrorPage(std::string value)
     
     while (std::getline(ss, code, ',') && std::getline(ss, path, ','))
     {
-        this->_errorPages[atoi(code.c_str())] = path;
+        if (code.size() > 3 || code.find_first_not_of("0123456789") != code.npos)
+            throw std::runtime_error("invalid error page code.");
+        int stat = atoi(code.c_str());
+        if (stat > 599 || stat < 400)
+            throw std::runtime_error("error codes must be in the range: 400-599.");
+        if (path[0] != '/')
+            throw std::runtime_error("error page path must start with \'/\' - path: " + path);
+        if (path.at(path.length() - 1) == '/' && path.size() > 1)
+            throw std::runtime_error("error page path must *not* end with \'/\' - path: " + path);
+        this->_errorPages[stat] = path;
     }
 }
 
 void Server::initClientBodySize(std::string value)
 {
-    this->_clientBodySize = atoi(value.c_str());
+    if (value.size() > 18 || value.find_first_not_of("0123456789") != value.npos)
+        throw std::runtime_error("bad client body size.");
+    this->_clientBodySize = static_cast<size_t>(atoll(value.c_str()));
 }
 
 void Server::initRoot(std::string value)
 {
+    if (value[0] != '/')
+        throw std::runtime_error("root path must start with \'/\' - path: " + value);
+    if (value.at(value.length() - 1) == '/' && value.size() > 1)
+        throw std::runtime_error("root path must *not* end with \'/\' - path: " + value);
+    if (!pathIsDir(value))
+        throw std::runtime_error("root path is not a valid directory - path: " + value);
+    // if (!pathExists(value))
+    //     throw std::runtime_error("bananaaaaaaaaaaaaa");
     this->_root = value;
 }
 
-void Server::initIndex(std::string value)
-{
-    this->_index = value;
-}
+// void Server::initIndex(std::string value)
+// {
+//     this->_index = value;
+// }
 
-void Server::initAutoIndex(std::string value)
-{
-    this->_autoIndex = (value == "on") ? true : false;
-}
+// void Server::initAutoIndex(std::string value)
+// {
+//     this->_autoIndex = (value == "on") ? true : false;
+// }
 
 unsigned int	Server::getPort() const
 {

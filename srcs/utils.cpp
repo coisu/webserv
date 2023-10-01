@@ -62,10 +62,20 @@ std::vector<std::string>	splitUrl(std::string url)
 bool	pathIsDir(std::string path)
 {
 	struct stat	statbuf;
-	if ((stat(path.c_str(), &statbuf) == 0))
-		return (S_ISDIR(statbuf.st_mode));
-	else
-		std::cerr << "\nWHAT\n";
-		// throw std::runtime_error(path + " is invalid.");
-	return false;
+
+	if (stat(path.c_str(), &statbuf) == 0)
+	{
+        if (!S_ISDIR(statbuf.st_mode))
+			return false;
+		if (!(statbuf.st_mode & S_IRUSR) ||	// read permissions
+			!(statbuf.st_mode & S_IWUSR) ||	// write permissions
+			!(statbuf.st_mode & S_IXUSR))	// exec permission
+			return false;
+	}
+    else
+	{
+    	throw std::runtime_error(std::string(strerror(errno)));
+	}
+	return true;
+	// return (stat(path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode));
 }

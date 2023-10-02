@@ -63,19 +63,18 @@ bool	pathIsDir(std::string path)
 {
 	struct stat	statbuf;
 
-	if (stat(path.c_str(), &statbuf) == 0)
+	if (stat(path.c_str(), &statbuf) != 0)
+		return (std::cerr << "file or directory not found\n", false);
+	else
 	{
         if (!S_ISDIR(statbuf.st_mode))
-			return false;
-		if (!(statbuf.st_mode & S_IRUSR) ||	// read permissions
-			!(statbuf.st_mode & S_IWUSR) ||	// write permissions
-			!(statbuf.st_mode & S_IXUSR))	// exec permission
-			return false;
-	}
-    else
-	{
-    	throw 404;
+			return (std::cerr << "not a directory", false);
+		if (!(statbuf.st_mode & S_IRUSR))	// read permissions
+			return (std::cerr << "no read permissions", false);
+		if (!(statbuf.st_mode & S_IWUSR))	// write permissions
+			return (std::cerr << "no write permissions", false);
+		if (!(statbuf.st_mode & S_IXUSR))	// exec permission
+			return (std::cerr << "no exec permissions", false);
 	}
 	return true;
-	// return (stat(path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode));
 }

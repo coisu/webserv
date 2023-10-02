@@ -26,7 +26,6 @@ int main(int ac, char **av) {
 	}
 	catch(const std::exception& e)
 	{
-		std::cout << "hello?\n";
 		std::cerr << e.what() << '\n';
 	}
     return 0;

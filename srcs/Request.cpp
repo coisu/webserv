@@ -4,7 +4,7 @@ Request::Request(std::string request, Server& serv)
 : server(serv), _full_request(request), _head(parseRequest(request))
 {
 	// std::cout << "Request created\n";
-	this->_body = readFile(this->_locPath);
+	// this->_body = readFile(this->_locPath);
 }
 
 Request::~Request()

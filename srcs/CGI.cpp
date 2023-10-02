@@ -58,8 +58,9 @@ std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std
 	while( it != env.end())
 	{
 		if (it->second.empty())
-			env.erase(it);
-		it++;
+			env.erase(it++);
+		else
+			it++;
 	}
 	identifyCGI(urlvec);
 	this->_av[0] = const_cast<char*>(this->_program.c_str());
@@ -155,6 +156,10 @@ std::string	CGI::exec_cgi( void )
 
 void	CGI::identifyCGI(std::vector<std::string> urlvec)
 {
+	// std::cout << "URLVEC:\n"
+	// for (size_t i = 0; i < urlvec.size(); i++)
+	// 	std::cout << urlvec[i] << ", ";
+	// std::cout << "end\n";
 	for (size_t i = 0; i < urlvec.size(); i++)
 	{
 		// for (std::map<std::string, std::string>::iterator it = this->_cgiConfig.begin(); 

@@ -59,7 +59,6 @@ std::map<std::string, std::string>	Request::parseRequest(std::string request)
 	std::cout << "root: " << this->server.getRoot() << std::endl;
 	std::cout << "url: " << this->_url << std::endl;
 	std::cout << "suby: " << this->_url.substr(0, this->_url.find_first_of('?')) << std::endl;
-	this->_locPath = "";
 	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
 	// this->_location = extractLocation(this->server, this->_locPath);
 	this->_isDir = pathIsDir(this->_locPath);

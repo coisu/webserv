@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "Request.hpp"
+#include "CGI.hpp"
 
 void log(const std::string &message){
     std::cerr << message << std::endl;
@@ -301,11 +302,21 @@ void    Server::runServer(){
                         FD_CLR(socket, &_socketSet);
                     } else {
                         std::cout << "we got data" << std::endl;
-						// std::cout << buffer << std::endl;
+						std::cout << "\n---------------------BUFFER-------------------\n" << buffer << std::endl;
+                        std::cout << "\n----------------------------------------------\n";
 						// Request request = process_request(buffer);
 						try
 						{
 							Request	request(buffer, *this);
+                            std::string requestUrl = request.getURL();
+                            CGI*    cgiTest = NULL;
+                            if (requestUrl.find("cgi-bin") != requestUrl.npos)
+                            {
+                                std::map<std::string, std::string>  cgiConfig;
+                                cgiConfig["/usr/bin/python3"] = ".py";
+                                cgiConfig["/bin/bash"] = ".sh";
+                                cgiTest = new CGI(*this, requestUrl, request.getMethodStr(), cgiConfig);
+                            }
 							// if (request.getCGI())
 							// {
 							// 	request.getCGI()->getCharEnv();
@@ -318,6 +329,9 @@ void    Server::runServer(){
 							// else
 							// {
 								std::string	msg = buildResponse(200, "JELLOO\n");
+                                msg = buildResponse(200, readFile("bing.html"));
+                                if (cgiTest)
+                                    msg = buildResponse(200, cgiTest->exec_cgi());
 								bytesSent = send(socket, msg.c_str(), msg.size(), 0);
 							// }
 								// bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);

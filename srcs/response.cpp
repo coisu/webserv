@@ -107,10 +107,45 @@ void		Response::initStatusCode(void)
 	this->_errorPages[505] = "HTTP Version Not Supported";	
 }
 
+// static bool isAllowedMethod(HttpMethod &method, Location &location, short &code)
+// {
+//     std::vector<short> methods = location.getMethods();
+//     if ((method == GET && !methods[0]) || (method == POST && !methods[1]) ||
+//        (method == DELETE && !methods[2])|| (method == PUT && !methods[3])||
+//         (method == HEAD && !methods[4]))
+//     {
+//         code = 405;
+//         return (1);
+//     }
+//     return (0);
+// }
+
+// static std::string combinePaths(std::string p1, std::string p2, std::string p3)
+// {
+//     std::string res;
+//     int         len1;
+//     int         len2;
+
+//     len1 = p1.length();
+//     len2 = p2.length();
+//     if (p1[len1 - 1] == '/' && (!p2.empty() && p2[0] == '/') )
+//         p2.erase(0, 1);
+//     if (p1[len1 - 1] != '/' && (!p2.empty() && p2[0] != '/'))
+//         p1.insert(p1.end(), '/');
+//     if (p2[len2 - 1] == '/' && (!p3.empty() && p3[0] == '/') )
+//         p3.erase(0, 1);
+//     if (p2[len2 - 1] != '/' && (!p3.empty() && p3[0] != '/'))
+//         p2.insert(p1.end(), '/');
+//     res = p1 + p2 + p3;
+//     return (res);
+// }
+
+
 void Response::processResponse()
 {
 	std::string	currentMethod(_request.getMethodStr());
-	std::string	ext(getExt(_request.getURL()));
+	std::string	ext(getExt(_request.getLocPath()));
+	bool isRedirect = false;
 
 	if (_request.getMethodEnum() == DELETE && _status == 404)
 		_status = -1;
@@ -124,6 +159,7 @@ void Response::processResponse()
 		if (_status == 0)
 		{
 			_status = 301;	//MOVED_PERMANENTLY
+			isRedirect = true;
 		}
 	}
 	else if (_status == -1)
@@ -135,32 +171,50 @@ void Response::processResponse()
 				if (_location.getAutoIndex())
 				{
 					struct stat			fileinfo;
-					
-					stat(_request.getURL().c_str(), &fileinfo);
+					int ret;
+
+					ret = stat(_target_path.c_str(), &fileinfo);
 					if (S_ISDIR(fileinfo.st_mode))
 					{
-						_body = writeBodyAutoindex(_request.getURL());		//check url and either make filepath before here.
+						_body = writeBodyAutoindex(_request.getURL());
 						_status = 200;
 					}
 					else if (S_ISREG(fileinfo.st_mode))						//regular file
 					{
-						_body = fileTextIntoBody(_request.getURL(), mimeList.getMimeType(ext) == "text/html");
+						_body = fileTextIntoBody(mimeList.getMimeType(ext) == "text/html");
 						_status = 200;
 					}
 				}
 				else
 				{
-					_body = writeBodyHtml(_request.getURL(), mimeList.getMimeType(ext) == "text/html");
+					_body = writeBodyHtml(_target_path, mimeList.getMimeType(ext) == "text/html");
 					_status = 200;
 				}
+
 			}
 			else
 			{
+				if (_request.getMethodEnum() == POST)
+				{
+					if (ret != 0)
+					{
+						std::string reqBody = _request.getBody();
+						int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
+						if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
+						{
+							std::cout << "Created by POST of " << _target_path <<std::endl;
+						}
+						close(fd);
+						_status = 201;
+					}
+
+				}
 				if (_location.getIsCGI())
 				{
 					CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig())
 					_body = cgi.exec_cgi();
 				}
+
 			}
 		}
 		else if (currentMethod_ == "DELETE")
@@ -185,14 +239,13 @@ void Response::processResponse()
 		_headers += buildHeaderCgi(_body, _status);				// didn't make it yet
 }
 
-std::string		Response::writeBodyHtml(std::string const &path, bool isHTML)
+std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 {
 	std::string		ret;
-	std::string		filePath;
 	std::ifstream 	ifs;
 	
-	if (path[0] != '/')
-		filePath = "/" + path;
+	// if (path[0] != '/')
+	// 	filePath = "/" + path;
 
 	ifs.open(const_cast<char*>(filePath.c_str()));
 	if (ifs.fail())
@@ -217,9 +270,9 @@ std::string		Response::writeBodyHtml(std::string const &path, bool isHTML)
 	return (ret);
 }
 
-std::string		Response::fileTextIntoBody(const std::string &filepath, bool isHTML)
+std::string		Response::fileTextIntoBody(bool isHTML)
 {
-	std::ifstream in(filepath.c_str());
+	std::ifstream in(_target_path.c_str());
 	std::string line;
 	std::string ret;
 
@@ -228,7 +281,8 @@ std::string		Response::fileTextIntoBody(const std::string &filepath, bool isHTML
 
 		while (std::getline(in, line))
 		{
-			if (isHTML) {
+			if (isHTML)
+			{
 				ret += "\n";
 				ret += line + "</br>";
 			}
@@ -246,7 +300,6 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 {
 	std::string 	ret;
 	std::string		url
-	std::string		filepath;		//check what's in url and set file_path
 	DIR				*dir_ptr;
 	struct dirent  	*dir_entry;
 	struct stat		fileinfo;
@@ -271,7 +324,7 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
   	ret += "<h1>Index of " + url + "</h1><hr><pre>\r\n";
   	ret += "<a href=\"../\">../</a>\r\n";
 
-	dir_ptr = opendir(filepath.c_str());
+	dir_ptr = opendir(_target_path.c_str());
 	if (dir_ptr != NULL)
 	{
 		while ((dir_entry = readdir(dir_ptr))) //get every file and directory info after opendir
@@ -279,7 +332,7 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 			if (strcmp(dir_entry->d_name, ".") == 0 || strcmp(dir_entry->d_name, "..") == 0)
 				continue;
 			std::string filename = std::string(dir_entry->d_name);
-			if (stat((filepath + filename).c_str(), &fileinfo) == 0)
+			if (stat((_target_path + filename).c_str(), &fileinfo) == 0)
 			{
 				if (S_ISDIR(fileinfo.st_mode))
 				{

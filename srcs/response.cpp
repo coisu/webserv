@@ -17,7 +17,7 @@ Response::Response()
 
 Response::Response(Request &request, const Server& server ) : _request(request), _server(server)
 {
-	_target_path = setTargetPath();
+	_target_path = _request->getLocPath;
 	_body = "";
 	_body_len = 0;
 	_auto_index = false;
@@ -117,7 +117,7 @@ void Response::processResponse()
 
 	setRequestVal();
 	setContentType(ext); 
-	checkSetLocation(_request.getURL());
+	checkSetLocation(_target_path);
 
 	if (_location.getRet().empty())
 	{
@@ -156,7 +156,11 @@ void Response::processResponse()
 			}
 			else
 			{
-				// _body = writeBodyCgi(_status);
+				if (_location.getIsCGI())
+				{
+					CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig())
+					_body = cgi.exec_cgi();
+				}
 			}
 		}
 		else if (currentMethod_ == "DELETE")

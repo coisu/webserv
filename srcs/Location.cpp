@@ -212,6 +212,12 @@ std::string	Location::getPath() const
 	return (this->_path);
 }
 
+std::string Location::getRet() const
+{
+    return (this->_ret);
+}
+
+
 bool	Location::getIsCGI() const
 {
 	return (this->_isCgi);

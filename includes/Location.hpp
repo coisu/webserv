@@ -26,6 +26,7 @@ class Location
         //getters
         std::string getBlock() const;
 		std::string getPath() const;
+        std::string getRet() const;
 		bool		getIsCGI() const;
 		std::map<std::string, std::string>		getCGIConfig() const;
         //setters

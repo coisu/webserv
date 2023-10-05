@@ -217,11 +217,16 @@ std::string Location::getRet() const
     return (this->_ret);
 }
 
-
 bool	Location::getIsCGI() const
 {
 	return (this->_isCgi);
 }
+
+bool    Location::getAutoIndex() const
+{
+    return (this->_autoIndex);
+}
+
 
 std::map<std::string, std::string>	Location::getCGIConfig() const
 {

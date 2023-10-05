@@ -520,7 +520,7 @@ std::string		Response::buildHeader(int bodySize, int status)
 {
 	std::string	header;
 
-	setContentLengh(bodySize);
+	setContentLength(bodySize);
 	header += makeStartLine(status);
 	header += makeTimeLine(false);
 	header += appendMapHeaders(false, status);
@@ -529,7 +529,37 @@ std::string		Response::buildHeader(int bodySize, int status)
 	return (header);
 }
 
-void	Response::setContentLengh(int bodySize)
+std::string		Response::buildHeaderCgi(std::String &body, int status)
+{
+	std::string	header;
+	std::string tmp(body);
+	std::string::size_type n;
+
+	header += makeStartLine(status);
+
+	n = tmp.find("\r\n\r\n");
+	if (n != std::string::npos)
+	{
+		header += tmp.substr(0, n) + "\r\n";
+		body.clear();
+		body = tmp.substr(n, tmp.size());
+	}
+
+	if (_request.getMethodEnum = DELETE)
+	{
+		setContentLength(0);
+	}
+	else
+	{
+		setContentLength(body.size() - 2);
+	}
+	header += appendMapHeaders(true, status);
+	header += makeTimeLine(true);
+
+	return (header);
+}
+
+void	Response::setContentLength(int bodySize)
 {
 	this->_headers["Content-Length"] = toString(bodySize);
 }
@@ -559,7 +589,7 @@ std::string		Response::appendMapHeaders(bool isCGI, int statusCode)
 		if ( !(it->second.empty()) )
 		{
 			if ((_request.getMethodEnum() == DELETE && it->first == "Content-Type") 
-			|| (it->first == "Content-Type" && option == isCGI)
+			|| (it->first == "Content-Type" && isCGI == true)
 			|| (it->first == "Transfer-Encoding"))
 			{
 				continue ;

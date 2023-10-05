@@ -16,7 +16,8 @@ SOURCES_FILES =	main.cpp \
 				utils.cpp \
 				parseConfig.cpp \
 				Server.cpp \
-				Location.cpp
+				Location.cpp \
+				response.cpp
 
 SRCS = $(addprefix $(SOURCE_DIR), $(SOURCES_FILES))
 

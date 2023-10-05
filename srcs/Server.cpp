@@ -328,11 +328,16 @@ void    Server::runServer(){
 							// }
 							// else
 							// {
-								std::string	msg = buildResponse(200, "JELLOO\n");
-                                msg = buildResponse(200, readFile("bing.html"));
-                                if (cgiTest)
-                                    msg = buildResponse(200, cgiTest->exec_cgi());
-								bytesSent = send(socket, msg.c_str(), msg.size(), 0);
+
+
+								// std::string	msg = buildResponse(200, "JELLOO\n");
+                                // msg = buildResponse(200, readFile("bing.html"));
+                                // if (cgiTest)
+                                //     msg = buildResponse(200, cgiTest->exec_cgi());
+								// bytesSent = send(socket, msg.c_str(), msg.size(), 0);
+
+
+
 							// }
 								// bytesSent = send(socket, _serverMessage.c_str(), _serverMessage.size(), 0);
 							// std::cout << "\n servmsg: " << _serverMessage << std::endl;
@@ -340,6 +345,16 @@ void    Server::runServer(){
 								// log("------ Server Response sent to client check------\n\n");
 							// else
 								// log("Error sending response to client");
+                                
+                            std::string responseBuffer;
+                            Response response(request, *this);
+
+                            responseBuffer = response.processResponse();
+                            bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
+                            
+                            response._buffer.clear();
+                            response._headerStr.clear();
+                            response._body.clear();
 						}
 						catch(int errcode)
 						{

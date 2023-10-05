@@ -5,6 +5,8 @@ Response::Response()
 {
 	_target_path = "";
 	_body = "";
+	_buffer = ""
+	_headerStr = ""
 	_body_len = 0;
 	_auto_index = false;
 	_status = 0;
@@ -19,6 +21,8 @@ Response::Response(Request &request, const Server& server ) : _request(request),
 {
 	_target_path = _request->getLocPath;
 	_body = "";
+	_buffer = ""
+	_headerStr = ""
 	_body_len = 0;
 	_auto_index = false;
 	_status = 0;
@@ -33,6 +37,8 @@ Response::Response(int status, const Server& server) :  _server(server)
 {
 	_target_path = setTargetPath();
 	_body = "";
+	_buffer = ""
+	_headerStr = ""
 	_body_len = 0;
 	_req_status = true;
 	_status = status;
@@ -141,12 +147,12 @@ void		Response::initStatusCode(void)
 // }
 
 
-void Response::processResponse()
+std::string Response::processResponse()
 {
 	std::string	currentMethod(_request.getMethodStr());
 	std::string	ext(getExt(_request.getLocPath()));
-	std::string headerStr = "";
-	std::string buffer = "";
+	// std::string _headerStr = "";
+	// std::string buffer = "";
 	bool isRedirect = false;
 
 	if (_request.getMethodEnum() == DELETE && _status == 404)
@@ -255,13 +261,13 @@ void Response::processResponse()
 
 	/* MAKE HEADER */
 	if ((_request.getMethodEnum() == GET && ext != "php") || _status >= 400)
-		headerStr += buildHeader(_body.size(), _status);
+		_headerStr += buildHeader(_body.size(), _status);
 	else
-		headerStr += buildHeaderCgi(_body, _status);				// didn't make it yet
+		_headerStr += buildHeaderCgi(_body, _status);				// didn't make it yet
 
-	buffer = (_request.getMethodEnum() = DELETE) ? headerStr + "\r\n" : headerStr + _body + "\r\n";
+	_buffer = (_request.getMethodEnum() = DELETE) ? _headerStr + "\r\n" : _headerStr + _body + "\r\n";
 		
-
+	return _buffer;
 }
 
 std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
@@ -546,7 +552,7 @@ std::string		Response::makeStartLine(int status)
 
 std::string		Response::appendMapHeaders(bool isCGI, int statusCode)	
 {
-	std::string	headerStr;
+	std::string	_headerStr;
 
 	for (std::map<std::string, std::string>::iterator it=_headers.begin(); it!=_headers.end(); it++)
 	{
@@ -558,20 +564,20 @@ std::string		Response::appendMapHeaders(bool isCGI, int statusCode)
 			{
 				continue ;
 			} 
-			headerStr += it->first;
-			headerStr += ": ";
+			_headerStr += it->first;
+			_headerStr += ": ";
 			if (it->first == "Content-Type" && statusCode >= 400)
 			{
-				headerStr += "text/html";
+				_headerStr += "text/html";
 			}
 			else
 			{
-				headerStr += it->second;
+				_headerStr += it->second;
 			}
-			headerStr += "\r\n";
+			_headerStr += "\r\n";
 		}
 	}
-	return headerStr;
+	return _headerStr;
 }
 
 // Date: Thu, 18 Aug 2022 11:02:41 GMT

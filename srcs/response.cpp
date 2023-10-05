@@ -9,7 +9,7 @@ Response::Response()
 	_auto_index = false;
 	_status = 0;
 	_req_status = false;
-	_checkCur = "";
+	_connect = "";
 	// _response_content = "";
 	initStatusCode();
 	initHeaders();
@@ -23,7 +23,7 @@ Response::Response(Request &request, const Server& server ) : _request(request),
 	_auto_index = false;
 	_status = 0;
 	_req_status = false;
-	_checkCur = "";
+	_connect = "";
 	// _response_content = "";
 	initStatusCode();
 	initHeaders();
@@ -36,7 +36,7 @@ Response::Response(int status, const Server& server) :  _server(server)
 	_body_len = 0;
 	_req_status = true;
 	_status = status;
-	_checkCur = "";
+	_connect = "";
 	initStatusCode();
 	initHeaders();
 }
@@ -145,6 +145,8 @@ void Response::processResponse()
 {
 	std::string	currentMethod(_request.getMethodStr());
 	std::string	ext(getExt(_request.getLocPath()));
+	std::string headerStr = "";
+	std::string buffer = "";
 	bool isRedirect = false;
 
 	if (_request.getMethodEnum() == DELETE && _status == 404)
@@ -228,15 +230,38 @@ void Response::processResponse()
 			_body = writeBodyHtml(_server.getRoot() + _server.getErrorPages()[[_status]], mimeList.getMimeType(ext) == "text/html");
 		else
 			_body = makeErrorPage(_status);
-		_checkCur = "Close";
+		_connect = "Close";
 	}
 	
+	/* REDIRECTION HEADER */
+	if (!_location.getRet().empty() && isRedirect || _status = 201)
+	{
+		setLocationHeader();
+	}
 
-	/* HEADER MAKE*/
+	if (!_request.getHead()["Connection"].empty())
+	{
+		if (_request.getHead()["Connection"] == "close")
+		{
+			_connect = "Close";
+			this->_headers["Connection"] = _connect;
+		}
+	}
+	else if (_status < 400)
+	{
+		_connect = "Keep-Alive";
+		this->_headers["Connection"] = _connect;
+	}
+
+	/* MAKE HEADER */
 	if ((_request.getMethodEnum() == GET && ext != "php") || _status >= 400)
-		_headers += buildHeader(_body.size(), _status);
+		headerStr += buildHeader(_body.size(), _status);
 	else
-		_headers += buildHeaderCgi(_body, _status);				// didn't make it yet
+		headerStr += buildHeaderCgi(_body, _status);				// didn't make it yet
+
+	buffer = (_request.getMethodEnum() = DELETE) ? headerStr + "\r\n" : headerStr + _body + "\r\n";
+		
+
 }
 
 std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
@@ -477,9 +502,8 @@ std::string		Response::makeErrorPage(int	status)
 int	Response::execteDelete(void)
 {
 	int	status(200);
-	std::string		filePath("./" + _request.getURL());		//check URL contents
 
-	if (remove(const_cast<char*>(filePath.c_str())) == -1)
+	if (remove(const_cast<char*>(_target_path.c_str())) == -1)
 	{
 		status = 204;
 	}
@@ -490,15 +514,11 @@ std::string		Response::buildHeader(int bodySize, int status)
 {
 	std::string	header;
 
-	// body size -> Content-Length
-	// append "Content-Lengh" to _headers
 	setContentLengh(bodySize);
-	// make start line
 	header += makeStartLine(status);
-	// append headers value!
-	header += appendMapHeaders(1, status);
-	// time
-	header += makeTimeLine(1);
+	header += makeTimeLine(false);
+	header += appendMapHeaders(false, status);
+	
 
 	return (header);
 }
@@ -523,40 +543,39 @@ std::string		Response::makeStartLine(int status)
 	return startLine;
 }
 
-// option1 : HTML, 0:CGI
-std::string		Response::appendMapHeaders(int option, int statusCode)	
+
+std::string		Response::appendMapHeaders(bool isCGI, int statusCode)	
 {
-	std::string	Header;
+	std::string	headerStr;
 
 	for (std::map<std::string, std::string>::iterator it=_headers.begin(); it!=_headers.end(); it++)
 	{
 		if ( !(it->second.empty()) )
 		{
-			if ((request_.getMethod() == "DELETE" && it->first == "Content-Type") 
-			|| (it->first == "Content-Type" && option == 0)
+			if ((_request.getMethodEnum() == DELETE && it->first == "Content-Type") 
+			|| (it->first == "Content-Type" && option == isCGI)
 			|| (it->first == "Transfer-Encoding"))
 			{
 				continue ;
 			} 
-			Header += it->first;
-			Header += ": ";
+			headerStr += it->first;
+			headerStr += ": ";
 			if (it->first == "Content-Type" && statusCode >= 400)
 			{
-				Header += "text/html";
+				headerStr += "text/html";
 			}
 			else
 			{
-				Header += it->second;
+				headerStr += it->second;
 			}
-			Header += "\r\n";
+			headerStr += "\r\n";
 		}
 	}
-	return Header;
+	return headerStr;
 }
 
 // Date: Thu, 18 Aug 2022 11:02:41 GMT
-// option1 : HTML, 0:CGI
-std::string		Response::makeTimeLine(int option) 
+std::string		Response::makeTimeLine(bool isCGI) 
 {
 	std::string	timeLine;
 	timeLine += "Date: ";
@@ -570,11 +589,18 @@ std::string		Response::makeTimeLine(int option)
   	strftime(buffer, 80, "%a, %d %b %Y %T GMT", timeinfo);
 
 	timeLine += buffer;
-	if (option == 1 || request_.getMethod() == "DELETE")
+	if (isCGI == false || _request.getMethodEnum() == DELETE)
 	{
 		timeLine += "\r\n";
 	}
 	return (timeLine);
+}
+
+void Response::setLocationHeader()
+{
+	std::string url = _request.getURL();
+
+	this->_headers["Location"] = url;
 }
 
 // bool Response::buildBody()

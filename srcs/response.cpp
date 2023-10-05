@@ -5,8 +5,8 @@ Response::Response()
 {
 	_target_path = "";
 	_body = "";
-	_buffer = ""
-	_headerStr = ""
+	_buffer = "";
+	_headerStr = "";
 	_body_len = 0;
 	_auto_index = false;
 	_status = 0;
@@ -17,35 +17,48 @@ Response::Response()
 	initHeaders();
 }
 
-Response::Response(Request &request, const Server& server ) : _request(request), _server(server)
+
+void    Response::setServer(const Server &server)
 {
-	_target_path = _request->getLocPath;
-	_body = "";
-	_buffer = ""
-	_headerStr = ""
-	_body_len = 0;
-	_auto_index = false;
-	_status = 0;
-	_req_status = false;
-	_connect = "";
-	// _response_content = "";
-	initStatusCode();
-	initHeaders();
+	this->_server = server;
 }
 
-Response::Response(int status, const Server& server) :  _server(server)
+void    Response::setRequest(const Request &request)
 {
-	_target_path = setTargetPath();
-	_body = "";
-	_buffer = ""
-	_headerStr = ""
-	_body_len = 0;
-	_req_status = true;
-	_status = status;
-	_connect = "";
-	initStatusCode();
-	initHeaders();
+	this->_request = request;
+	this->_target_path = _request->getLocPath;
 }
+
+
+// Response::Response(const Request &request, const Server &server ) : _request(request), _server(server)
+// {
+// 	_target_path = _request->getLocPath;
+// 	_body = "";
+// 	_buffer = ""
+// 	_headerStr = ""
+// 	_body_len = 0;
+// 	_auto_index = false;
+// 	_status = 0;
+// 	_req_status = false;
+// 	_connect = "";
+// 	// _response_content = "";
+// 	initStatusCode();
+// 	initHeaders();
+// }
+
+// Response::Response(int status, const Server& server) :  _server(server)
+// {
+// 	_target_path = setTargetPath();
+// 	_body = "";
+// 	_buffer = ""
+// 	_headerStr = ""
+// 	_body_len = 0;
+// 	_req_status = true;
+// 	_status = status;
+// 	_connect = "";
+// 	initStatusCode();
+// 	initHeaders();
+// }
 
 Response::~Response() {}
 
@@ -637,6 +650,13 @@ void Response::setLocationHeader()
 	std::string url = _request.getURL();
 
 	this->_headers["Location"] = url;
+}
+
+void	Response::clear()
+{
+	this->_buffer.clear();
+	this->_headerStr.clear();
+	this->_body.clear();
 }
 
 // bool Response::buildBody()

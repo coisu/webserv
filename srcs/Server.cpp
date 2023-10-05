@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "Request.hpp"
+#include "Response.hpp"
 #include "CGI.hpp"
 
 void log(const std::string &message){
@@ -308,15 +309,15 @@ void    Server::runServer(){
 						try
 						{
 							Request	request(buffer, *this);
-                            std::string requestUrl = request.getURL();
-                            CGI*    cgiTest = NULL;
-                            if (requestUrl.find("cgi-bin") != requestUrl.npos)
-                            {
-                                std::map<std::string, std::string>  cgiConfig;
-                                cgiConfig["/usr/bin/python3"] = ".py";
-                                cgiConfig["/bin/bash"] = ".sh";
-                                cgiTest = new CGI(*this, requestUrl, request.getMethodStr(), cgiConfig);
-                            }
+                            // std::string requestUrl = request.getURL();
+                            // CGI*    cgiTest = NULL;
+                            // if (requestUrl.find("cgi-bin") != requestUrl.npos)
+                            // {
+                            //     std::map<std::string, std::string>  cgiConfig;
+                            //     cgiConfig["/usr/bin/python3"] = ".py";
+                            //     cgiConfig["/bin/bash"] = ".sh";
+                            //     cgiTest = new CGI(*this, requestUrl, request.getMethodStr(), cgiConfig);
+                            // }
 							// if (request.getCGI())
 							// {
 							// 	request.getCGI()->getCharEnv();
@@ -347,14 +348,15 @@ void    Server::runServer(){
 								// log("Error sending response to client");
                                 
                             std::string responseBuffer;
-                            Response response(request, *this);
+                            Response response;
+
+                            response.setServer(*this);
+                            response.setRequest(request);
 
                             responseBuffer = response.processResponse();
                             bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
                             
-                            response._buffer.clear();
-                            response._headerStr.clear();
-                            response._body.clear();
+                            response.clear();
 						}
 						catch(int errcode)
 						{

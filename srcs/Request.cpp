@@ -161,6 +161,10 @@ std::string	Request::getURL() const
 	return (this->_url);
 }
 
+std::string Request::getLocPath() const
+{
+	return (this->_locPath);
+}
 // std::string	Request::getLocation() const
 //{
 // 	return (this->_location);

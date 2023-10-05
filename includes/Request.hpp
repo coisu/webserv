@@ -37,6 +37,7 @@ class Request
 		std::string	getMethodStr() const;
 		std::string	getInfo() const;
 		std::string	getURL() const;
+		std::string getLocPath() const;
 		std::map<std::string, std::string>	getHead() const;
 		Location*	getLocation() const;
 		Location*	extractLocation(const Server& server, std::string locPath);

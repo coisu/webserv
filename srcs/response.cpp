@@ -116,6 +116,10 @@ void		Response::initStatusCode(void)
 	this->_errorPages[505] = "HTTP Version Not Supported";	
 }
 
+
+// ERROR MANAGING: 405, 413
+
+
 // static bool isAllowedMethod(HttpMethod &method, Location &location, short &code)
 // {
 //     std::vector<short> methods = location.getMethods();

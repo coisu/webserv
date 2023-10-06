@@ -1,9 +1,40 @@
 
 #include "Response.hpp"
 
-Response::Response()
+Mime Response::_mimeList;
+
+// Response::Response()
+// {
+// 	_target_path = "";
+// 	_body = "";
+// 	_buffer = "";
+// 	_headerStr = "";
+// 	_body_len = 0;
+// 	_auto_index = false;
+// 	_status = 0;
+// 	_req_status = false;
+// 	_connect = "";
+// 	// _response_content = "";
+// 	initStatusCode();
+// 	initHeaders();
+// }
+
+
+// void    Response::setServer(const Server &server)
+// {
+// 	this->_server = server;
+// }
+
+// void    Response::setRequest(const Request &request)
+// {
+// 	this->_request = request;
+// 	this->_target_path = _request->getLocPath();
+// }
+
+
+Response::Response(const Request &request, Server &server ) : _request(request), _server(server)
 {
-	_target_path = "";
+	_target_path = _request.getLocPath();
 	_body = "";
 	_buffer = "";
 	_headerStr = "";
@@ -16,35 +47,6 @@ Response::Response()
 	initStatusCode();
 	initHeaders();
 }
-
-
-void    Response::setServer(const Server &server)
-{
-	this->_server = server;
-}
-
-void    Response::setRequest(const Request &request)
-{
-	this->_request = request;
-	this->_target_path = _request->getLocPath;
-}
-
-
-// Response::Response(const Request &request, const Server &server ) : _request(request), _server(server)
-// {
-// 	_target_path = _request->getLocPath;
-// 	_body = "";
-// 	_buffer = ""
-// 	_headerStr = ""
-// 	_body_len = 0;
-// 	_auto_index = false;
-// 	_status = 0;
-// 	_req_status = false;
-// 	_connect = "";
-// 	// _response_content = "";
-// 	initStatusCode();
-// 	initHeaders();
-// }
 
 // Response::Response(int status, const Server& server) :  _server(server)
 // {
@@ -59,18 +61,6 @@ void    Response::setRequest(const Request &request)
 // 	initStatusCode();
 // 	initHeaders();
 // }
-
-Response::~Response() {}
-
-bool Response::checkECode()
-{
-	if (_request.getStatus())
-	{
-		_status = _request.getStatus();
-		return (1);
-	}
-	return (0);
-}
 
 void		Response::initHeaders(void)
 {
@@ -162,13 +152,14 @@ void		Response::initStatusCode(void)
 
 std::string Response::processResponse()
 {
-	std::string	currentMethod(_request.getMethodStr());
+	// std::string	currentMethod(_request.getMethodEnum());
+	_currentMethod = _request.getMethodEnum();
 	std::string	ext(getExt(_request.getLocPath()));
 	// std::string _headerStr = "";
 	// std::string buffer = "";
 	bool isRedirect = false;
 
-	if (_request.getMethodEnum() == DELETE && _status == 404)
+	if (_currentMethod == DELETE && _status == 404)
 		_status = -1;
 
 	setRequestVal();
@@ -185,16 +176,15 @@ std::string Response::processResponse()
 	}
 	else if (_status == -1)
 	{
-		if (_request.getMethodEnum() == GET || _request.getMethodEnum() == POST)
+		if (_currentMethod == GET || _currentMethod == POST)
 		{
-			if (_request.getMethodEnum() == GET && ext != "php")	//html
+			if (_currentMethod == GET && ext != "php")	//html
 			{
 				if (_location.getAutoIndex())
 				{
 					struct stat			fileinfo;
-					int ret;
 
-					ret = stat(_target_path.c_str(), &fileinfo);
+					stat(_target_path.c_str(), &fileinfo);
 					if (S_ISDIR(fileinfo.st_mode))
 					{
 						_body = writeBodyAutoindex(_request.getURL());
@@ -202,21 +192,25 @@ std::string Response::processResponse()
 					}
 					else if (S_ISREG(fileinfo.st_mode))						//regular file
 					{
-						_body = fileTextIntoBody(mimeList.getMimeType(ext) == "text/html");
+						_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
 						_status = 200;
 					}
 				}
 				else
 				{
-					_body = writeBodyHtml(_target_path, mimeList.getMimeType(ext) == "text/html");
+					_body = writeBodyHtml(_target_path, _mimeList.getMimeType(ext) == "text/html");
 					_status = 200;
 				}
 
 			}
 			else
 			{
-				if (_request.getMethodEnum() == POST)
+				if (_currentMethod == POST)
 				{
+					struct stat			fileinfo;
+					int ret;
+
+					ret = stat(_target_path.c_str(), &fileinfo);
 					if (ret != 0)
 					{
 						std::string reqBody = _request.getBody();
@@ -232,28 +226,29 @@ std::string Response::processResponse()
 				}
 				if (_location.getIsCGI())
 				{
-					CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig())
+					CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
 					_body = cgi.exec_cgi();
 				}
 
 			}
 		}
-		else if (currentMethod_ == "DELETE")
+		else if (_currentMethod == DELETE)
 		{
 			_status = execteDelete();
 		}
 	}
 	if (_status >= 400)
 	{
-		if (_server.getErrorPages()[_status])
-			_body = writeBodyHtml(_server.getRoot() + _server.getErrorPages()[[_status]], mimeList.getMimeType(ext) == "text/html");
+		std::map<int, std::string> ep = _server.getErrorPages();
+		if (ep.find(_status) != ep.end())
+			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
 		else
 			_body = makeErrorPage(_status);
 		_connect = "Close";
 	}
 	
 	/* REDIRECTION HEADER */
-	if (!_location.getRet().empty() && isRedirect || _status = 201)
+	if ((!_location.getRet().empty() && isRedirect) || _status == 201)
 	{
 		setLocationHeader();
 	}
@@ -273,12 +268,12 @@ std::string Response::processResponse()
 	}
 
 	/* MAKE HEADER */
-	if ((_request.getMethodEnum() == GET && ext != "php") || _status >= 400)
+	if ((_currentMethod == GET && ext != "php") || _status >= 400)
 		_headerStr += buildHeader(_body.size(), _status);
 	else
 		_headerStr += buildHeaderCgi(_body, _status);				// didn't make it yet
 
-	_buffer = (_request.getMethodEnum() = DELETE) ? _headerStr + "\r\n" : _headerStr + _body + "\r\n";
+	_buffer = (_currentMethod = DELETE) ? _headerStr + "\r\n" : _headerStr + _body + "\r\n";
 		
 	return _buffer;
 }
@@ -343,7 +338,7 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 std::string		Response::writeBodyAutoindex(const std::string &str)
 {
 	std::string 	ret;
-	std::string		url
+	std::string		url;
 	DIR				*dir_ptr;
 	struct dirent  	*dir_entry;
 	struct stat		fileinfo;
@@ -412,7 +407,7 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 std::string	Response::getExt(std::string const &filename) const
 {
 	std::string	ext;
-	int	idx;
+	std::string::size_type	idx;
 	idx = filename.rfind(".");
 	if (idx != std::string::npos) {
 		ext = filename.substr(idx + 1);
@@ -429,8 +424,9 @@ void	Response::setRequestVal(void)
 	std::map<std::string, std::string> ReqHead = _request.getHead();
 
 	std::map<std::string, std::string>::iterator	itForHeader;
+	std::map<std::string, std::string>::iterator	it;
 	// std::cout << "=============================" << std::endl;
-	for (std::map<std::string, std::string>::iterator it = ReqHead.begin(); it! = ReqHead.end(); ++it)
+	for (it == ReqHead.begin(); it != ReqHead.end(); ++it)
 	{
 		itForHeader = _headers.find(it->first);
 		if (itForHeader != _headers.end() && itForHeader->first != "Content-Length")
@@ -443,12 +439,12 @@ void	Response::setRequestVal(void)
 
 void	Response::setContentType(std::string ext)
 {
-	_header["Content-Type"] = mimeList.getMimeType(ext);
+	_headers["Content-Type"] = _mimeList.getMimeType(ext);
 }
 
 bool	Response::checkSetLocation(std::string path)
 {
-	std::pair<bool, LocationBlock> location_pair;
+	std::pair<bool, Location> location_pair;
 
 	location_pair = getMatchLoc(path);
 	if (location_pair.first == true)
@@ -462,10 +458,10 @@ bool	Response::checkSetLocation(std::string path)
 
 std::pair<bool, Location>	Response::getMatchLoc(const std::string& request_path)
 {
-	int match = 0;
+	size_t match = 0;
 	Location	ret;
 
-	for (std::vector<Location>::iterator it = _server.getLocations.begin(); it != _server.getLocations.end(); ++it) 
+	for (std::vector<Location>::iterator it = _server.getLocations().begin(); it != _server.getLocations().end(); ++it) 
 	{
 		if (request_path.find(it->getPath()) == 0)
 		{
@@ -542,7 +538,7 @@ std::string		Response::buildHeader(int bodySize, int status)
 	return (header);
 }
 
-std::string		Response::buildHeaderCgi(std::String &body, int status)
+std::string		Response::buildHeaderCgi(std::string &body, int status)
 {
 	std::string	header;
 	std::string tmp(body);
@@ -558,7 +554,7 @@ std::string		Response::buildHeaderCgi(std::String &body, int status)
 		body = tmp.substr(n, tmp.size());
 	}
 
-	if (_request.getMethodEnum = DELETE)
+	if (_request.getMethodEnum() == DELETE)
 	{
 		setContentLength(0);
 	}
@@ -632,6 +628,7 @@ std::string		Response::makeTimeLine(bool isCGI)
   	time_t rawtime;
   	struct tm* timeinfo;
   	char buffer[80];
+
   	time(&rawtime);
   	timeinfo = localtime(&rawtime);
 
@@ -645,7 +642,18 @@ std::string		Response::makeTimeLine(bool isCGI)
 	return (timeLine);
 }
 
-void Response::setLocationHeader()
+std::string	Response::getFileDateTime(time_t sec)
+{
+	std::string	ret;
+	char		buf[18];
+
+	strftime(buf, sizeof(buf), "%d-%b-%Y %H:%M", localtime(&sec));
+	ret += buf;
+
+	return (ret);
+}
+
+void Response::setLocationHeader(void)
 {
 	std::string url = _request.getURL();
 
@@ -657,6 +665,13 @@ void	Response::clear()
 	this->_buffer.clear();
 	this->_headerStr.clear();
 	this->_body.clear();
+}
+
+std::string	Response::toString(const int& i) const
+{
+	std::ostringstream ss;
+	ss << i;
+	return (ss.str());
 }
 
 // bool Response::buildBody()

@@ -24,6 +24,11 @@ Mime::Mime()
     mime_types[".wav"] = "audio/wav";
 }
 
+Mime &operator=(Mime const &copy)
+{
+    return (*this);
+}
+
 Mime::~Mime() {}
 
 std::string Mime::getMimeType(std::string extn)

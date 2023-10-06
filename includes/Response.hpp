@@ -9,14 +9,13 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
+#include <dirent.h>
+#include <fcntl.h>
 #include "Request.hpp"
 #include "Mime.hpp"
 #include "Server.hpp"
-
-class Request;
-class Mime;
-class Server;
-
+#include "utils.h"
+#include "CGI.hpp"
 
 class Response
 {
@@ -32,34 +31,67 @@ class Response
         bool            _req_status;
         std::string     _connect;
         std::map<std::string, std::string>     _headers;
-        Request         _request;
-        Server          _server;
-
-    public:
-        Mime            _mimeList;
+        std::map<int, std::string>             _errorPages;
         // Request         _request;
         // Server          _server;
 
-        Response();
-        // Response( Request &request, const Server& server );
+    public:
+        static  Mime            _mimeList;
+        const   Request&        _request;
+        Server&         _server;
+        t_method	_currentMethod;
+
+        // Response();
+        Response( const Request &request, Server& server );
         // Response( int status, const Server& server );
         ~Response();
 
 
-    void    setServer(const Server &server);
-    void    setRequest(const Request &request);
+    void            setServer(const Server &server);
+    void            setRequest(const Request &request);
 
 
-    /* Constructor */
-    void		initHeaders(void);
-    void		initStatusCode(void);
+    /* Init in Constructor */
+    void		    initHeaders(void);
+    void		    initStatusCode(void);
+
     /* Process */
-    std::string    processResponse();
+    std::string     processResponse(void);
+    std::pair<bool, Location>	getMatchLoc(const std::string& request_path);
+
+
+    void            setLocation(Location Loc);
+    void	        setRequestVal(void);
+
+    bool	        checkSetLocation(std::string path);
+    std::string     getExt(std::string const &filename) const;
+    int	            execteDelete(void);
 
     /* Body Writer */
+    std::string		writeBodyAutoindex(const std::string &str);
+    std::string		fileTextIntoBody(bool isHTML);
+    std::string		writeBodyHtml(std::string filePath, bool isHTML);
+    std::string		makeErrorPage(int	status);
+    std::string	    getFileDateTime(time_t sec);
 
-    /* Header Write */
+    /* Header Writer */
+    std::string		buildHeader(int bodySize, int status);
+    std::string		buildHeaderCgi(std::string &body, int status);
 
+    std::string		makeStartLine(int status);
+    std::string		makeTimeLine(bool isCGI) ;
+    void	        setContentType(std::string ext);
+    void            setLocationHeader(void);
+    void	        setContentLength(int bodySize);
+    std::string		appendMapHeaders(bool isCGI, int statusCode)	;
+
+
+
+
+
+
+    /* Utils */
+    std::string	toString(const int& i) const;
     void	clear();
 
 

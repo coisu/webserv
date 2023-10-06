@@ -348,10 +348,10 @@ void    Server::runServer(){
 								// log("Error sending response to client");
                                 
                             std::string responseBuffer;
-                            Response response;
+                            Response response(request, *this);
 
-                            response.setServer(*this);
-                            response.setRequest(request);
+                            // response.setServer(*this);
+                            // response.setRequest(request);
 
                             responseBuffer = response.processResponse();
                             bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);

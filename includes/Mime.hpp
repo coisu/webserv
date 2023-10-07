@@ -3,6 +3,8 @@
 
 // #include "http_tcpServer.hpp"
 // #include "Response.hpp"
+#include <map>
+#include <string>
 
 class Mime
 {
@@ -12,7 +14,6 @@ class Mime
     public:
         Mime();
         ~Mime();
-        Mime &operator=(Mime const &copy);
         std::string getMimeType(std::string extn);
 };
 

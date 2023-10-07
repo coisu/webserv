@@ -1,8 +1,8 @@
 
 #include "Response.hpp"
 
-Mime Response::_mimeList;
 
+Mime   _mimeList;
 // Response::Response()
 // {
 // 	_target_path = "";
@@ -47,6 +47,8 @@ Response::Response(const Request &request, Server &server ) : _request(request),
 	initStatusCode();
 	initHeaders();
 }
+
+Response::~Response() {}
 
 // Response::Response(int status, const Server& server) :  _server(server)
 // {

@@ -350,9 +350,6 @@ void    Server::runServer(){
                             std::string responseBuffer;
                             Response response(request, *this);
 
-                            // response.setServer(*this);
-                            // response.setRequest(request);
-
                             responseBuffer = response.processResponse();
                             bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
                             

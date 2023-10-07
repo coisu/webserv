@@ -2,38 +2,33 @@
 
 Mime::Mime()
 {
-	mime_types["default"] = "text/html";
-    mime_types[".html"] = "text/html";
-    mime_types[".htm"] = "text/html";
-    mime_types[".txt"] = "text/plain";
-    mime_types[".css"] = "text/css";
-    mime_types[".ico"] = "image/x-icon";
-    mime_types[".jpg"] = "image/jpeg";
-    mime_types[".jpeg"] = "image/jpeg";
-    mime_types[".ico"] = "image/x-icon";
-    mime_types[".bmp"] = "image/bmp";
-	mime_types[".gif"] = "image/gif";
-    mime_types[".png"] = "image/png";
-    mime_types[".avi"] = "video/x-msvideo";
-	mime_types[".mp4"] = "video/mp4";
-    mime_types[".doc"] = "application/msword";
-    mime_types[".gz"] = "application/x-gzip";
-    mime_types[".xml"] = "application/xml";
-    mime_types[".pdf"] = "application/pdf";
-    mime_types[".mp3"] = "audio/mpeg";
-    mime_types[".wav"] = "audio/wav";
-}
-
-Mime &operator=(Mime const &copy)
-{
-    return (*this);
+	mimeType["default"] = "text/html";
+    mimeType[".html"] = "text/html";
+    mimeType[".htm"] = "text/html";
+    mimeType[".txt"] = "text/plain";
+    mimeType[".css"] = "text/css";
+    mimeType[".ico"] = "image/x-icon";
+    mimeType[".jpg"] = "image/jpeg";
+    mimeType[".jpeg"] = "image/jpeg";
+    mimeType[".ico"] = "image/x-icon";
+    mimeType[".bmp"] = "image/bmp";
+	mimeType[".gif"] = "image/gif";
+    mimeType[".png"] = "image/png";
+    mimeType[".avi"] = "video/x-msvideo";
+	mimeType[".mp4"] = "video/mp4";
+    mimeType[".doc"] = "application/msword";
+    mimeType[".gz"] = "application/x-gzip";
+    mimeType[".xml"] = "application/xml";
+    mimeType[".pdf"] = "application/pdf";
+    mimeType[".mp3"] = "audio/mpeg";
+    mimeType[".wav"] = "audio/wav";
 }
 
 Mime::~Mime() {}
 
 std::string Mime::getMimeType(std::string extn)
 {
-    if (mime_types.count(extn))
-        return (mime_types[extn]);
-    return (mime_type[default]);
+    if (mimeType.count(extn))
+        return (mimeType[extn]);
+    return (mimeType["default"]);
 }

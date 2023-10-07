@@ -17,6 +17,8 @@
 #include "utils.h"
 #include "CGI.hpp"
 
+extern   Mime   _mimeList;
+
 class Response
 {
     private:
@@ -36,7 +38,7 @@ class Response
         // Server          _server;
 
     public:
-        static  Mime            _mimeList;
+        // Mime           _mimeList;
         const   Request&        _request;
         Server&         _server;
         t_method	_currentMethod;

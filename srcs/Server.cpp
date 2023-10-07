@@ -346,7 +346,7 @@ void    Server::runServer(){
 								// log("------ Server Response sent to client check------\n\n");
 							// else
 								// log("Error sending response to client");
-                                
+                            
                             std::string responseBuffer;
                             Response response(request, *this);
 
@@ -359,9 +359,19 @@ void    Server::runServer(){
 						{
 							// std::string	code(SSTR(errcode));
 							// std::cerr << "error code: " << errcode << std::endl;
-							std::string	errorbod(buildResponse(404, "error code: " + SSTR(errcode)));
+							// std::string	errorbod(buildResponse(404, "error code: " + SSTR(errcode)));
 
-							bytesSent = send(socket, errorbod.c_str(), errorbod.size(), 0);
+                            Request	request(buffer, *this);
+
+                            std::string responseBuffer;
+                            Response response(request, *this);
+
+                            response.setStatus(errcode);
+                            responseBuffer = response.processResponse();
+                            bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
+                            
+                            response.clear();
+							// bytesSent = send(socket, errorbod.c_str(), errorbod.size(), 0);
 						}
 						
 						(void)bytesSent;
@@ -579,4 +589,38 @@ int	Server::getListenFd() const
 std::string	Server::getBlock() const
 {
 	return (this->_block);
+}
+
+#include <iostream>
+const std::pair<bool, Location> Server::srchLocation(std::string& path) const
+{
+    Location    ret;
+    size_t match = 0;
+
+    std::vector<Location>::const_iterator cur = _locations.begin();
+    std::vector<Location>::const_iterator end = _locations.end();
+
+    std::cout << "\n\nREQUEST PATH : " << path << std::endl;
+
+    for (; cur != end; ++cur)
+    {
+        std::cout << "  >>Current iterator's path: " << cur->getPath() << std::endl;
+        if (path.find(cur->getPath()) == 0)
+        {
+            if(cur->getPath().length() > match)
+                {
+                    match = cur->getPath().length();
+                    int tmp = static_cast<int>(match);
+                    std::stringstream ssIn;
+                    ssIn << tmp;
+                    std::cout << "MATCH : " << ssIn.str() << std::endl;
+                    ret = *cur;
+                }
+        }
+    }
+    if (match != 0)
+    {
+        return (std::make_pair(true, ret));
+    }
+	return (std::make_pair(false, ret)); 
 }

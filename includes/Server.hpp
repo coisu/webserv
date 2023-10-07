@@ -39,9 +39,11 @@ class Server
         std::vector<Location>       getLocations() const;
         int                         getListenFd() const;
         std::string                 getBlock() const;
+        const std::pair<bool, Location> srchLocation(std::string& path) const;
+
         //setters
         void    setLocations( std::vector<Location> locationVec );
-    
+
 	private:
         Server( void );
     /*methods*/
@@ -90,6 +92,9 @@ class Server
     
     // Timeout
         struct timeval      _timeout;
+
+
+
 
 };
 

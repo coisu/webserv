@@ -42,7 +42,7 @@ Response::Response(const Request &request, Server &server ) : _request(request),
 	_auto_index = false;
 	_status = 0;
 	_req_status = false;
-	_connect = "";
+	_connect = "Keep-Alive";
 	// _response_content = "";
 	initStatusCode();
 	initHeaders();
@@ -74,6 +74,7 @@ void		Response::initHeaders(void)
 	this->_headers["Server"] = "";
 	this->_headers["Transfer-Encoding"] = "";
 	this->_headers["WWW-Authenticate"] = "";
+	this->_headers["Content-Encoding"] = "";
 	this->_headers["Content-Language"] = "";
 	this->_headers["Content-Length"] = "";
 	this->_headers["Content-Type"] = "";
@@ -168,19 +169,21 @@ std::string Response::processResponse()
 	if (_currentMethod == DELETE && _status == 404)
 		_status = -1;
 
-	setRequestVal();
+	// setRequestVal();
 	setContentType(ext); 
 	checkSetLocation(_target_path);
 
-	if (_location.getRet().empty())
-	{
-		if (_status == 0)
-		{
-			_status = 301;	//MOVED_PERMANENTLY
-			isRedirect = true;
-		}
-	}
-	else if (_status == -1)
+	// if (_location.getRet().empty())
+	// {
+	// 		std::cout << "-----?TESTING?" << std::endl;
+
+	// 	if (_status == 0)
+	// 	{
+	// 		_status = 301;	//MOVED_PERMANENTLY
+	// 		isRedirect = true;
+	// 	}
+	// }
+if (_status == -1)
 	{
 		if (_currentMethod == GET || _currentMethod == POST)
 		{
@@ -243,6 +246,8 @@ std::string Response::processResponse()
 			_status = execteDelete();
 		}
 	}
+		std::cout << "?TESTING?" << std::endl;
+
 	if (_status >= 400)
 	{
 		std::map<int, std::string> ep = _server.getErrorPages();
@@ -272,7 +277,10 @@ std::string Response::processResponse()
 		_connect = "Keep-Alive";
 		this->_headers["Connection"] = _connect;
 	}
-
+	if (_status == 0)
+	{
+		_status = 200;
+	}
 	/* MAKE HEADER */
 	if ((_currentMethod == GET && ext != "php") || _status >= 400)
 		_headerStr += buildHeader(_body.size(), _status);
@@ -281,6 +289,10 @@ std::string Response::processResponse()
 
 	_buffer = (_currentMethod = DELETE) ? _headerStr + "\r\n" : _headerStr + _body + "\r\n";
 		
+
+	std::cout << "******************************************\n";
+	std::cout << _buffer << std::endl;
+	std::cout << "******************************************\n";
 	return _buffer;
 }
 
@@ -427,20 +439,45 @@ std::string	Response::getExt(std::string const &filename) const
 
 void	Response::setRequestVal(void)
 {
-	std::map<std::string, std::string> ReqHead = _request.getHead();
+	std::map<std::string, std::string> reqHead = _request.getHead();
+	std::map<std::string, std::string>::iterator it=reqHead.begin();
 
-	std::map<std::string, std::string>::iterator	itForHeader;
-	std::map<std::string, std::string>::iterator	it;
-	// std::cout << "=============================" << std::endl;
-	for (it == ReqHead.begin(); it != ReqHead.end(); ++it)
+	std::cout << "===========HERE==================" << std::endl;
+		int i = 0;
+
+	for (; it != reqHead.end(); ++it )
 	{
-		itForHeader = _headers.find(it->first);
-		if (itForHeader != _headers.end() && itForHeader->first != "Content-Length")
-		{
- 			_headers[itForHeader->first] = it->second;
+
+		++i;
+		std::cout << "EXIT?? - " << toString(i) << std::endl;
+
+		std::cout << "now iterator is" << "[ " << it->first << " ] : " << it->second << std::endl;
+
+		std::map<std::string, std::string>::iterator new_it = _headers.find(it->first);
+		if (new_it != _headers.end())
+			std::cout << "return it Find" << "[ " << new_it->first << " ] : " << new_it->second << std::endl;
+
+		// if (it->first != "Content-Length" && _headers.find(it->first) != _headers.end())
+		// {
+		// 	std::cout <<"IN?????" <<std::endl;
+		// 	_headers[it->first] = it->second;
+		// 	std::cout << "[ " << it->first << " ] : " << it->second << std::endl;
+		// }
+	}
+
+	// std::map<std::string, std::string>::iterator	itForHeader;
+	// // std::map<std::string, std::string>::iterator	it = ReqHead.begin();
+
+	// std::cout << "===========HERE==================" << std::endl;
+	// for (std::map<std::string, std::string>::iterator it = ReqHead.begin(); it != ReqHead.end(); ++it)
+	// {
+	// 	// itForHeader = _headers.find(it->first);
+	// 	// if (itForHeader != _headers.end() && itForHeader->first != "Content-Length")
+	// 	// {
+ 	// 		_headers[itForHeader->first] = it->second;
 			// std::cout << "[ " << itForHeader->first << " ] : " << it->second << std::endl;
-		}
-	}         
+	// 	}
+	// }         
 }
 
 void	Response::setContentType(std::string ext)
@@ -452,7 +489,9 @@ bool	Response::checkSetLocation(std::string path)
 {
 	std::pair<bool, Location> location_pair;
 
-	location_pair = getMatchLoc(path);
+
+	// location_pair = getMatchLoc(path);
+	location_pair = _server.srchLocation(path);
 	if (location_pair.first == true)
 	{
 		setLocation(location_pair.second);
@@ -462,29 +501,51 @@ bool	Response::checkSetLocation(std::string path)
 		return (false);
 }
 
-std::pair<bool, Location>	Response::getMatchLoc(const std::string& request_path)
+void	Response::setStatus(int err)
 {
-	size_t match = 0;
-	Location	ret;
-
-	for (std::vector<Location>::iterator it = _server.getLocations().begin(); it != _server.getLocations().end(); ++it) 
-	{
-		if (request_path.find(it->getPath()) == 0)
-		{
-			// if( it->getPath() == "/" || request_path.length() == it->getPath().length() || request_path[it->getPath().length()] == '/')
-			// {
-				if(it->getPath().length() > match)
-				{
-					match = it->getPath().length();
-					ret = *it;
-				}
-			// }
-		}
-	}
-	if (match > 0)
-		return (std::make_pair(true, ret));
-	return (std::make_pair(false, ret)); 
+	this->_status = err;
 }
+
+// std::pair<bool, Location>	Response::getMatchLoc(const std::string& request_path)
+// {
+// 	size_t match = 0;
+// 	Location	ret;
+
+// 	std::vector<Location>::iterator cur = _server.getLocations().begin();
+// 	std::vector<Location>::iterator end = _server.getLocations().end();
+
+// std::cout << "\n\n\n";
+
+// std::cout << "REQUEST PATH : " << request_path << std::endl;
+// 	for (; cur != end; ++cur)
+// 	{
+// 		std::cout << "CHECKING.... " << cur->getPath() << "??" << std::endl;
+
+// 	}
+
+
+	// std::cout << "CHECKING... " << _server.getLocations().begin()->getPath() << std::endl;
+
+
+	// for (std::vector<Location>::iterator it = _server.getLocations().begin(); it != _server.getLocations().end(); ++it) 
+	// {
+	// 	std::cout << "it Path : " << it->getPath() << std::endl;
+	// 	if (request_path.find(it->getPath()) == 0)
+	// 	{
+	// 		// if( it->getPath() == "/" || request_path.length() == it->getPath().length() || request_path[it->getPath().length()] == '/')
+	// 		// {
+	// 			if(it->getPath().length() > match)
+	// 			{
+	// 				match = it->getPath().length();
+	// 				ret = *it;
+	// 			}
+	// 		// }
+	// 	}
+	// }
+// 	if (match > 0)
+// 		return (std::make_pair(true, ret));
+// 	return (std::make_pair(false, ret)); 
+// }
 
 void Response::setLocation(Location Loc)
 {

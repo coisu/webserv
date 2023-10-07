@@ -51,6 +51,7 @@ class Response
 
     void            setServer(const Server &server);
     void            setRequest(const Request &request);
+    void	        setStatus(int err);
 
 
     /* Init in Constructor */

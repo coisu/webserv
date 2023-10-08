@@ -173,16 +173,14 @@ std::string Response::processResponse()
 	setContentType(ext); 
 	checkSetLocation(_target_path);
 
-	// if (_location.getRet().empty())
-	// {
-	// 		std::cout << "-----?TESTING?" << std::endl;
-
-	// 	if (_status == 0)
-	// 	{
-	// 		_status = 301;	//MOVED_PERMANENTLY
-	// 		isRedirect = true;
-	// 	}
-	// }
+	if (!_location.getRet().empty())
+	{
+		if (_status == 0)
+		{
+			_status = 301;	//MOVED_PERMANENTLY
+			isRedirect = true;
+		}
+	}
 if (_status == -1)
 	{
 		if (_currentMethod == GET || _currentMethod == POST)
@@ -447,10 +445,7 @@ void	Response::setRequestVal(void)
 
 	for (; it != reqHead.end(); ++it )
 	{
-
 		++i;
-		std::cout << "EXIT?? - " << toString(i) << std::endl;
-
 		std::cout << "now iterator is" << "[ " << it->first << " ] : " << it->second << std::endl;
 
 		std::map<std::string, std::string>::iterator new_it = _headers.find(it->first);

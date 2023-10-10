@@ -78,3 +78,13 @@ bool	pathIsDir(std::string path)
 	}
 	return true;
 }
+
+bool isNumeric(std::string const &str)
+{
+    size_t i = 0;
+
+    while (i < str.length() - 1 && std::isdigit(str.at(i))) {
+        i++;
+    }
+    return !str.empty() && i == str.length() - 1;
+}

@@ -217,6 +217,12 @@ std::string Location::getRet() const
     return (this->_ret);
 }
 
+std::string Location::getIndex() const
+{
+    return (this->_index);
+}
+
+
 bool	Location::getIsCGI() const
 {
 	return (this->_isCgi);

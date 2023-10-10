@@ -132,7 +132,6 @@ std::string Response::processResponse()
 
 	if (_location.getIndex() == "")
 	{
-		std::cout << "&&&&&&&&&&&&&&&&& IN &&&&&&&&&&&&&&&&&&&&\n";
 		_target_path += "index.html";
 	}
 std::cout << "\n\n\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> INFO CHECK\n";
@@ -180,12 +179,21 @@ std::cout << "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> INFO CHECK\n\n\n";
 				else
 				{
 					std::cout << "\n\n... MANUAL BODY WRITER ...\n\n";
-					_body = writeBodyHtml(_target_path, _mimeList.getMimeType(ext) == "text/html");
-					// _status = 200;
+
+					std::pair<bool, std::string> body_pair;
+					body_pair = writeBodyHtmlPair(_target_path, _mimeList.getMimeType(ext) == "text/html");
+					if (body_pair.first == true)
+					{
+						_status = 200;
+						_body = body_pair.second;
+					}
+					else
+					{
+						_status = 404;
+						_body = body_pair.second;
+					}
 				}
-				std::cout << "\n\n>> HTML BODY PRINT >>>>>>>>>>\n";
-				std::cout << _body;
-				std::cout << "\n<<<<<<<<<<<<<<<<<< HTML BODY PRINT\n\n";
+
 			}
 			else
 			{
@@ -236,7 +244,7 @@ std::cout << "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> INFO CHECK\n\n\n";
 			_body = makeErrorPage(_status);
 		_connect = "Close";
 	}
-	
+
 	/* REDIRECTION HEADER */
 	if ((!_location.getRet().empty() && isRedirect) || _status == 201)
 	{
@@ -266,13 +274,44 @@ std::cout << "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> INFO CHECK\n\n\n";
 	else
 		_headerStr += buildHeaderCgi(_body, _status);
 
-	_buffer = (_currentMethod = DELETE) ? _headerStr + "\r\n" : _headerStr + _body + "\r\n";
-		
+	_buffer = (_currentMethod == DELETE) ? _headerStr + "\r\n" : _headerStr + _body + "\r\n";
 
-	std::cout << "******************************************\n";
-	std::cout << _buffer << std::endl;
-	std::cout << "******************************************\n";
 	return _buffer;
+}
+std::pair<bool, std::string>		Response::writeBodyHtmlair(std::string filePath, bool isHTML)
+{
+	std::string		ret;
+	std::ifstream 	ifs;
+	
+	// if (path[0] != '/')
+	// 	filePath = "/" + path;
+	std::cout << "\n\n >> >> >> >> >> >> filePath: " << filePath << std::endl;
+
+	ifs.open(const_cast<char*>(filePath.c_str()));
+	
+	if (ifs.fail())
+	{
+		return (std::make_pair(false, makeErrorPage(404)));
+	}
+	std::string	str;
+	std::cout << "\n\n >> >> >> >> >> >> filePath: " << filePath << std::endl;
+	while (std::getline(ifs, str))
+	{
+
+			std::cout << "\n\n >> GET LINE: " << str << std::endl;
+
+		if (isHTML)
+		{
+			ret += "\r\n";
+		}
+		else
+		{
+			ret += "\n";
+		}
+		ret += str;
+	}
+
+	return (std::make_pair(true, ret));
 }
 
 std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
@@ -288,9 +327,7 @@ std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 	
 	if (ifs.fail())
 	{
-		_status = 404;
-		return "";
-		// return makeErrorPage(404);
+		return makeErrorPage(404);
 	}
 	std::string	str;
 	std::cout << "\n\n >> >> >> >> >> >> filePath: " << filePath << std::endl;

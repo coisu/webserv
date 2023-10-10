@@ -351,6 +351,8 @@ void    Server::runServer(){
                             Response response(request, *this);
 
                             responseBuffer = response.processResponse();
+
+                            std::cout << "\n\n\n >> Response result buffer PRINT >>>>> \n\n" << responseBuffer <<std::endl;
                             bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
                             
                             response.clear();

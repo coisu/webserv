@@ -600,8 +600,6 @@ const std::pair<bool, Location> Server::srchLocation(std::string& path) const
     std::vector<Location>::const_iterator cur = _locations.begin();
     std::vector<Location>::const_iterator end = _locations.end();
 
-    std::cout << "\n\nREQUEST PATH : " << path << std::endl;
-
     for (; cur != end; ++cur)
     {
         std::cout << "  >>Current iterator's path: " << cur->getPath() << std::endl;

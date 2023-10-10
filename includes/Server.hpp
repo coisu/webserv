@@ -34,7 +34,7 @@ class Server
         std::map<int, std::string>  getErrorPages() const;
         size_t                      getClientBodySize() const;
         std::string                 getRoot() const;
-        std::string                 getIndex() const;
+        // std::string                 getIndex() const;
         bool                        getAutoIndex() const;
         std::vector<Location>       getLocations() const;
         int                         getListenFd() const;

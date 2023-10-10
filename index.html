@@ -1,0 +1,68 @@
+<html>
+<head>
+<title>Webserv</title>
+<style>
+h1{
+font-size:40px;
+font-weight:800;
+text-align:center;
+}
+h2
+{
+font-size:25px;
+text-align:center;
+margin-top:-40px;
+}
+p{
+text-align:center;
+font-size:15px;
+}
+
+.container
+{
+width:1000px;
+margin: 0 auto;
+margin-top:15%;
+}
+</style>
+</head>
+<body>
+<div class="container">
+	<h1>Welcome to Webserv !</h1><br>
+<h2>If you see this page, the our web server is successfully installed and working.<br>Thank you for using our Webserv.</h2>
+<p>More information go to <a href="https://github.com/coisu/webserv">our git</a></p>
+</div>
+<div>
+  	<body>
+    	<div>POST test</div>
+    	<form action=".post.php" method="post">
+    	  <input type="text" name="id" placeholder="Enter id here">
+    	  <input type="text" name="age" placeholder="Enter age here">
+    	  <input type="submit" value="Submit">
+    	</form>
+  	</body>
+</div>
+<div>
+	<body>
+	  	<div>Autoindex</div>
+	  	<form action="autoindex_tester/" method="get">
+			<input type="submit" value="autoindex">
+	  	</form>
+	</body>
+</div>
+<div>
+	<body>
+		<div>Redirection to google</div>
+		<form action="redirection_google/" method="get">
+		  <input type="submit" value="redirection to google">
+		</form>	
+		<div>error page (with FILE)</div>
+		<form action="error_pages_file/" method="get">
+		  <input type="submit" value="redirection to error page">
+		</form>
+		<div>error page (Redirection)</div>
+		<form action="error_pages_redirection/" method="get">
+		  <input type="submit" value="redirection to error page">
+		</form>
+	</body>
+</div>

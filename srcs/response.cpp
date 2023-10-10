@@ -129,19 +129,60 @@ std::string Response::processResponse()
 	setContentType(ext); 
 	checkSetLocation(_target_path);
 
-
-	if (_location.getIndex() == "")
+	if (_location.getIndex() != "" && pathExists(_target_path + _location.getIndex()))
+	{
+		_target_path += _location.getIndex();
+	}
+	else if (!_location.getAutoIndex())
+	{
+		std::cout << "[TARGET_FILE] : " << _target_path << std::endl;
+		if (pathExists(_target_path) && pathIsDir(_target_path))
+		{
+			setStatus(403);
+		}
+		else if (!pathExists(_target_path))
+		{
+			setStatus(404);
+		}
+	}
+	else if (_location.getIndex() == "" && _location.getRet().empty())
 	{
 		_target_path += "index.html";
 	}
-std::cout << "\n\n\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> INFO CHECK\n";
-std::cout << "URL:     " << _request.getURL() << std::endl;
-std::cout << "LocPATH: " <<  _request.getLocPath() << std::endl;
-std::cout << "Location Index :" << _location.getIndex() << std::endl;
-std::cout << "_target_path :" << _target_path << std::endl;
-std::cout << "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> INFO CHECK\n\n\n";
+
+
+	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;
+	std::cout << "  [PATH] : " << _location.getPath() << std::endl;
+	std::cout << "[RETURN] : " << _location.getRet() << std::endl;
+	std::cout << " [INDEX] : " << _location.getIndex() << std::endl;
+	std::cout << "[TARGET] : " << _target_path << std::endl;
+	std::cout << "[E-CODE] : " << _status << std::endl;
+	std::cout << "\n-------------->>>>>>>> INFO CHECK <<<<<<<<--------------\n" << std::endl;
+
 	if (!_location.getRet().empty())
 	{
+		int	code = 0;
+		std::string str = "";
+		
+		if (isNumeric(_location.getRet()))
+		{
+			std::stringstream ssint;
+			ssint << _location.getRet();
+			ssint >> code;
+		}
+		else
+		{
+			str = _location.getRet();
+			isRedirect = true;
+		}
+		setStatus(code);
+		if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308)
+		{
+			if (!str.empty())
+				setLocationHeader(str);
+			else
+				setLocationHeader(" ");
+		}
 		if (_status == -1 && _req_status == false)
 		{
 			_status = 301;	//MOVED_PERMANENTLY
@@ -237,18 +278,22 @@ std::cout << "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> INFO CHECK\n\n\n";
 
 	if (_status >= 400)
 	{
+		std::cout << "status -- " << _status << std::endl;
 		std::map<int, std::string> ep = _server.getErrorPages();
 		if (ep.find(_status) != ep.end())
+		{
+			std::cout << "SERCHING ===== " << ep[_status] <<std::endl;
 			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
+		}
 		else
 			_body = makeErrorPage(_status);
 		_connect = "Close";
 	}
 
 	/* REDIRECTION HEADER */
-	if ((!_location.getRet().empty() && isRedirect) || _status == 201)
+	if ((!_location.getRet().empty() && isRedirect && _req_status == false) || _status == 201)
 	{
-		setLocationHeader();
+		setLocationHeader(_request.getURL());
 	}
 
 	if (!_request.getHead()["Connection"].empty())
@@ -278,7 +323,7 @@ std::cout << "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> INFO CHECK\n\n\n";
 
 	return _buffer;
 }
-std::pair<bool, std::string>		Response::writeBodyHtmlair(std::string filePath, bool isHTML)
+std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, bool isHTML)
 {
 	std::string		ret;
 	std::ifstream 	ifs;
@@ -297,9 +342,6 @@ std::pair<bool, std::string>		Response::writeBodyHtmlair(std::string filePath, b
 	std::cout << "\n\n >> >> >> >> >> >> filePath: " << filePath << std::endl;
 	while (std::getline(ifs, str))
 	{
-
-			std::cout << "\n\n >> GET LINE: " << str << std::endl;
-
 		if (isHTML)
 		{
 			ret += "\r\n";
@@ -321,7 +363,6 @@ std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 	
 	// if (path[0] != '/')
 	// 	filePath = "/" + path;
-	std::cout << "\n\n >> >> >> >> >> >> filePath: " << filePath << std::endl;
 
 	ifs.open(const_cast<char*>(filePath.c_str()));
 	
@@ -330,12 +371,8 @@ std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 		return makeErrorPage(404);
 	}
 	std::string	str;
-	std::cout << "\n\n >> >> >> >> >> >> filePath: " << filePath << std::endl;
 	while (std::getline(ifs, str))
 	{
-
-			std::cout << "\n\n >> GET LINE: " << str << std::endl;
-
 		if (isHTML)
 		{
 			ret += "\r\n";
@@ -460,22 +497,11 @@ std::string	Response::getExt(std::string const &filename) const
     return ext;
 }
 
-void	Response::setRequestVal(void)
-{
-	std::map<std::string, std::string> reqHead = _request.getHead();
-	std::map<std::string, std::string>::iterator it=reqHead.begin();
+// void	Response::setRequestVal(void)
+// {
+	// std::map<std::string, std::string> reqHead = _request.getHead();
+	// std::map<std::string, std::string>::iterator it=reqHead.begin();
 
-	std::cout << "===========HERE==================" << std::endl;
-		int i = 0;
-
-	for (; it != reqHead.end(); ++it )
-	{
-		++i;
-		std::cout << "now iterator is" << "[ " << it->first << " ] : " << it->second << std::endl;
-
-		std::map<std::string, std::string>::iterator new_it = _headers.find(it->first);
-		if (new_it != _headers.end())
-			std::cout << "return it Find" << "[ " << new_it->first << " ] : " << new_it->second << std::endl;
 
 		// if (it->first != "Content-Length" && _headers.find(it->first) != _headers.end())
 		// {
@@ -483,7 +509,6 @@ void	Response::setRequestVal(void)
 		// 	_headers[it->first] = it->second;
 		// 	std::cout << "[ " << it->first << " ] : " << it->second << std::endl;
 		// }
-	}
 
 	// std::map<std::string, std::string>::iterator	itForHeader;
 	// // std::map<std::string, std::string>::iterator	it = ReqHead.begin();
@@ -498,7 +523,7 @@ void	Response::setRequestVal(void)
 			// std::cout << "[ " << itForHeader->first << " ] : " << it->second << std::endl;
 	// 	}
 	// }         
-}
+// }
 
 void	Response::setContentType(std::string ext)
 {
@@ -741,10 +766,8 @@ std::string	Response::getFileDateTime(time_t sec)
 	return (ret);
 }
 
-void Response::setLocationHeader(void)
+void Response::setLocationHeader(std::string url)
 {
-	std::string url = _request.getURL();
-
 	this->_headers["Location"] = url;
 }
 

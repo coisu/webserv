@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <cctype>
 #include "Request.hpp"
 #include "Mime.hpp"
 #include "Server.hpp"
@@ -85,7 +86,7 @@ class Response
     std::string		makeStartLine(int status);
     std::string		makeTimeLine(bool isCGI) ;
     void	        setContentType(std::string ext);
-    void            setLocationHeader(void);
+    void            setLocationHeader(std::string url);
     void	        setContentLength(int bodySize);
     std::string		appendMapHeaders(bool isCGI, int statusCode)	;
 

@@ -604,18 +604,21 @@ const std::pair<bool, Location> Server::srchLocation(std::string& path) const
 
     for (; cur != end; ++cur)
     {
-        std::cout << "  >>Current iterator's path: " << cur->getPath() << std::endl;
-        if (path.find(cur->getPath()) == 0)
+        if (path.find(cur->getPath()) != std::string::npos)
         {
+            std::cout << "\n----------------------------------------------------\n";
             if(cur->getPath().length() > match)
                 {
                     match = cur->getPath().length();
                     int tmp = static_cast<int>(match);
                     std::stringstream ssIn;
                     ssIn << tmp;
-                    std::cout << "MATCH : " << ssIn.str() << std::endl;
                     ret = *cur;
+                    std::cout << "< match > : " << tmp << std::endl;
                 }
+                std::cout << "< curent > : " << cur->getPath() << std::endl;
+                std::cout << "< Loc_path > :" << path << std::endl;
+                std::cout << "----------------------------------------------------\n";
         }
     }
     if (match != 0)

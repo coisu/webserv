@@ -73,6 +73,7 @@ class Response
     /* Body Writer */
     std::string		writeBodyAutoindex(const std::string &str);
     std::string		fileTextIntoBody(bool isHTML);
+    std::pair<bool, std::string>		writeBodyHtmlPair(std::string filePath, bool isHTML);
     std::string		writeBodyHtml(std::string filePath, bool isHTML);
     std::string		makeErrorPage(int	status);
     std::string	    getFileDateTime(time_t sec);

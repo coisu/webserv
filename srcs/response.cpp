@@ -6,6 +6,7 @@ Mime   _mimeList;
 
 Response::Response(const Request &request, Server &server ) : _request(request), _server(server)
 {
+	// _target_path = _server.getRoot() + "/";
 	_target_path = _request.getLocPath();
 	_body = "";
 	_buffer = "";
@@ -79,19 +80,21 @@ void		Response::initStatusCode(void)
 
 // ERROR MANAGING: 405, 413
 
+bool Response::isAllowedMethod(int currentMethod)
+{
+    std::vector<int> methods = _location.getAllowMethods();
 
-// static bool isAllowedMethod(HttpMethod &method, Location &location, short &code)
-// {
-//     std::vector<short> methods = location.getMethods();
-//     if ((method == GET && !methods[0]) || (method == POST && !methods[1]) ||
-//        (method == DELETE && !methods[2])|| (method == PUT && !methods[3])||
-//         (method == HEAD && !methods[4]))
-//     {
-//         code = 405;
-//         return (1);
-//     }
-//     return (0);
-// }
+	if (methods.size() == 0)
+	{
+		return (1);
+	}
+	if (find(methods.begin(), methods.end(), currentMethod) == methods.end())
+    {
+        _status = 405;
+        return (0);
+    }
+	return (1);
+}
 
 // static std::string combinePaths(std::string p1, std::string p2, std::string p3)
 // {
@@ -133,7 +136,11 @@ std::string Response::processResponse()
 	{
 		_target_path += _location.getIndex();
 	}
-	else if (!_location.getAutoIndex())
+	else if (_location.getIndex() == "" && _location.getRet() == "" && !_location.getIsCGI())
+	{
+		_target_path += "index.html";
+	}
+	if (!_location.getAutoIndex() &&  _location.getRet().empty())
 	{
 		std::cout << "[TARGET_FILE] : " << _target_path << std::endl;
 		if (pathExists(_target_path) && pathIsDir(_target_path))
@@ -145,10 +152,10 @@ std::string Response::processResponse()
 			setStatus(404);
 		}
 	}
-	else if (_location.getIndex() == "" && _location.getRet().empty())
-	{
-		_target_path += "index.html";
-	}
+	// else if (_location.getIndex() == "" && _location.getRet().empty())
+	// {
+	// 	_target_path += "index.html";
+	// }
 
 
 	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;
@@ -173,23 +180,43 @@ std::string Response::processResponse()
 		else
 		{
 			str = _location.getRet();
+			// setStatus(302);
+			_status = 302;
 			isRedirect = true;
 		}
-		setStatus(code);
-		if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308)
+		if (code != 0)
+			setStatus(code);
+		if (_status == 301 || _status == 302 || _status == 303 || _status == 307 || _status == 308)
 		{
 			if (!str.empty())
 				setLocationHeader(str);
 			else
 				setLocationHeader(" ");
 		}
-		if (_status == -1 && _req_status == false)
+		if (_status == -1 && _req_status == false && !isRedirect)
 		{
 			_status = 301;	//MOVED_PERMANENTLY
 			isRedirect = true;
 		}
+		if (isRedirect && _location.getIndex() == "")
+		{
+			int i;
+			std::cout << "rfound : " << _target_path.rfind("/")<< std::endl;
+			std::cout << "length : " <<  _target_path.length()<< std::endl;
+			if (_target_path.rfind("/") == _target_path.length() - 1)
+			{
+				i = _target_path.rfind("/", _target_path.length() -2);
+			}
+			else
+				i = _target_path.rfind("/", _target_path.length() - 1);
+			std::cout << "FIND index : "<< i << std::endl;
+			_target_path = _target_path.substr(0, i + 1);
+			_target_path += "index.html";
+		}
+		std::cout << "[TARGET] : " << _target_path << std::endl;
+		std::cout << "[E-CODE] : " << _status << std::endl;
 	}
-	else if (_status == -1)
+	if (isAllowedMethod(_currentMethod) && (_status == -1 || _status == 302))
 	{
 		if (_currentMethod == GET || _currentMethod == POST)
 		{
@@ -214,7 +241,8 @@ std::string Response::processResponse()
 					{
 						std::cout << "\n\n... target file is regular file ...\n\n";
 						_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
-						_status = 200;
+						if (_status == -1)
+							_status = 200;
 					}
 				}
 				else
@@ -281,10 +309,7 @@ std::string Response::processResponse()
 		std::cout << "status -- " << _status << std::endl;
 		std::map<int, std::string> ep = _server.getErrorPages();
 		if (ep.find(_status) != ep.end())
-		{
-			std::cout << "SERCHING ===== " << ep[_status] <<std::endl;
 			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
-		}
 		else
 			_body = makeErrorPage(_status);
 		_connect = "Close";
@@ -293,9 +318,9 @@ std::string Response::processResponse()
 	/* REDIRECTION HEADER */
 	if ((!_location.getRet().empty() && isRedirect && _req_status == false) || _status == 201)
 	{
-		setLocationHeader(_request.getURL());
+		if (_headers["Location"] == "")
+			setLocationHeader(_request.getURL());
 	}
-
 	if (!_request.getHead()["Connection"].empty())
 	{
 		if (_request.getHead()["Connection"] == "close")
@@ -401,7 +426,7 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 			if (isHTML)
 			{
 				ret += "\n";
-				ret += line + "</br>";
+				ret += line;
 			}
 			else
 			{

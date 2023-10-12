@@ -213,6 +213,7 @@ int Server::startServer(){
         return 1;
     }
     _maxSocket = _serverSocket;
+    std::cout << "< max socket > " << _maxSocket <<std::endl;
     return 0;
 }
 
@@ -271,6 +272,7 @@ void    Server::runServer(){
 
     FD_ZERO(&tempSet);
     memcpy(&tempSet, &_socketSet, sizeof(_socketSet));
+
     activity = select(_maxSocket + 1, &tempSet, NULL, NULL, &_timeout);
     if (activity == -1)
         exitWithError("Error calling select()");
@@ -279,7 +281,6 @@ void    Server::runServer(){
         return;
     }
     for (int socket = 0; socket <= _maxSocket; socket++){
-        // std::cout << "max_socket" << _maxSocket << std::endl;
             if (FD_ISSET(socket, &tempSet)) {
                 if (socket == _serverSocket){
                     // memset(buffer, 0, sizeof(buffer));

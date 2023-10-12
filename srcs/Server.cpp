@@ -304,8 +304,7 @@ void    Server::runServer(){
                         FD_CLR(socket, &_socketSet);
                     } else {
                         std::cout << "we got data" << std::endl;
-						std::cout << "\n---------------------BUFFER-------------------\n" << buffer << std::endl;
-                        std::cout << "\n----------------------------------------------\n";
+
 						// Request request = process_request(buffer);
 						try
 						{
@@ -347,7 +346,7 @@ void    Server::runServer(){
 								// log("------ Server Response sent to client check------\n\n");
 							// else
 								// log("Error sending response to client");
-                            
+                            request.printRequest();
                             std::string responseBuffer;
                             Response response(request, *this);
 

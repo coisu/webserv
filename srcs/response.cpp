@@ -124,14 +124,15 @@ std::string Response::processResponse()
 	std::string	ext(getExt(_request.getLocPath()));
 	bool isRedirect = false;
 
-
 	if (_currentMethod == DELETE && _status == 404)
 		_status = -1;
+
+	if (_request.getBody().length() > _server.getClientBodySize())
+		_status = 413;
 
 	// setRequestVal();
 	setContentType(ext); 
 	checkSetLocation(_target_path);
-
 	if (_location.getIndex() != "" && pathExists(_target_path + _location.getIndex()))
 	{
 		_target_path += _location.getIndex();
@@ -152,10 +153,11 @@ std::string Response::processResponse()
 			setStatus(404);
 		}
 	}
-	// else if (_location.getIndex() == "" && _location.getRet().empty())
-	// {
-	// 	_target_path += "index.html";
-	// }
+
+// else if (_location.getIndex() == "" && _location.getRet().empty())
+// {
+// 	_target_path += "index.html";
+// }
 
 
 	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;

@@ -86,6 +86,7 @@ void	Request::printRequest( void )
 	}
 	std::cout << "\n--------END---------\n" << std::endl;
 	std::cout << "\n\n-------BODY-------\n" << std::endl;
+	// _body.append("THIS IS 413 TESTING");
 	std::cout << this->_body << std::endl;
 	std::cout << "\n--------END---------\n" << std::endl;
 }

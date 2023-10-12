@@ -31,6 +31,7 @@ class Location
 		bool		getIsCGI() const;
         bool        getAutoIndex() const;
 		std::map<std::string, std::string>		getCGIConfig() const;
+        std::vector<int>    getAllowMethods() const;
         //setters
     private:
     /*methods*/

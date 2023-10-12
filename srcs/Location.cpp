@@ -239,3 +239,7 @@ std::map<std::string, std::string>	Location::getCGIConfig() const
 	return (this->_cgiConfig);
 }
 
+std::vector<int>    Location::getAllowMethods() const
+{
+    return (this->_allowMethods);
+}

@@ -2,6 +2,7 @@
 #define RESPONSE_HPP
 
 #include <vector>
+#include <algorithm>
 #include <string>
 #include <map>
 #include <set>
@@ -97,6 +98,7 @@ class Response
 
     /* Utils */
     std::string	toString(const int& i) const;
+    bool isAllowedMethod(int currentMethod);
     void	clear();
 
 

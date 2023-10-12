@@ -309,9 +309,16 @@ std::string Response::processResponse()
 		std::cout << "status -- " << _status << std::endl;
 		std::map<int, std::string> ep = _server.getErrorPages();
 		if (ep.find(_status) != ep.end())
+		{
+						std::cout << "2:ERROR_STATUS ============ : " << _status <<std::endl;
+
 			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
+		}
 		else
+		{
+			std::cout << "ERROR_STATUS ============ : " << _status <<std::endl;
 			_body = makeErrorPage(_status);
+		}
 		_connect = "Close";
 	}
 
@@ -393,7 +400,11 @@ std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 	
 	if (ifs.fail())
 	{
-		return makeErrorPage(404);
+		ifs.close();
+		std::map<int, std::string> ep = _server.getErrorPages();
+		ifs.open(const_cast<char*>((_server.getRoot() + ep[404]).c_str()));
+		if (ifs.fail())
+			return makeErrorPage(404);
 	}
 	std::string	str;
 	while (std::getline(ifs, str))

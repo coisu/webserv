@@ -137,7 +137,7 @@ std::string Response::processResponse()
 	{
 		_target_path += _location.getIndex();
 	}
-	else if (_location.getIndex() == "" && _location.getRet() == "" && !_location.getIsCGI())
+	else if (_location.getIndex() == "" && _location.getRet() == "" && !_location.getIsCGI() && pathExists(_target_path + "index.html"))
 	{
 		_target_path += "index.html";
 	}
@@ -460,7 +460,7 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 	struct stat		fileinfo;
 	std::stringstream	ss;
 
-	url = str;
+	url = str.substr(0, str.find_first_of('?'));
 	if (!(*(url.rbegin()) == '/'))
 		url.append("/");
 

@@ -28,31 +28,31 @@ std::string buildResponse(int code, std::string body)
     return (ss.str());
 }
 
-void	Server::initDefaults()
-{
-	this->_port = 0;
-	this->_host = 0;
-	this->_serverName = "localhost";
-	// this->_errorPages = ;
-	this->_clientBodySize = std::numeric_limits<size_t>::max();
-	this->_root = "";
-	// this->_index = "";
-	// this->_autoIndex = false;
-	// this->_locations = ;
-	this->_listenFd = 0;
-	this->_block = "";
-	this->_sIpAddress = "";
-	this->_serverPort = 0;
-	this->_serverSocket = 0;
-	this->_clientSocket = 0;
-	this->_serverIncomingMessage = 0;
-	// this->_socketSet = 0;
-	this->_maxSocket = 0;
-	// this->_serverSocketAddress = ;
-	this->_socketAddressLen = 0;
-	this->_serverMessage = "";
-	// this->_timeout = ;
-}
+// void	Server::initDefaults()
+// {
+// 	this->_port = 0;
+// 	this->_host = 0;
+// 	this->_serverName = "localhost";
+// 	// this->_errorPages = ;
+// 	this->_clientBodySize = std::numeric_limits<size_t>::max();
+// 	this->_root = "";
+// 	// this->_index = "";
+// 	// this->_autoIndex = false;
+// 	// this->_locations = ;
+// 	this->_listenFd = 0;
+// 	this->_block = "";
+// 	this->_sIpAddress = "";
+// 	//this->_serverPort = 0;
+// 	this->_serverSocket = 0;
+// 	this->_clientSocket = 0;
+// 	this->_serverIncomingMessage = 0;
+// 	// this->_socketSet = 0;
+// 	this->_maxSocket = 0;
+// 	// this->_serverSocketAddress = ;
+// 	this->_socketAddressLen = 0;
+// 	this->_serverMessage = "";
+// 	// this->_timeout = ;
+// }
 
 Server::Server( void ) {}
 
@@ -60,7 +60,7 @@ Server::~Server( void ) {}
 
 Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 {
-	initDefaults();
+	// initDefaults();
     std::stringstream   ss(serverBlock);
     std::string         part;
 
@@ -75,7 +75,7 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
         setAttributes(key, value);
     }
 
-	this->_serverPort = this->_port;
+	//this->_serverPort = this->_port;
 	// this->_serverSocket = ();
 	// this->_clientSocket = ();
 	// this->_serverIncomingMessage = (),
@@ -155,7 +155,7 @@ Server::Server( const Server& src )
     this->_block = src._block;
 
 	this->_sIpAddress = src._sIpAddress;
-	this->_serverPort = src._serverPort;
+	//this->_serverPort = src._serverPort;
 	this->_serverSocket = src._serverSocket;
 	this->_clientSocket = src._clientSocket;
 	this->_serverIncomingMessage = src._serverIncomingMessage;
@@ -184,7 +184,7 @@ Server& Server::operator=( const Server& src )
         this->_block = src._block;
 
 		this->_sIpAddress = src._sIpAddress;
-		this->_serverPort = src._serverPort;
+		//this->_serverPort = src._serverPort;
 		this->_serverSocket = src._serverSocket;
 		this->_clientSocket = src._clientSocket;
 		this->_serverIncomingMessage = src._serverIncomingMessage;

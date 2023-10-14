@@ -83,9 +83,9 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 	// this->_maxSocket = 
 	this->_socketAddressLen = sizeof(_serverSocketAddress);
 	this->_serverMessage = buildResponse(200, "hello worldywoo!");
-    this->_serverSocketAddress.sin_family = AF_INET; // for IPv4
-    this->_serverSocketAddress.sin_port = this->_port;
-    this->_serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
+    // this->_serverSocketAddress.sin_family = AF_INET; // for IPv4
+    // this->_serverSocketAddress.sin_port = this->_port;
+    // this->_serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
     this->_timeout.tv_sec = 3 * 60;
     this->_timeout.tv_usec = 0;
     inet_addr(this->_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order

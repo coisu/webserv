@@ -13,16 +13,12 @@ int main(int ac, char **av) {
 	{
 		std::vector<Server>	servers;
 		
-		// ParseConfig	config("./resources/default.conf");
 		servers = parseConfig("./resources/default.conf");
 
 		for (size_t i = 0; i < servers.size(); i++)
 			std::cout << "Server " << i << ":\n" << servers[i] << "\n\n";
-		while (true)
-		{
-			for (size_t i = 0; i < servers.size(); i++)
-				servers[i].runServer();
-		}
+		
+		handleConnections(servers);
 	}
 	catch(const std::exception& e)
 	{

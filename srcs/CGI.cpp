@@ -156,7 +156,7 @@ std::string	CGI::exec_cgi( void )
 
 void	CGI::identifyCGI(std::vector<std::string> urlvec)
 {
-	// std::cout << "URLVEC:\n"
+	// std::cout << "URLVEC:\n";
 	// for (size_t i = 0; i < urlvec.size(); i++)
 	// 	std::cout << urlvec[i] << ", ";
 	// std::cout << "end\n";
@@ -170,6 +170,8 @@ void	CGI::identifyCGI(std::vector<std::string> urlvec)
 		// 		// this->_script = this->server.getRoot() + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
 		// }
 	}
+	// _script = "/workspaces/webserv/cgi-bin/";
+	_script = "/workspaces/webserv/post/post.php";
 	if (this->_script.empty())
 		throw 501;
 	this->_program = this->_cgiConfig[this->_postfix];
@@ -203,6 +205,7 @@ std::string	CGI::extractQueryString(std::vector<std::string> urlvec)
 
 	for (size_t i = 0; i < urlvec.size(); i++)
 	{
+		std::cout << "Query string ===== " << urlvec[i] <<std::endl;
 		if (urlvec[i][0] == '?')
 			return (urlvec[i].substr(1));
 	}

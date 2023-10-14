@@ -268,7 +268,7 @@ void    Server::runServer(){
     long    bytesSent;
     fd_set  tempSet;
     int     activity;
-	char	buffer[1024];
+	char	buffer[10024];
 
     FD_ZERO(&tempSet);
     memcpy(&tempSet, &_socketSet, sizeof(_socketSet));
@@ -347,6 +347,10 @@ void    Server::runServer(){
 							// else
 								// log("Error sending response to client");
                             request.printRequest();
+                            // std::cout << "-------request ---\n";
+                            // std::cout<< buffer <<std::endl;
+                            // std::cout << "-------request ---\n";
+
                             std::string responseBuffer;
                             Response response(request, *this);
 

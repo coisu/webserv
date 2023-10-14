@@ -67,6 +67,10 @@ std::map<std::string, std::string>	Request::parseRequest(std::string request)
 
 	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
 		requestHeader[key] = val.substr(0, val.size() - 1);
+	std::cout << "\n\n\n\nval == " <<val <<std::endl;
+	std::cout << "key == [" << key << "]" <<std::endl << std::endl;
+	if (!key.empty())
+		this->_body = key.substr(1, key.length() - 1);
 
 	return requestHeader;
 }
@@ -84,9 +88,9 @@ void	Request::printRequest( void )
 		std::cout << "[" << it->first << " : " << it->second << "]" << std::endl;
 		++it;
 	}
-	std::cout << "\n--------END---------\n" << std::endl;
 	std::cout << "\n\n-------BODY-------\n" << std::endl;
 	// _body.append("THIS IS 413 TESTING");
+	_body = "name=JISU+CHOI&age=10";
 	std::cout << this->_body << std::endl;
 	std::cout << "\n--------END---------\n" << std::endl;
 }

@@ -9,6 +9,47 @@
 #include <sys/select.h>
 #include <fcntl.h>
 
+void    recvSendLoop()
+{
+    fd_set  serverSet, clientSet;
+    FD_ZERO(&serverSet);
+    FD_ZERO(&clientSet);
+    // Add all server sockets to the set.
+    for (int i = 0; i < serverSockets.size(); i++)
+        FD_SET(serverSockets[i], &serverSet);
+    while (true)
+    {
+        int socketReady = select(maxSocket + 1, &serverSet, NULL, NULL, NULL);
+        if (socketReady > 0)
+        {
+            // Loop through the server sockets to find the one that is ready.
+            for (int i = 0; i < serverSockets.size(); i++)
+            {
+                if (FD_ISSET(serverSockets[i], &serverSet))
+                {
+                    // Accept and handle the connection on the port i.
+                     struct sockaddr_in  clientSocketAddress;
+                     int clientSocket = accept(serverSockets[i], (struct sockaddr *)&clientSocketAddress, sizeof(clientSocketAddress));
+                     if (clientSocket < 0)
+                     {
+                        std::ostringstream ss << 
+                        "Server failed to accept incoming connection from ADDRESS: " 
+                        << inet_ntoa(_serverSocketAddress.sin_addr) << "; PORT: " 
+                        << ntohs(_serverSocketAddress.sin_port);
+                        throw std::runtime_error(ss.str());
+                     }
+                    // Handle the connection on this port as needed.
+                    // recv -> parse request -> launch response -> send
+
+                }
+            }
+        }
+        else
+            throw std::runtime_error("Error calling select")
+    }
+    for (int i = 0; i < serverSockets.size(); i++)
+        close(serverSockets[i]);
+}
 
 std::vector<int> getPorts(std::vector<Server> &servers)
 {
@@ -27,11 +68,11 @@ handleConnections(std::vector<Server> &servers)
 
     // Create a vector to store socket descriptors for multiple ports.
     std::vector<int>    serverSockets;
-    fd_set              tempSet;
     int                 maxSocket = 0;
 
     // Create and initialize sockets for each port.
-    for (int i = 0; i < portVec.size(); ++i) {
+    for (int i = 0; i < portVec.size(); i++)
+    {
         int currentSocket = socket(AF_INET, SOCK_STREAM, 0);
         if (currentSocket == -1) {
             std::cerr << "Error creating socket for port " << i << std::endl;
@@ -51,27 +92,24 @@ handleConnections(std::vector<Server> &servers)
         }
 
         // Listen for incoming connections.
-        
+        if (listen(currentSocket, 10) < 0)
+            throw std::runtime_error("Socket listen failed");
+
+        // Set to non-blocking
+        if (fcntl(_serverSocket, F_SETFL, O_NONBLOCK) < 0)
+            throw std::runtime_error("Socket set non-blocking failed");
 
         // Update the maximum socket descriptor for select.
-        
-
-        if (serverSockets[i] > maxSocket) {
-            maxSocket = serverSockets[i];
+        if (currentSocket > maxSocket) {
+            maxSocket = currentSocket;
         }
 
     }
+
     std::cout << "Server is listening on multiple ports..." << std::endl;
 
     //main loop
-    while (true)
-    {
-         // Add all server sockets to the set.
-            // Loop through the server sockets to find the one that is ready.
-                // Accept and handle the connection on the port i.
-                // Handle the connection on this port as needed.
-    }
-
+    recvSendLoop();
 }
 
 // handleConnections(std::vector<Server> &servers)

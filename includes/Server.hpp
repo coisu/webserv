@@ -78,7 +78,7 @@ class Server
         std::string                 _block;
 
 		std::string         _sIpAddress;
-        int                 _serverPort; // = _port
+        // int                 _serverPort; // = _port
         int                 _serverSocket; // = _server_fd
         int					_clientSocket; //this vector will store  socket clients which reached server 
         long                _serverIncomingMessage;

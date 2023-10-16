@@ -1,5 +1,5 @@
-#ifndef UTILS_H
-# define UTILS_H
+#ifndef UTILS_HPP
+# define UTILS_HPP
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -13,6 +13,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include "Server.hpp"
 
 #define EXAMPLE_RESPONSE "HTTP/1.1 200 OK \
 \nDate: Mon, 27 Jul 2009 12:28:53 GMT \
@@ -76,5 +77,7 @@ std::string					readFile(std::string location);
 std::vector<std::string>	splitUrl(std::string url);
 bool						pathIsDir(std::string path);
 bool						isNumeric(std::string const &str);
+
+void	handleConnections(std::vector<Server> &servers);
 
 #endif

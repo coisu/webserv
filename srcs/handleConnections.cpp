@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "utils.hpp"
 #include "Server.hpp"
 #include <iostream>
 #include <cstring>
@@ -9,13 +9,13 @@
 #include <sys/select.h>
 #include <fcntl.h>
 
-void    recvSendLoop()
+void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
 {
     fd_set  serverSet, clientSet;
     FD_ZERO(&serverSet);
     FD_ZERO(&clientSet);
     // Add all server sockets to the set.
-    for (int i = 0; i < serverSockets.size(); i++)
+    for (size_t i = 0; i < serverSockets.size(); i++)
         FD_SET(serverSockets[i], &serverSet);
     while (true)
     {
@@ -23,21 +23,23 @@ void    recvSendLoop()
         if (socketReady > 0)
         {
             // Loop through the server sockets to find the one that is ready.
-            for (int i = 0; i < serverSockets.size(); i++)
+            for (size_t i = 0; i < serverSockets.size(); i++)
             {
                 if (FD_ISSET(serverSockets[i], &serverSet))
                 {
                     // Accept and handle the connection on the port i.
-                     struct sockaddr_in  clientSocketAddress;
-                     int clientSocket = accept(serverSockets[i], (struct sockaddr *)&clientSocketAddress, sizeof(clientSocketAddress));
-                     if (clientSocket < 0)
-                     {
-                        std::ostringstream ss << 
-                        "Server failed to accept incoming connection from ADDRESS: " 
-                        << inet_ntoa(_serverSocketAddress.sin_addr) << "; PORT: " 
-                        << ntohs(_serverSocketAddress.sin_port);
-                        throw std::runtime_error(ss.str());
-                     }
+                    struct sockaddr_in  clientSocketAddress;
+                    socklen_t           clientSocketSize = sizeof(clientSocketAddress);
+                    int clientSocket = accept(serverSockets[i], (struct sockaddr *)&clientSocketAddress, &clientSocketSize);
+                    if (clientSocket < 0)
+                    {
+                       std::ostringstream ss;
+                       ss << 
+                       "Server failed to accept incoming connection from ADDRESS: " 
+                       << inet_ntoa(clientSocketAddress.sin_addr) << "; PORT: " 
+                       << ntohs(clientSocketAddress.sin_port);
+                       throw std::runtime_error(ss.str());
+                    }
                     // Handle the connection on this port as needed.
                     // recv -> parse request -> launch response -> send
 
@@ -45,9 +47,9 @@ void    recvSendLoop()
             }
         }
         else
-            throw std::runtime_error("Error calling select")
+            throw std::runtime_error("Error calling select");
     }
-    for (int i = 0; i < serverSockets.size(); i++)
+    for (size_t i = 0; i < serverSockets.size(); i++)
         close(serverSockets[i]);
 }
 
@@ -55,23 +57,23 @@ std::vector<int> getPorts(std::vector<Server> &servers)
 {
     std::vector<int> ports;
 
-    for (int i = 0; i < servers.size(); i++)
+    for (size_t i = 0; i < servers.size(); i++)
     {
         ports.push_back(servers[i].getPort());
     }
     return ports;
 }
 
-handleConnections(std::vector<Server> &servers)
+void handleConnections(std::vector<Server> &servers)
 {
-    const std::vector<int> portVec = getPorts(&servers);  // Get all the different ports in the servers
+    const std::vector<int> portVec = getPorts(servers);  // Get all the different ports in the servers
 
     // Create a vector to store socket descriptors for multiple ports.
     std::vector<int>    serverSockets;
     int                 maxSocket = 0;
 
     // Create and initialize sockets for each port.
-    for (int i = 0; i < portVec.size(); i++)
+    for (size_t i = 0; i < portVec.size(); i++)
     {
         int currentSocket = socket(AF_INET, SOCK_STREAM, 0);
         if (currentSocket == -1) {
@@ -83,7 +85,7 @@ handleConnections(std::vector<Server> &servers)
         struct sockaddr_in  serverSocketAddress;
         serverSocketAddress.sin_family = AF_INET; // for IPv4
         serverSocketAddress.sin_port = portVec[i];
-        serverSocketAddress.sin_addr.s_addr = INADDR_ANY; 
+        serverSocketAddress.sin_addr.s_addr = INADDR_ANY;
         
         // Bind the socket to the address and port.
         if (bind(currentSocket,(struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress)) < 0)
@@ -96,8 +98,18 @@ handleConnections(std::vector<Server> &servers)
             throw std::runtime_error("Socket listen failed");
 
         // Set to non-blocking
-        if (fcntl(_serverSocket, F_SETFL, O_NONBLOCK) < 0)
+        if (fcntl(currentSocket, F_SETFL, O_NONBLOCK) < 0)
             throw std::runtime_error("Socket set non-blocking failed");
+
+        if (currentSocket < 0)
+        {
+            std::ostringstream ss;
+            ss << 
+            "Server failed to accept incoming connection from ADDRESS: " 
+            << inet_ntoa(serverSocketAddress.sin_addr) << "; PORT: " 
+            << ntohs(serverSocketAddress.sin_port);
+            throw std::runtime_error(ss.str());
+        }
 
         // Update the maximum socket descriptor for select.
         if (currentSocket > maxSocket) {
@@ -109,7 +121,7 @@ handleConnections(std::vector<Server> &servers)
     std::cout << "Server is listening on multiple ports..." << std::endl;
 
     //main loop
-    recvSendLoop();
+    recvSendLoop(serverSockets, maxSocket);
 }
 
 // handleConnections(std::vector<Server> &servers)

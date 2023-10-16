@@ -18,7 +18,8 @@ SOURCES_FILES =	main.cpp \
 				Server.cpp \
 				Location.cpp \
 				response.cpp \
-				Mime.cpp
+				Mime.cpp \
+				handleConnections.cpp \
 
 SRCS = $(addprefix $(SOURCE_DIR), $(SOURCES_FILES))
 

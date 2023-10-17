@@ -196,6 +196,7 @@ std::cout << "\ntarget file : " << _target_path << std::endl;
 		if (_currentMethod == GET || _currentMethod == POST)
 		{
 			if (_currentMethod == GET && ext != "php" && !_location.getIsCGI())	//html
+			// if (_currentMethod == GET && ext != "sh")	//html
 			{
 				if (_location.getAutoIndex())
 				{
@@ -348,7 +349,6 @@ std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, 
 		}
 		ret += str;
 	}
-
 	return (std::make_pair(true, ret));
 }
 

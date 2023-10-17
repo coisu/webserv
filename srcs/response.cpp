@@ -186,6 +186,8 @@ std::cout << "\ntarget file : " << _target_path << std::endl;
 			_target_path += "index.html";
 		}
 	}
+	if (!pathExists(_target_path))
+		_status = 404;
 	std::string	ext(getExt(_target_path));
 	if (_headers["Content-Type"] == "")
 		setContentType(ext); 
@@ -238,7 +240,8 @@ std::cout << "\ntarget file : " << _target_path << std::endl;
 					if (pathExists(_target_path))
 					{
 						std::string reqBody = _request.getBody();
-
+						if (_location.getIsCGI())
+							std::cout << "\n\n >> This POST method is CGI\n\n";
 						int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
 						if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
 						{
@@ -584,7 +587,7 @@ std::string		Response::makeErrorPage(int	status)
 int	Response::execteDelete(void)
 {
 	int	status(200);
-
+	std::cout << " -->> IT IS DELETING CONTENTS IN TARGET FILE PATH\n" << std::endl;
 	if (remove(const_cast<char*>(_target_path.c_str())) == -1)
 	{
 		status = 204;

@@ -171,7 +171,7 @@ void	CGI::identifyCGI(std::vector<std::string> urlvec)
 		// }
 	}
 	// _script = "/workspaces/webserv/cgi-bin/";
-	_script = "/workspaces/webserv/post/post.php";
+	// _script = "/workspaces/webserv/post/post.php";
 	if (this->_script.empty())
 		throw 501;
 	this->_program = this->_cgiConfig[this->_postfix];

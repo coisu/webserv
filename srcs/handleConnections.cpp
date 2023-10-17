@@ -9,45 +9,83 @@
 #include <sys/select.h>
 #include <fcntl.h>
 
+#define WRITEREADY true
+#define READREADY false
+
 void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
 {
-    fd_set  serverSet, clientSet;
-    FD_ZERO(&serverSet);
-    FD_ZERO(&clientSet);
-    // Add all server sockets to the set.
-    for (size_t i = 0; i < serverSockets.size(); i++)
-        FD_SET(serverSockets[i], &serverSet);
+    fd_set              readSet, writeSet;
+    std::map<int, bool> clientSockets;
+    std::map<int, bool>::iterator it;
+
     while (true)
     {
-        int socketReady = select(maxSocket + 1, &serverSet, NULL, NULL, NULL);
-        if (socketReady > 0)
-        {
-            // Loop through the server sockets to find the one that is ready.
-            for (size_t i = 0; i < serverSockets.size(); i++)
-            {
-                if (FD_ISSET(serverSockets[i], &serverSet))
-                {
-                    // Accept and handle the connection on the port i.
-                    struct sockaddr_in  clientSocketAddress;
-                    socklen_t           clientSocketSize = sizeof(clientSocketAddress);
-                    int clientSocket = accept(serverSockets[i], (struct sockaddr *)&clientSocketAddress, &clientSocketSize);
-                    if (clientSocket < 0)
-                    {
-                       std::ostringstream ss;
-                       ss << 
-                       "Server failed to accept incoming connection from ADDRESS: " 
-                       << inet_ntoa(clientSocketAddress.sin_addr) << "; PORT: " 
-                       << ntohs(clientSocketAddress.sin_port);
-                       throw std::runtime_error(ss.str());
-                    }
-                    // Handle the connection on this port as needed.
-                    // recv -> parse request -> launch response -> send
+        FD_ZERO(&readSet);
+        FD_ZERO(&writeSet);
 
-                }
-            }
+        // Add all server sockets to the set.
+        for (size_t i = 0; i < serverSockets.size(); i++)
+            FD_SET(serverSockets[i], &readSet);
+        
+        // Add client sockets to the readSet or writeSet
+        for (it = clientSockets.begin(); it != clientSockets.end(); it++)
+        {
+            if (it->second == WRITEREADY)
+                FD_SET(it->first, &writeSet);
+            else if (it->second == READREADY)
+                FD_SET(it->first, &readSet);
         }
-        else
-            throw std::runtime_error("Error calling select");
+
+        if (select(maxSocket + 1, &readSet, &writeSet, NULL, NULL) == -1)
+        {
+            throw std::runtime_error("Select() failed");
+        }
+        // Loop through the server sockets to find the one that is ready.
+        for (size_t i = 0; i < serverSockets.size(); i++)
+        {
+            // check each server socket to see if its ready
+            if (FD_ISSET(serverSockets[i], &readSet))
+            {
+                // Accept and handle the connection on the port i.
+                struct sockaddr_in  clientSocketAddress;
+                socklen_t           clientSocketSize = sizeof(clientSocketAddress);
+                // accept the client connection and create client socket
+                int clientSocket = accept(serverSockets[i], (struct sockaddr *)&clientSocketAddress, &clientSocketSize);
+                if (clientSocket < 0)
+                {
+                    std::cerr << 
+                    "Server failed to accept incoming connection from clent ADDRESS: " 
+                    << inet_ntoa(clientSocketAddress.sin_addr) << "; PORT: " 
+                    << ntohs(clientSocketAddress.sin_port);
+                    continue ;
+                }
+                // update maxSocket as needed
+                if (clientSocket > maxSocket)
+                    maxSocket = clientSocket;
+                clientSockets[clientSocket] = READREADY;
+                // add client socket to readSet
+                FD_SET(clientSocket, &readSet);
+                std::cout << "New connexion comming: " 
+                            << inet_ntoa(clientSocketAddress.sin_addr) 
+                            << ":" << ntohs(clientSocketAddress.sin_port) 
+                            << std::endl;
+            }
+            for (it = clientSockets.begin(); it != clientSockets.end(); it++)
+            {
+                // check for data on client socket
+                if (FD_ISSET(it->first, &readSet))
+                {
+                    //recv
+                    // if recv finished reading set client to WRITEREADY in the clientSocket map
+                }
+                else if (FD_ISSET(it->first, &writeSet))
+                {
+                    //send
+                    // if recv finished reading set client to WRITEREADY in the clientSocket map
+                }
+            // Handle the connection on this port as needed.
+            // recv -> parse request -> launch response -> send
+        }
     }
     for (size_t i = 0; i < serverSockets.size(); i++)
         close(serverSockets[i]);
@@ -86,6 +124,8 @@ void handleConnections(std::vector<Server> &servers)
         serverSocketAddress.sin_family = AF_INET; // for IPv4
         serverSocketAddress.sin_port = portVec[i];
         serverSocketAddress.sin_addr.s_addr = INADDR_ANY;
+
+        std::cout << "PORT: " << ntohs(portVec[i]) << std::endl;
         
         // Bind the socket to the address and port.
         if (bind(currentSocket,(struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress)) < 0)
@@ -101,11 +141,17 @@ void handleConnections(std::vector<Server> &servers)
         if (fcntl(currentSocket, F_SETFL, O_NONBLOCK) < 0)
             throw std::runtime_error("Socket set non-blocking failed");
 
+        std::ostringstream ss;
+        ss << "\n*** Listening on ADDRESS: " 
+        << inet_ntoa(serverSocketAddress.sin_addr) // convert the IP address (binary) in string
+        << " PORT: " << ntohs(serverSocketAddress.sin_port) // invert octets, beacause network have big endians before and we want to have little endians before
+        << " ***\n\n";
+
         if (currentSocket < 0)
         {
             std::ostringstream ss;
             ss << 
-            "Server failed to accept incoming connection from ADDRESS: " 
+            "Server failed to setup connection on ADDRESS: " 
             << inet_ntoa(serverSocketAddress.sin_addr) << "; PORT: " 
             << ntohs(serverSocketAddress.sin_port);
             throw std::runtime_error(ss.str());

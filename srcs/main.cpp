@@ -16,9 +16,20 @@ int main(int ac, char **av) {
 		servers = parseConfig("./resources/default.conf");
 
 		for (size_t i = 0; i < servers.size(); i++)
+		{
 			std::cout << "Server " << i << ":\n" << servers[i] << "\n\n";
+			// servers[i].startServer();
+		}
 		
 		handleConnections(servers);
+		// while (true)
+		// {
+		// 	for (size_t i = 0; i < servers.size(); i++)
+		// 	{
+		// 		servers[i].startListen();
+		// 		servers[i].runServer();
+		// 	}
+		// }
 	}
 	catch(const std::exception& e)
 	{

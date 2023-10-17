@@ -92,35 +92,109 @@ char**	CGI::getCharEnv( void )
 	return (char_env);
 }
 
-std::string	CGI::exec_cgi( void )
-{
-	const char*	cmd;
-	std::string	strcmd;
-	char		buffer[128];
-	std::string	envline;
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <iostream>
+#include <string.h>
+#include <stdio.h>
 
-	for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
-		envline += (it->first + "=\'" + it->second + "\' ");
-	strcmd = "echo \"" + this->_env["QUERY_STRING"] + "\" hello |" + envline + this->_program + " " + this->_script;
-	cmd = strcmd.c_str();
-	// std::cout << strcmd << std::endl;
-	std::string result = "";
-	FILE* pipe = popen(cmd, "r");
-	if (!pipe)
-		throw std::runtime_error("popen() failed!");
-	try
+std::string CGI::exec_cgi( void )
+{
+    int pipefd[2];
+    pid_t pid;
+	char** const argv = this->_av;
+	if (!argv)
+		throw std::runtime_error("Failed to run CGI: argv is empty");
+	const char* cgi_path = argv[0];
+	char** const envp = this->getCharEnv();
+	std::string response;
+
+    // Create a pipe
+    if (pipe(pipefd) == -1)
 	{
-		while (fgets(buffer, sizeof buffer, pipe) != NULL)
-			result += buffer;
-	}
-	catch (...)
+        perror("pipe");
+        throw std::runtime_error("Failed to create pipe");
+        throw std::runtime_error("Failed to create pipe");
+    }
+
+    // Fork the process
+    pid = fork();
+    if (pid == -1)
 	{
-		pclose(pipe);
-		throw ;
-	}
-	pclose(pipe);
-	return result;
+        perror("fork");
+        throw std::runtime_error("Failed to fork process");
+    }
+
+    if (pid == 0)
+	{
+        // Child process
+
+        // Redirect stdout to the write end of the pipe
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[0]);
+        close(pipefd[1]);
+
+        // Execute the CGI program
+        if (execve(cgi_path, argv, envp) == -1)
+		{
+            perror("execve");
+        }
+        exit(1);
+    }
+	else
+	{
+        // Parent process
+
+        // Close write end in parent
+        close(pipefd[1]);
+
+        char buffer[1024];
+        ssize_t bytesRead;
+        while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
+		{
+            // Here, buffer contains bytesRead bytes of output from the CGI program.
+            // Send this back as the HTTP response.
+			response += buffer;
+			// write()
+            // write(STDOUT_FILENO, buffer, bytesRead);
+        }
+
+        close(pipefd[0]);
+        waitpid(pid, NULL, 0);
+    }
+	return (response);
 }
+
+// std::string	CGI::exec_cgi( void )
+// {
+// 	const char*	cmd;
+// 	std::string	strcmd;
+// 	char		buffer[128];
+// 	std::string	envline;
+
+// 	for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
+// 		envline += (it->first + "=\'" + it->second + "\' ");
+// 	strcmd = "echo \"" + this->_env["QUERY_STRING"] + "\" hello |" + envline + this->_program + " " + this->_script;
+// 	cmd = strcmd.c_str();
+// 	// std::cout << strcmd << std::endl;
+// 	std::string result = "";
+// 	FILE* pipe = popen(cmd, "r");
+// 	if (!pipe)
+// 		throw std::runtime_error("popen() failed!");
+// 	try
+// 	{
+// 		while (fgets(buffer, sizeof buffer, pipe) != NULL)
+// 			result += buffer;
+// 	}
+// 	catch (...)
+// 	{
+// 		pclose(pipe);
+// 		throw ;
+// 	}
+// 	pclose(pipe);
+// 	return result;
+// }
 
 // std::string	CGI::exec_cgi( void )
 // {

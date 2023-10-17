@@ -222,7 +222,7 @@ std::string Response::processResponse()
 	{
 		if (_currentMethod == GET || _currentMethod == POST)
 		{
-			if (_currentMethod == GET && ext != "php")	//html
+			if (_currentMethod == GET && ext != "sh")	//html
 			{
 				if (_location.getAutoIndex())
 				{
@@ -386,7 +386,6 @@ std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, 
 		}
 		ret += str;
 	}
-
 	return (std::make_pair(true, ret));
 }
 

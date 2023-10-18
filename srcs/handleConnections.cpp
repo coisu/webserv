@@ -14,12 +14,16 @@
 
 void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
 {
-    fd_set              readSet, writeSet;
-    std::map<int, bool> clientSockets;
-    std::map<int, bool>::iterator it;
+    fd_set  readSet, writeSet;
+    std::map<int, bool>             clientSockets;
+    std::map<int, bool>::iterator   it;
+    std::map<int, std::string>      clientMsg;
+    // std::map<int, std::string>::iterator   it;
+    char	                        buffer[1024];
 
     while (true)
     {
+        ssize_t bytesReceived = 0;
         FD_ZERO(&readSet);
         FD_ZERO(&writeSet);
 
@@ -39,6 +43,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
         if (select(maxSocket + 1, &readSet, &writeSet, NULL, NULL) == -1)
         {
             throw std::runtime_error("Select() failed");
+            // continue ;
         }
         // Loop through the server sockets to find the one that is ready.
         for (size_t i = 0; i < serverSockets.size(); i++)
@@ -64,7 +69,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                     maxSocket = clientSocket;
                 clientSockets[clientSocket] = READREADY;
                 // add client socket to readSet
-                FD_SET(clientSocket, &readSet);
+                // FD_SET(clientSocket, &readSet);
                 std::cout << "New connexion comming: " 
                             << inet_ntoa(clientSocketAddress.sin_addr) 
                             << ":" << ntohs(clientSocketAddress.sin_port) 
@@ -75,16 +80,26 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                 // check for data on client socket
                 if (FD_ISSET(it->first, &readSet))
                 {
+                    bytesReceived = recv(it->first, buffer, sizeof(buffer), 0);
+                    clientMsg[it->first] += buffer;
+                    std::cout << "\n----MESSGE----\n" << clientMsg[it->first] << "\n-----END-----\n";
+                    if (bytesReceived > 0)
+                        std::cout << "\n----BUFFER----\n" << buffer << "\n-----END-----\n";
+                    else if (bytesReceived == 0)
+                        std::cout << "\n-NO BUFFER RECEIVED-\n";
+                    else
+                        std::cout << "\n-ERROR RECEIVING FROM SOCKET-\n";
                     //recv
                     // if recv finished reading set client to WRITEREADY in the clientSocket map
+                    // recv -> parse request -> launch response
                 }
                 else if (FD_ISSET(it->first, &writeSet))
                 {
                     //send
                     // if recv finished reading set client to WRITEREADY in the clientSocket map
                 }
-            // Handle the connection on this port as needed.
-            // recv -> parse request -> launch response -> send
+                // Handle the connection on this port as needed.
+            }
         }
     }
     for (size_t i = 0; i < serverSockets.size(); i++)
@@ -137,9 +152,9 @@ void handleConnections(std::vector<Server> &servers)
         if (listen(currentSocket, 10) < 0)
             throw std::runtime_error("Socket listen failed");
 
-        // Set to non-blocking
-        if (fcntl(currentSocket, F_SETFL, O_NONBLOCK) < 0)
-            throw std::runtime_error("Socket set non-blocking failed");
+        // // Set to non-blocking
+        // if (fcntl(currentSocket, F_SETFL, O_NONBLOCK) < 0)
+        //     throw std::runtime_error("Socket set non-blocking failed");
 
         std::ostringstream ss;
         ss << "\n*** Listening on ADDRESS: " 

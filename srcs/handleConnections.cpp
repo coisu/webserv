@@ -81,7 +81,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                 if (FD_ISSET(it->first, &readSet))
                 {
                     bytesReceived = recv(it->first, buffer, sizeof(buffer), 0);
-                    clientMsg[it->first] += buffer;
+                    clientMsg[it->first].append(buffer, bytesReceived);
                     std::cout << "\n----MESSGE----\n" << clientMsg[it->first] << "\n-----END-----\n";
                     if (bytesReceived > 0)
                         std::cout << "\n----BUFFER----\n" << buffer << "\n-----END-----\n";

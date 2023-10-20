@@ -7,19 +7,27 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/select.h>
-#include <fcntl.h>
 
 #define WRITEREADY true
 #define READREADY false
 
+struct ClientState {
+    std::string incompleteRequest; // buffer for storing partial HTTP request
+    std::string incompleteResponse; // buffer for storing partial HTTP response
+    bool isChunked;
+    size_t expectedContentLength;
+    // ... other states like request headers, method, etc.
+};
+
+
 void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
 {
     fd_set  readSet, writeSet;
-    std::map<int, bool>             clientSockets;
-    std::map<int, bool>::iterator   it;
-    std::map<int, std::string>      clientMsg;
+    std::map<int, ClientState> clients;
+    std::map<int, ClientState>::iterator   it;
+    // std::map<int, bool>             clientSockets;
+    // std::map<int, std::vector<std::pair<std::string, std::string> > >      clientMsg;
     // std::map<int, std::string>::iterator   it;
-    char	                        buffer[1024];
 
     while (true)
     {
@@ -31,14 +39,14 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
         for (size_t i = 0; i < serverSockets.size(); i++)
             FD_SET(serverSockets[i], &readSet);
         
-        // Add client sockets to the readSet or writeSet
-        for (it = clientSockets.begin(); it != clientSockets.end(); it++)
-        {
-            if (it->second == WRITEREADY)
-                FD_SET(it->first, &writeSet);
-            else if (it->second == READREADY)
-                FD_SET(it->first, &readSet);
-        }
+        // // Add client sockets to the readSet or writeSet
+        // for (it = clientSockets.begin(); it != clientSockets.end(); it++)
+        // {
+        //     if (it->second == WRITEREADY)
+        //         FD_SET(it->first, &writeSet);
+        //     else if (it->second == READREADY)
+        //         FD_SET(it->first, &readSet);
+        // }
 
         if (select(maxSocket + 1, &readSet, &writeSet, NULL, NULL) == -1)
         {
@@ -48,7 +56,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
         // Loop through the server sockets to find the one that is ready.
         for (size_t i = 0; i < serverSockets.size(); i++)
         {
-            // check each server socket to see if its ready
+            // check the server socket to see if its ready
             if (FD_ISSET(serverSockets[i], &readSet))
             {
                 // Accept and handle the connection on the port i.
@@ -75,31 +83,38 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                             << ":" << ntohs(clientSocketAddress.sin_port) 
                             << std::endl;
             }
-            for (it = clientSockets.begin(); it != clientSockets.end(); it++)
+        }
+        // Loop through clients and check for readiness for reading and writing
+        for (it = clients.begin(); it != clients.end(); it++)
+        {
+            // naming for clarity
+            int         clientSocket = it->first;
+            ClientState client = it->second;
+
+            if (FD_ISSET(clientSocket, &readSet)) // <-- check if client is ready to read from
             {
-                // check for data on client socket
-                if (FD_ISSET(it->first, &readSet))
-                {
-                    bytesReceived = recv(it->first, buffer, sizeof(buffer), 0);
-                    clientMsg[it->first].append(buffer, bytesReceived);
-                    std::cout << "\n----MESSGE----\n" << clientMsg[it->first] << "\n-----END-----\n";
-                    if (bytesReceived > 0)
-                        std::cout << "\n----BUFFER----\n" << buffer << "\n-----END-----\n";
-                    else if (bytesReceived == 0)
-                        std::cout << "\n-NO BUFFER RECEIVED-\n";
-                    else
-                        std::cout << "\n-ERROR RECEIVING FROM SOCKET-\n";
-                    //recv
-                    // if recv finished reading set client to WRITEREADY in the clientSocket map
-                    // recv -> parse request -> launch response
-                }
-                else if (FD_ISSET(it->first, &writeSet))
-                {
-                    //send
-                    // if recv finished reading set client to WRITEREADY in the clientSocket map
-                }
-                // Handle the connection on this port as needed.
+                char    buffer[1024];
+                bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+                client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
+                std::cout << "\n----MESSGE----\n" << client.incompleteRequest << "\n-----END-----\n";
+                if (bytesReceived > 0)
+                    std::cout << "\n----BUFFER----\n" << buffer << "\n-----END-----\n";
+                else if (bytesReceived == 0)
+                    std::cout << "\n-NO BUFFER RECEIVED-\n";
+                else
+                    std::cout << "\n-ERROR RECEIVING FROM SOCKET-\n";
             }
+            else if (FD_ISSET(clientSocket, &writeSet)) // <-- check if client is ready to write into
+            {
+                int bytesSent = send(clientSocket, client.incompleteResponse.data(), client.incompleteResponse.size(), 0);
+                if(bytesSent <= 0) {
+                    // Handle error or close
+                } 
+                else {
+                    client.incompleteResponse.erase(0, bytesSent); // <-- erase sent data
+                }
+            }
+            // Handle the connection on this port as needed.
         }
     }
     for (size_t i = 0; i < serverSockets.size(); i++)

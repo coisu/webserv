@@ -67,14 +67,14 @@ std::string    printClient(ClientState &client)
 {
     std::ostringstream os;
     std::map<std::string, std::string>::iterator it;
-    os << "INFO:\n" << client.info  << "\n;";
-    os << "HEADER:\n";
+    os << "INFO:" << std::endl << client.info  << ";" << std::endl;
+    os << "HEADER:" << std::endl;
     for (it = client.header.begin(); it != client.header.end(); it++)
     {
-        os << it->first << ": " << it->second << ";\n";
+        os << it->first << ": " << it->second << ";" << std::endl;
     }
-    os << "BODY:\n";
-    os << client.body << ";\n";
+    os << "BODY:" << std::endl;
+    os << client.body << ";" << std::endl;
     // std::cout << os.str();
     return (os.str());
 }

@@ -11,23 +11,61 @@
 #define WRITEREADY true
 #define READREADY false
 
+#include <fstream>
+#include <sstream>
+
 struct ClientState {
     std::string incompleteRequest; // buffer for storing partial HTTP request
     std::string incompleteResponse; // buffer for storing partial HTTP response
-    bool isChunked;
-    size_t expectedContentLength;
+    bool    isChunked;
+    bool    isReceivingBody;
+    size_t  contentLength;
+    size_t  receivedLength;
+    std::map<std::string, std::string>  header;
+    std::string                         body;
     // ... other states like request headers, method, etc.
 };
 
+void    parseHttpRequest(ClientState &client)
+{
+    size_t pos = client.incompleteRequest.find("\r\n\r\n"); // <-- seach for header-body seperator
+    if (!client.isReceivingBody && pos != std::string::npos) // <-- if client isnt receiving body and seperator is found
+    {
+        std::istringstream  iss(client.incompleteRequest.substr(0, pos + 4)); // <-- put header part of the request into istream
+        std::string         key, val;
+
+        // parse header into map of key: values
+        while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
+            client.header[key] = val.substr(0, val.size() - 1);
+
+        client.incompleteRequest.erase(0, pos + 4); // <-- erase what has been parsed
+
+        // if Content-Length is present in header setup values to start receiving the body
+        if (!client.header["Content-Length"].empty())
+        {
+            client.contentLength = atoi(client.header["Content-Length"].c_str());
+            client.isReceivingBody = true;    
+            client.receivedLength = 0;    
+        }
+    }
+    size_t i = 0;
+    // put all the available request body in client.body
+    while (client.receivedLength < client.contentLength && i < client.incompleteRequest.size())
+    {
+        client.body += client.incompleteRequest[i];
+        client.receivedLength++;
+        i++;
+    }
+    client.incompleteRequest.erase(0, i); // <-- erase what has been saved
+    if (client.receivedLength == client.contentLength) // <-- check if the body has been fully received
+        client.isReceivingBody = false;
+}
 
 void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
 {
     fd_set  readSet, writeSet;
     std::map<int, ClientState> clients;
     std::map<int, ClientState>::iterator   it;
-    // std::map<int, bool>             clientSockets;
-    // std::map<int, std::vector<std::pair<std::string, std::string> > >      clientMsg;
-    // std::map<int, std::string>::iterator   it;
 
     while (true)
     {
@@ -38,15 +76,6 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
         // Add all server sockets to the set.
         for (size_t i = 0; i < serverSockets.size(); i++)
             FD_SET(serverSockets[i], &readSet);
-        
-        // // Add client sockets to the readSet or writeSet
-        // for (it = clientSockets.begin(); it != clientSockets.end(); it++)
-        // {
-        //     if (it->second == WRITEREADY)
-        //         FD_SET(it->first, &writeSet);
-        //     else if (it->second == READREADY)
-        //         FD_SET(it->first, &readSet);
-        // }
 
         if (select(maxSocket + 1, &readSet, &writeSet, NULL, NULL) == -1)
         {
@@ -75,9 +104,8 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                 // update maxSocket as needed
                 if (clientSocket > maxSocket)
                     maxSocket = clientSocket;
-                clientSockets[clientSocket] = READREADY;
-                // add client socket to readSet
-                // FD_SET(clientSocket, &readSet);
+                // clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, 0, 0, std::map<std::string, std::string>(), std::string()};
+                clients[clientSocket] = (ClientState){0, 0, 0, 0, 0, 0, std::map<std::string, std::string>(), 0};
                 std::cout << "New connexion comming: " 
                             << inet_ntoa(clientSocketAddress.sin_addr) 
                             << ":" << ntohs(clientSocketAddress.sin_port) 
@@ -95,16 +123,24 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
             {
                 char    buffer[1024];
                 bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-                client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
                 std::cout << "\n----MESSGE----\n" << client.incompleteRequest << "\n-----END-----\n";
-                if (bytesReceived > 0)
-                    std::cout << "\n----BUFFER----\n" << buffer << "\n-----END-----\n";
-                else if (bytesReceived == 0)
-                    std::cout << "\n-NO BUFFER RECEIVED-\n";
+                if (bytesReceived <= 0)
+                {
+                    if (bytesReceived == -1)
+                        throw std::runtime_error("Error reading from client");
+                    // if (bytesReceived == 0)
+                    // {
+                    //     std::cout << "RECV RETURNED ZERO\n";
+                    //     // close socket
+                    // }
+                }
                 else
-                    std::cout << "\n-ERROR RECEIVING FROM SOCKET-\n";
+                {
+                    client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
+                    parseHttpRequest(client);
+                }
             }
-            else if (FD_ISSET(clientSocket, &writeSet)) // <-- check if client is ready to write into
+            if (FD_ISSET(clientSocket, &writeSet)) // <-- check if client is ready to write into
             {
                 int bytesSent = send(clientSocket, client.incompleteResponse.data(), client.incompleteResponse.size(), 0);
                 if(bytesSent <= 0) {
@@ -114,7 +150,9 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                     client.incompleteResponse.erase(0, bytesSent); // <-- erase sent data
                 }
             }
-            // Handle the connection on this port as needed.
+            // Add client socket to writeSet and readSet
+            FD_SET(clientSocket, &readSet);
+            FD_SET(clientSocket, &writeSet);
         }
     }
     for (size_t i = 0; i < serverSockets.size(); i++)
@@ -166,10 +204,6 @@ void handleConnections(std::vector<Server> &servers)
         // Listen for incoming connections.
         if (listen(currentSocket, 10) < 0)
             throw std::runtime_error("Socket listen failed");
-
-        // // Set to non-blocking
-        // if (fcntl(currentSocket, F_SETFL, O_NONBLOCK) < 0)
-        //     throw std::runtime_error("Socket set non-blocking failed");
 
         std::ostringstream ss;
         ss << "\n*** Listening on ADDRESS: " 

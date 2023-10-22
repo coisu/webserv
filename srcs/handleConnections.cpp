@@ -126,10 +126,16 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
         {
 			if (it->second.isClosed)
 				clients.erase(it++);
+			else if (it->second.isClosing && it->second.incompleteResponse.empty())
+			{
+				close(it->first);
+				clients.erase(it++);
+			}
 			else
 			{
 				FD_SET(it->first, &readSet);
-				FD_SET(it->first, &writeSet);
+				if (!it->second.incompleteResponse.empty()) // <-- only add to writeSet if there is something to send
+					FD_SET(it->first, &writeSet);
 				it++;
 			}
         }
@@ -210,13 +216,6 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
             }
             if (FD_ISSET(clientSocket, &writeSet)) // <-- check if client is ready to write into
             {
-				if (client.isClosing && client.incompleteResponse.empty())
-				{
-					close(clientSocket);
-					FD_CLR(clientSocket, &readSet);
-					FD_CLR(clientSocket, &writeSet);
-					client.isClosed = true;
-				}
                 int bytesSent = send(clientSocket, client.incompleteResponse.data(), client.incompleteResponse.size(), 0);
 				if(bytesSent < 0)
 				{

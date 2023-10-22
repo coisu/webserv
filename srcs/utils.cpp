@@ -31,6 +31,17 @@ bool	pathExists(std::string path)
 
 }
 
+// helper function to trim leading and trailing whitespace from a string
+std::string trimWhiteSpace( const std::string &str )
+{
+    size_t start = str.find_first_not_of(" \t\n\r");
+    size_t end = str.find_last_not_of(" \t\n\r");
+    if (start == std::string::npos || end == std::string::npos)
+        return ("");
+    else
+        return (str.substr(start, end - start + 1));
+}
+
 std::string	readFile(std::string location)
 {
 	std::ifstream t(location.c_str());

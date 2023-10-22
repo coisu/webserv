@@ -36,9 +36,10 @@ void    parseHttpRequest(ClientState &client)
         std::string         key, val;
 
         std::getline(iss, client.info); // <-- put request first line into info to be passed later
+		client.info = trimWhiteSpace(client.info);
         // parse header into map of key: values
         while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-            client.header[key] = val.substr(0, val.size() - 1);
+            client.header[trimWhiteSpace(key)] = trimWhiteSpace(val.substr(0, val.size() - 1));
 
         client.incompleteRequest.erase(0, pos + 4); // <-- erase what has been parsed
 
@@ -67,16 +68,27 @@ std::string    printClient(ClientState &client)
 {
     std::ostringstream os;
     std::map<std::string, std::string>::iterator it;
-    os << "INFO:" << std::endl << client.info  << ";" << std::endl;
-    os << "HEADER:" << std::endl;
+    os << "INFO:" << std::endl << client.info << ";" << std::endl;
+    os << "\nHEADER:" << std::endl;
     for (it = client.header.begin(); it != client.header.end(); it++)
     {
-        os << it->first << ": " << it->second << ";" << std::endl;
+        os << "\"" << it->first << ": " << it->second << "\";" << std::endl;
     }
-    os << "BODY:" << std::endl;
-    os << client.body << ";" << std::endl;
-    // std::cout << os.str();
+    os << "\nBODY:" << std::endl;
+    os << "\"" << client.body << "\";" << std::endl;
+    std::string outy;
+    // std::map<std::string, std::string>::iterator it;
+    // outy += "INFO:\n" + client.info + ";\n";
+	// outy += "HEADER:\r\n\n\n\n\n\n";
+    // for (it = client.header.begin(); it != client.header.end(); it++)
+    // {
+    //     outy += it->first + ": " + it->second + ";\n";
+    // }
+    // outy += "BODY:\n";
+    // outy += client.body + ";\n";
+    std::cout << os.str();
     return (os.str());
+    // return (outy);
 }
 
 std::string makeResponse(int code, std::string body)
@@ -84,7 +96,7 @@ std::string makeResponse(int code, std::string body)
     std::stringstream ss;
 
     ss << "HTTP/1.1 " << code << " OK\r\n"
-          << "Content-Type: text/html\r\n" //text/plain\r\n"
+          << "Content-Type: text/plain\r\n" //text/plain\r\n"
           << "Content-Length: " << body.size() << "\r\n"
           << "\n" << body << "\r\n";
     // std::cout << ss.str();
@@ -142,9 +154,10 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                 if (clientSocket > maxSocket)
                     maxSocket = clientSocket;
                 // clients[clientSocket] = (ClientState){};
-                clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, 0, 0, std::map<std::string, std::string>(), std::string(), std::string()};
+                clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, 0, 0, 
+													  std::map<std::string, std::string>(), std::string(), std::string()};
                 // clients[clientSocket] = (ClientState){0, 0, 0, 0, 0, 0, std::map<std::string, std::string>(), 0, 0};
-                std::cout << "New connexion comming: " 
+                std::cout << "New connection incomming: " 
                             << inet_ntoa(clientSocketAddress.sin_addr) 
                             << ":" << ntohs(clientSocketAddress.sin_port) 
                             << std::endl;

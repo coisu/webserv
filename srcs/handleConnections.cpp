@@ -19,6 +19,8 @@ struct ClientState {
     std::string incompleteResponse; // buffer for storing partial HTTP response
     bool    isChunked;
     bool    isReceivingBody;
+	bool	isClosing;
+	bool	isClosed;
     size_t  contentLength;
     size_t  receivedLength;
     std::map<std::string, std::string>  header;
@@ -86,7 +88,7 @@ std::string    printClient(ClientState &client)
     // }
     // outy += "BODY:\n";
     // outy += client.body + ";\n";
-    std::cout << os.str();
+    // std::cout << os.str();
     return (os.str());
     // return (outy);
 }
@@ -120,15 +122,21 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
             FD_SET(serverSockets[i], &readSet);
 
         // Add all client sockets to writeSet and readSet
-        for (it = clients.begin(); it != clients.end(); it++)
+        for (it = clients.begin(); it != clients.end(); )
         {
-            FD_SET(it->first, &readSet);
-            FD_SET(it->first, &writeSet);
+			if (it->second.isClosed)
+				clients.erase(it++);
+			else
+			{
+				FD_SET(it->first, &readSet);
+				FD_SET(it->first, &writeSet);
+				it++;
+			}
         }
 
         if (select(maxSocket + 1, &readSet, &writeSet, NULL, NULL) == -1)
         {
-            throw std::runtime_error("Select() failed");
+            // throw std::runtime_error("Select() failed");
             // continue ;
         }
         // Loop through the server sockets to find the one that is ready.
@@ -154,7 +162,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                 if (clientSocket > maxSocket)
                     maxSocket = clientSocket;
                 // clients[clientSocket] = (ClientState){};
-                clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, 0, 0, 
+                clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, 0, 0, 
 													  std::map<std::string, std::string>(), std::string(), std::string()};
                 // clients[clientSocket] = (ClientState){0, 0, 0, 0, 0, 0, std::map<std::string, std::string>(), 0, 0};
                 std::cout << "New connection incomming: " 
@@ -168,7 +176,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
         {
             // naming for clarity
             int         clientSocket = it->first;
-            ClientState client = it->second;
+            ClientState &client = it->second;
 
             if (FD_ISSET(clientSocket, &readSet)) // <-- check if client is ready to read from
             {
@@ -178,11 +186,18 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                 if (bytesReceived <= 0)
                 {
                     if (bytesReceived == -1)
-                        throw std::runtime_error("Error reading from client");
+					{
+						std::cerr << "Error reading from client" << std::endl;
+						close(clientSocket);
+						FD_CLR(clientSocket, &readSet);
+						FD_CLR(clientSocket, &writeSet);
+						client.isClosed = true;
+						continue ;
+					}
                     if (bytesReceived == 0)
                     {
-                        // std::cout << "RECV RETURNED ZERO\n";
-                        // close socket
+                        std::cout << "RECV RETURNED ZERO\n";
+                        client.isClosing = true;
                     }
                 }
                 else
@@ -195,12 +210,24 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
             }
             if (FD_ISSET(clientSocket, &writeSet)) // <-- check if client is ready to write into
             {
-                // std::cout << "READY TO WRITE\n";
+				if (client.isClosing && client.incompleteResponse.empty())
+				{
+					close(clientSocket);
+					FD_CLR(clientSocket, &readSet);
+					FD_CLR(clientSocket, &writeSet);
+					client.isClosed = true;
+				}
                 int bytesSent = send(clientSocket, client.incompleteResponse.data(), client.incompleteResponse.size(), 0);
-                if(bytesSent <= 0) {
+				if(bytesSent < 0)
+				{
                     // Handle error or close
-                } 
-                else {
+					close(clientSocket);
+					FD_CLR(clientSocket, &readSet);
+					FD_CLR(clientSocket, &writeSet);
+					client.isClosed = true;
+				}
+                else
+				{
                     client.incompleteResponse.erase(0, bytesSent); // <-- erase sent data
                 }
             }

@@ -189,7 +189,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                 char    buffer[1024];
                 bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
                 // std::cout << "\n----MESSGE----\n" << client.incompleteRequest << "\n-----END-----\n";
-                if (bytesReceived <= 0)
+				if (bytesReceived <= 0)
                 {
                     if (bytesReceived == -1)
 					{

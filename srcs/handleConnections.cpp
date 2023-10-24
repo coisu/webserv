@@ -111,9 +111,15 @@ std::string makeResponse(int code, std::string body)
     return (ss.str());
 }
 
-Server& selectServer(int clientSocket, ClientState client)
+Server& selectServer(int clientSocket, ClientState client, std::vector<Server> &servers)
 {
-
+	struct sockaddr_in sin;
+	socklen_t len = sizeof(sin);
+	if (getsockname(clientSocket, (struct sockaddr *)&sin, &len) == -1)
+		std::cerr << "Error: problem directing to server\n"; // return server error
+	else
+		std::cout << "Port Number: " << ntohs(sin.sin_port);
+	return (servers[0])
 }
 
 void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<Server> &servers)
@@ -180,8 +186,8 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                 if (clientSocket > maxSocket)
                     maxSocket = clientSocket;
                 // clients[clientSocket] = (ClientState){};
-                clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, 0, 0, 
-													  std::map<std::string, std::string>(), std::string(), std::string()};
+                clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, ser
+													  0, 0, std::map<std::string, std::string>(), std::string(), std::string()};
                 // clients[clientSocket] = (ClientState){0, 0, 0, 0, 0, 0, std::map<std::string, std::string>(), 0, 0};
                 std::cout << "New connection incomming: " 
                             << inet_ntoa(clientSocketAddress.sin_addr) 
@@ -224,13 +230,13 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                     parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 					if (client.receivedLength == client.contentLength)
 					{
-						Server server = selectServer(clientSocket, client);
-						Request request(client.header, client.body, client.info, server);
-						Response response(request, server);
-						client.responseQueue.push(response);
+						Server server = selectServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
+						Request request(client.header, client.body, client.info, server); // <-- create request obj with ClientStatus info
+						Response response(request, server); // <-- create response with request obj and selected server
+						client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
 					}
-                    if (bytesReceived < 1024)
-                        client.incompleteResponse = makeResponse(200, printClient(client));
+                    // if (bytesReceived < 1024)
+                    //     client.incompleteResponse = makeResponse(200, printClient(client));
                 }
             }
             if (FD_ISSET(clientSocket, &writeSet)) // <-- check if client is ready to write into

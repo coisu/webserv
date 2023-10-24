@@ -1,7 +1,7 @@
 #include "Request.hpp"
 
 Request::Request(std::string request, Server& serv)
-: server(serv), _full_request(request), _head(head)
+: server(serv), _full_request(request)
 {
 	parseRequest(request);
 	std::string key, val;

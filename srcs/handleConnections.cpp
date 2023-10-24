@@ -225,7 +225,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 					if (client.receivedLength == client.contentLength)
 					{
 						Server server = selectServer(clientSocket, client);
-						Request request(client.header, client.body, server);
+						Request request(client.header, client.body, client.info, server);
 						Response response(request, server);
 						client.responseQueue.push(response);
 					}

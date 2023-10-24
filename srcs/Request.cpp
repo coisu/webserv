@@ -1,19 +1,46 @@
 #include "Request.hpp"
 
-Request::Request(std::string request, Server& serv, std::map<std::string, std::string> head) 
+Request::Request(std::string request, Server& serv)
 : server(serv), _full_request(request), _head(head)
 {
 	parseRequest(request);
+	std::string key, val;
+	std::istringstream iss(request);
+	std::string methods[3] = {"GET", "POST", "DELETE"};
+
+	std::getline(iss, this->_info);
+
+	this->_method_enum = extractMethodType(this->_info);
+	this->_method_str = methods[this->_method_enum];
+	this->_url = extractURL(this->_info);
+	std::cout << "root: " << this->server.getRoot() << std::endl;
+	std::cout << "url: " << this->_url << std::endl;
+	std::cout << "suby: " << this->_url.substr(0, this->_url.find_first_of('?')) << std::endl;
+	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
+	// this->_location = extractLocation(this->server, this->_locPath);
+	this->_isDir = pathIsDir(this->_locPath);
+	// this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
+	// this->_is_cgi = this->_location->getIsCGI();
+
+	// while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
+		// requestHeader[key] = val.substr(0, val.size() - 1);
+
+	// return requestHeader;
 	// std::cout << "Request created\n";
 	// this->_body = readFile(this->_locPath);
 }
 
-Request::Request(std::map<std::string, std::string> header, std::string body, Server& serv) 
-: server(serv), _head(header)
+Request::Request(std::map<std::string, std::string> header, std::string body, std::string info, Server& serv) 
+: server(serv), _head(header), _body(body), _info(info)
 {
-	parseRequest(request);
-	// std::cout << "Request created\n";
-	// this->_body = readFile(this->_locPath);
+
+	std::string key, val;
+	std::string methods[3] = {"GET", "POST", "DELETE"};
+
+	this->_method_enum = extractMethodType(this->_info);
+	this->_method_str = methods[this->_method_enum];
+	this->_url = extractURL(this->_info);
+	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
 }
 
 Request::~Request()
@@ -52,33 +79,33 @@ Request&	Request::operator = (const Request& copy)
 // 	return (NULL);
 // }
 
-void	Request::parseRequest(std::string request)
-{
-	// std::map<std::string, std::string> requestHeader;
-	std::string key, val;
-	std::istringstream iss(request);
-	std::string methods[3] = {"GET", "POST", "DELETE"};
+// void	Request::parseRequest(std::string request)
+// {
+// 	// std::map<std::string, std::string> requestHeader;
+// 	std::string key, val;
+// 	std::istringstream iss(request);
+// 	std::string methods[3] = {"GET", "POST", "DELETE"};
 
-	// std::getline(iss, this->_info);
+// 	// std::getline(iss, this->_info);
 
-	this->_method_enum = extractMethodType(this->_info);
-	this->_method_str = methods[this->_method_enum];
-	this->_url = extractURL(this->_info);
-	// std::vector<std::string> urlvec = splitUrl(this->_url);
-	std::cout << "root: " << this->server.getRoot() << std::endl;
-	std::cout << "url: " << this->_url << std::endl;
-	std::cout << "suby: " << this->_url.substr(0, this->_url.find_first_of('?')) << std::endl;
-	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
-	// this->_location = extractLocation(this->server, this->_locPath);
-	this->_isDir = pathIsDir(this->_locPath);
-	// this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
-	// this->_is_cgi = this->_location->getIsCGI();
+// 	this->_method_enum = extractMethodType(this->_info);
+// 	this->_method_str = methods[this->_method_enum];
+// 	this->_url = extractURL(this->_info);
+// 	// std::vector<std::string> urlvec = splitUrl(this->_url);
+// 	std::cout << "root: " << this->server.getRoot() << std::endl;
+// 	std::cout << "url: " << this->_url << std::endl;
+// 	std::cout << "suby: " << this->_url.substr(0, this->_url.find_first_of('?')) << std::endl;
+// 	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
+// 	// this->_location = extractLocation(this->server, this->_locPath);
+// 	this->_isDir = pathIsDir(this->_locPath);
+// 	// this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
+// 	// this->_is_cgi = this->_location->getIsCGI();
 
-	// while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-		// requestHeader[key] = val.substr(0, val.size() - 1);
+// 	// while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
+// 		// requestHeader[key] = val.substr(0, val.size() - 1);
 
-	// return requestHeader;
-}
+// 	// return requestHeader;
+// }
 
 void	Request::printRequest( void )
 {

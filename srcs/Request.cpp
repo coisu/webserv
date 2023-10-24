@@ -1,8 +1,17 @@
 #include "Request.hpp"
 
-Request::Request(std::string request, Server& serv) 
-: server(serv), _full_request(request), _head(parseRequest(request))
+Request::Request(std::string request, Server& serv, std::map<std::string, std::string> head) 
+: server(serv), _full_request(request), _head(head)
 {
+	parseRequest(request);
+	// std::cout << "Request created\n";
+	// this->_body = readFile(this->_locPath);
+}
+
+Request::Request(std::map<std::string, std::string> header, std::string body, Server& serv) 
+: server(serv), _head(header)
+{
+	parseRequest(request);
 	// std::cout << "Request created\n";
 	// this->_body = readFile(this->_locPath);
 }
@@ -43,14 +52,14 @@ Request&	Request::operator = (const Request& copy)
 // 	return (NULL);
 // }
 
-std::map<std::string, std::string>	Request::parseRequest(std::string request)
+void	Request::parseRequest(std::string request)
 {
-	std::map<std::string, std::string> requestHeader;
+	// std::map<std::string, std::string> requestHeader;
 	std::string key, val;
 	std::istringstream iss(request);
 	std::string methods[3] = {"GET", "POST", "DELETE"};
 
-	std::getline(iss, this->_info);
+	// std::getline(iss, this->_info);
 
 	this->_method_enum = extractMethodType(this->_info);
 	this->_method_str = methods[this->_method_enum];
@@ -65,10 +74,10 @@ std::map<std::string, std::string>	Request::parseRequest(std::string request)
 	// this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
 	// this->_is_cgi = this->_location->getIsCGI();
 
-	while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-		requestHeader[key] = val.substr(0, val.size() - 1);
+	// while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
+		// requestHeader[key] = val.substr(0, val.size() - 1);
 
-	return requestHeader;
+	// return requestHeader;
 }
 
 void	Request::printRequest( void )

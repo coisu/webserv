@@ -7,6 +7,9 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/select.h>
+#include <queue>
+#include "Response.hpp"
+#include "Request.hpp"
 
 #define WRITEREADY true
 #define READREADY false
@@ -15,17 +18,18 @@
 #include <sstream>
 
 struct ClientState {
-    std::string incompleteRequest; // buffer for storing partial HTTP request
-    std::string incompleteResponse; // buffer for storing partial HTTP response
-    bool    isChunked;
-    bool    isReceivingBody;
-	bool	isClosing;
-	bool	isClosed;
-    size_t  contentLength;
-    size_t  receivedLength;
-    std::map<std::string, std::string>  header;
-    std::string                         body;
-    std::string                         info;
+    std::string	incompleteRequest; // buffer for storing partial HTTP request
+    std::string	incompleteResponse; // buffer for storing partial HTTP response
+    bool		isChunked;
+    bool		isReceivingBody;
+	bool		isClosing;
+	bool		isClosed;
+    size_t		contentLength;
+    size_t		receivedLength;
+    std::map<std::string, std::string>	header;
+    std::string							body;
+    std::string							info;
+	std::queue<std::string>				responseQueue;
     // ... other states like request headers, method, etc.
 };
 
@@ -49,8 +53,8 @@ void    parseHttpRequest(ClientState &client)
         if (!client.header["Content-Length"].empty())
         {
             client.contentLength = atoi(client.header["Content-Length"].c_str());
-            client.isReceivingBody = true;    
-            client.receivedLength = 0;    
+            client.isReceivingBody = true;
+            client.receivedLength = 0;
         }
     }
     size_t i = 0;
@@ -63,7 +67,9 @@ void    parseHttpRequest(ClientState &client)
     }
     client.incompleteRequest.erase(0, i); // <-- erase what has been saved
     if (client.receivedLength == client.contentLength) // <-- check if the body has been fully received
+	{
         client.isReceivingBody = false;
+	}
 }
 
 std::string    printClient(ClientState &client)
@@ -105,7 +111,12 @@ std::string makeResponse(int code, std::string body)
     return (ss.str());
 }
 
-void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
+Server& selectServer(int clientSocket, ClientState client)
+{
+
+}
+
+void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<Server> &servers)
 {
     fd_set  readSet, writeSet;
     std::map<int, ClientState> clients;
@@ -139,11 +150,12 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
 				it++;
 			}
         }
-
+		// wait for activity on sockets in readSet and writeSet
         if (select(maxSocket + 1, &readSet, &writeSet, NULL, NULL) == -1)
         {
             // throw std::runtime_error("Select() failed");
-            // continue ;
+			std::cerr << "Error: Select() failed\n";
+            continue ;
         }
         // Loop through the server sockets to find the one that is ready.
         for (size_t i = 0; i < serverSockets.size(); i++)
@@ -209,7 +221,14 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket)
                 else
                 {
                     client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
-                    parseHttpRequest(client);
+                    parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
+					if (client.receivedLength == client.contentLength)
+					{
+						Server server = selectServer(clientSocket, client);
+						Request request(client.header, client.body, server);
+						Response response(request, server);
+						client.responseQueue.push(response);
+					}
                     if (bytesReceived < 1024)
                         client.incompleteResponse = makeResponse(200, printClient(client));
                 }
@@ -308,7 +327,7 @@ void handleConnections(std::vector<Server> &servers)
     std::cout << "Server is listening on multiple ports..." << std::endl;
 
     //main loop
-    recvSendLoop(serverSockets, maxSocket);
+    recvSendLoop(serverSockets, maxSocket, servers);
 }
 
 // handleConnections(std::vector<Server> &servers)

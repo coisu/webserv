@@ -308,7 +308,7 @@ void    Server::runServer(){
 						// Request request = process_request(buffer);
 						try
 						{
-							Request	request(buffer, *this);
+							// Request	request(buffer, *this);
                             // std::string requestUrl = request.getURL();
                             // CGI*    cgiTest = NULL;
                             // if (requestUrl.find("cgi-bin") != requestUrl.npos)
@@ -346,16 +346,16 @@ void    Server::runServer(){
 								// log("------ Server Response sent to client check------\n\n");
 							// else
 								// log("Error sending response to client");
-                            request.printRequest();
+                            // request.printRequest();
                             std::string responseBuffer;
-                            Response response(request, *this);
+                            // Response response(request, *this);
 
-                            responseBuffer = response.processResponse();
+                            // responseBuffer = response.processResponse();
 
-                            std::cout << "\n\n\n >> Response result buffer PRINT >>>>> \n\n" << responseBuffer <<std::endl;
-                            bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
+                            // std::cout << "\n\n\n >> Response result buffer PRINT >>>>> \n\n" << responseBuffer <<std::endl;
+                            // bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
                             
-                            response.clear();
+                            // response.clear();
 						}
 						catch(int errcode)
 						{
@@ -363,16 +363,16 @@ void    Server::runServer(){
 							// std::cerr << "error code: " << errcode << std::endl;
 							// std::string	errorbod(buildResponse(404, "error code: " + SSTR(errcode)));
 
-                            Request	request(buffer, *this);
+                            // Request	request(buffer, *this);
 
-                            std::string responseBuffer;
-                            Response response(request, *this);
+                            // std::string responseBuffer;
+                            // Response response(request, *this);
 
-                            response.setStatus(errcode);
-                            responseBuffer = response.processResponse();
-                            bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
+                            // response.setStatus(errcode);
+                            // responseBuffer = response.processResponse();
+                            // bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
                             
-                            response.clear();
+                            // response.clear();
 							// bytesSent = send(socket, errorbod.c_str(), errorbod.size(), 0);
 						}
 						

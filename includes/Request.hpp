@@ -22,7 +22,8 @@ class Request
 {
 	public:
 		//OCCF
-		Request(std::string request, Server& serv);
+		// Request(std::string request, Server& serv);
+		Request(std::string request, Server& serv, std::map<std::string, std::string> head);
 		// Request(std::map<std::string, std::string>	head);
 		virtual ~Request();
 		Request(const Request& copy);
@@ -52,7 +53,7 @@ class Request
 
 	protected:
 		//private methods
-		std::map<std::string, std::string>	parseRequest(std::string request);
+		void		parseRequest(std::string request);
 		e_method	extractMethodType(std::string info);
 		std::string	extractURL(std::string info);
 		// bool		extractDirStatus(std::string url);

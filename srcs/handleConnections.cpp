@@ -111,15 +111,61 @@ std::string makeResponse(int code, std::string body)
     return (ss.str());
 }
 
-Server& selectServer(int clientSocket, ClientState client, std::vector<Server> &servers)
+Server* chooseServer(int clientSocket, ClientState client, std::vector<Server> servers)
 {
+	(void)client;
+	(void)servers;
+	(void)clientSocket;
+	Server*	selectedServer = NULL;
+	std::vector<Server>::iterator it;
+
+	// get the port of the connected client with clientSocket and getsockname()
 	struct sockaddr_in sin;
 	socklen_t len = sizeof(sin);
 	if (getsockname(clientSocket, (struct sockaddr *)&sin, &len) == -1)
 		std::cerr << "Error: problem directing to server\n"; // return server error
 	else
-		std::cout << "Port Number: " << ntohs(sin.sin_port);
-	return (servers[0])
+		std::cout << "Port Number: " << ntohs(sin.sin_port) << std::endl;
+	// set the client values
+	unsigned int clientPort = sin.sin_port;
+	std::string clientName = client.header["Host"];
+	clientName = clientName.substr(0, clientName.find(':'));
+	std::cout << "HOST: " << clientName
+			  << "\nclient PORT: " << sin.sin_port
+			  << "\nserver[0] PORT: " << servers[0].getPort() << std::endl;
+
+	// select default server (server with no name)
+	for (it = servers.begin(); it != servers.end(); it++)
+	{
+		if (it->getPort() == clientPort && it->getServerName().empty())
+		{
+			selectedServer = &(*it);
+			break ;
+		}
+	}
+	// compare the client values with the server values to match the right server
+	for (it = servers.begin(); it != servers.end(); it++)
+	{
+		if (it->getPort() == clientPort && it->getServerName() == clientName)
+		{
+			selectedServer = &(*it);
+			break ;
+		}
+	}
+
+	// for (it = servers.begin(); it != servers.end(); )
+	// {
+	// 	std::string		serverName = it->getServerName();
+	// 	unsigned int	serverPort = it->getPort();
+	// 	// erase from list if the ports dont match or the names dont match, keep if name is empty (default server)
+	// 	if (serverPort != clientPort || (!serverName.empty() && serverName != clientName))
+	// 		servers.erase(it++);
+	// 	else
+	// 		it++;
+	// }
+
+	// return NULL if no server was found and there are no default servers (servers with no name)
+	return (selectedServer);
 }
 
 void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<Server> &servers)
@@ -186,8 +232,8 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                 if (clientSocket > maxSocket)
                     maxSocket = clientSocket;
                 // clients[clientSocket] = (ClientState){};
-                clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, ser
-													  0, 0, std::map<std::string, std::string>(), std::string(), std::string()};
+                clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, 0, 0, std::map<std::string, std::string>(), 
+													  std::string(), std::string(), std::queue<std::string>()};
                 // clients[clientSocket] = (ClientState){0, 0, 0, 0, 0, 0, std::map<std::string, std::string>(), 0, 0};
                 std::cout << "New connection incomming: " 
                             << inet_ntoa(clientSocketAddress.sin_addr) 
@@ -230,13 +276,14 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                     parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 					if (client.receivedLength == client.contentLength)
 					{
-						Server server = selectServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
-						Request request(client.header, client.body, client.info, server); // <-- create request obj with ClientStatus info
-						Response response(request, server); // <-- create response with request obj and selected server
+						Server* server = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
+						std::cout << "SERVER PTR: " << server << std::endl;
+						Request request(client.header, client.body, client.info, *server); // <-- create request obj with ClientStatus info
+						Response response(request, *server); // <-- create response with request obj and selected server
 						client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
 					}
-                    // if (bytesReceived < 1024)
-                    //     client.incompleteResponse = makeResponse(200, printClient(client));
+                    if (bytesReceived < 1024)
+                        client.incompleteResponse = makeResponse(200, printClient(client));
                 }
             }
             if (FD_ISSET(clientSocket, &writeSet)) // <-- check if client is ready to write into

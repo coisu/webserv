@@ -3,7 +3,7 @@
 Request::Request(std::string request, Server& serv)
 : server(serv), _full_request(request)
 {
-	parseRequest(request);
+	// parseRequest(request);
 	std::string key, val;
 	std::istringstream iss(request);
 	std::string methods[3] = {"GET", "POST", "DELETE"};
@@ -31,7 +31,7 @@ Request::Request(std::string request, Server& serv)
 }
 
 Request::Request(std::map<std::string, std::string> header, std::string body, std::string info, Server& serv) 
-: server(serv), _head(header), _body(body), _info(info)
+: server(serv), _info(info), _head(header), _body(body) 
 {
 
 	std::string key, val;

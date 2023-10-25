@@ -1,8 +1,27 @@
 
 #include "Response.hpp"
 
-
 Mime   _mimeList;
+
+Response::Response(int status, Request &r, Server &s) : _request(r), _server(s)
+{
+	_target_path = "";
+	_body = "";
+	_buffer = "";
+	_headerStr = "";
+	_body_len = 0;
+	_auto_index = false;
+	_status = -1;
+	_req_status = false;
+	_connect = "Keep-Alive";
+	initStatusCode();
+	initHeaders();
+	std::string responseBuffer = jumpToErrorPage(status);
+	std::cout << "============================\n";
+	std::cout << responseBuffer << std::endl;
+	std::cout << "============================\n";
+	
+}
 
 Response::Response(const Request &request, Server &server ) : _request(request), _server(server)
 {
@@ -90,19 +109,49 @@ bool Response::isAllowedMethod(int currentMethod)
 	}
 	if (find(methods.begin(), methods.end(), currentMethod) == methods.end())
     {
-		std::cout << "ERROR: 405\n";
         _status = 405;
         return (0);
     }
 	return (1);
 }
 
+// static std::string combinePaths(std::string p1, std::string p2, std::string p3)
+// {
+//     std::string res;
+//     int         len1;
+//     int         len2;
+
+//     len1 = p1.length();
+//     len2 = p2.length();
+//     if (p1[len1 - 1] == '/' && (!p2.empty() && p2[0] == '/') )
+//         p2.erase(0, 1);
+//     if (p1[len1 - 1] != '/' && (!p2.empty() && p2[0] != '/'))
+//         p1.insert(p1.end(), '/');
+//     if (p2[len2 - 1] == '/' && (!p3.empty() && p3[0] == '/') )
+//         p3.erase(0, 1);
+//     if (p2[len2 - 1] != '/' && (!p3.empty() && p3[0] != '/'))
+//         p2.insert(p1.end(), '/');
+//     res = p1 + p2 + p3;
+//     return (res);
+// }
+
+std::string Response::jumpToErrorPage(int status)
+{
+	std::string errorBody;
+	std::string errorHeader;
+
+	errorBody = makeErrorPage(status);
+	setContentType("default");
+	errorHeader = buildHeader(errorBody.size(), status);
+
+	return (errorHeader + errorBody + "\r\n");
+}
+
 std::string Response::processResponse()
 {
-
 	// std::string	currentMethod(_request.getMethodEnum());
 	_currentMethod = _request.getMethodEnum();
-	// std::string	ext(getExt(_request.getLocPath()));
+	std::string	ext(getExt(_request.getLocPath()));
 	bool isRedirect = false;
 
 	if (_currentMethod == DELETE && _status == 404)
@@ -111,11 +160,9 @@ std::string Response::processResponse()
 	if (_request.getBody().length() > _server.getClientBodySize())
 		_status = 413;
 
-	setRequestVal();
-	// setContentType(ext); 
+	// setRequestVal();
+	setContentType(ext); 
 	checkSetLocation(_target_path);
-std::cout << "target file : " << _target_path << std::endl;
-std::cout << "index       : " << _location.getIndex() << std::endl;
 	if (_location.getIndex() != "" && pathExists(_target_path + _location.getIndex()))
 	{
 		_target_path += _location.getIndex();
@@ -124,8 +171,9 @@ std::cout << "index       : " << _location.getIndex() << std::endl;
 	{
 		_target_path += "index.html";
 	}
-	if (!_location.getAutoIndex() && _location.getRet().empty())
+	if (!_location.getAutoIndex() &&  _location.getRet().empty())
 	{
+		std::cout << "[TARGET_FILE] : " << _target_path << std::endl;
 		if (pathExists(_target_path) && pathIsDir(_target_path))
 		{
 			setStatus(403);
@@ -135,12 +183,21 @@ std::cout << "index       : " << _location.getIndex() << std::endl;
 			setStatus(404);
 		}
 	}
-std::cout << "\ntarget file : " << _target_path << std::endl;
 
 // else if (_location.getIndex() == "" && _location.getRet().empty())
 // {
 // 	_target_path += "index.html";
 // }
+
+
+	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;
+	std::cout << "  [PATH] : " << _location.getPath() << std::endl;
+	std::cout << "[RETURN] : " << _location.getRet() << std::endl;
+	std::cout << " [INDEX] : " << _location.getIndex() << std::endl;
+	std::cout << "[TARGET] : " << _target_path << std::endl;
+	std::cout << "[E-CODE] : " << _status << std::endl;
+	std::cout << "\n-------------->>>>>>>> INFO CHECK <<<<<<<<--------------\n" << std::endl;
+
 	if (!_location.getRet().empty())
 	{
 		int	code = 0;
@@ -176,118 +233,26 @@ std::cout << "\ntarget file : " << _target_path << std::endl;
 		if (isRedirect && _location.getIndex() == "")
 		{
 			int i;
+			std::cout << "rfound : " << _target_path.rfind("/")<< std::endl;
+			std::cout << "length : " <<  _target_path.length()<< std::endl;
 			if (_target_path.rfind("/") == _target_path.length() - 1)
 			{
 				i = _target_path.rfind("/", _target_path.length() -2);
 			}
 			else
 				i = _target_path.rfind("/", _target_path.length() - 1);
+			std::cout << "FIND index : "<< i << std::endl;
 			_target_path = _target_path.substr(0, i + 1);
 			_target_path += "index.html";
 		}
+		std::cout << "[TARGET] : " << _target_path << std::endl;
+		std::cout << "[E-CODE] : " << _status << std::endl;
 	}
-	if (!pathExists(_target_path))
-		_status = 404;
-	std::string	ext(getExt(_target_path));
-	if (_headers["Content-Type"] == "")
-		setContentType(ext); 
+
 	if (isAllowedMethod(_currentMethod) && (_status == -1 || _status == 302))
-	{
-		if (_currentMethod == GET || _currentMethod == POST)
-		{
-			if (_currentMethod == GET && ext != "php" && !_location.getIsCGI())	//html
-			// if (_currentMethod == GET && ext != "sh")	//html
-			{
-				if (_location.getAutoIndex())
-				{
-					struct stat			fileinfo;
-
-					stat(_target_path.c_str(), &fileinfo);
-					if (S_ISDIR(fileinfo.st_mode))
-					{
-						std::cout << "\n\n... target file is directory ...\n\n";
-						_body = writeBodyAutoindex(_request.getURL());
-						_status = 200;
-					}
-					else if (S_ISREG(fileinfo.st_mode))						//regular file
-					{
-						std::cout << "\n\n... target file is regular file ...\n\n";
-						_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
-						if (_status == -1)
-							_status = 200;
-					}
-				}
-				else
-				{
-					std::pair<bool, std::string> body_pair;
-					body_pair = writeBodyHtmlPair(_target_path, _mimeList.getMimeType(ext) == "text/html");
-					if (body_pair.first == true)
-					{
-						_status = 200;
-						_body = body_pair.second;
-					}
-					else
-					{
-						_status = 404;
-						_body = body_pair.second;
-					}
-				}
-
-			}
-			else
-			{
-				if (_currentMethod == POST)
-				{
-					if (pathExists(_target_path))
-					{
-						std::string reqBody = _request.getBody();
-						if (_location.getIsCGI())
-							std::cout << "\n\n >> This POST method is CGI\n\n";
-						int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
-						if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
-						{
-							std::cout << "Created by POST of " << _target_path <<std::endl;
-							_body = "\n" + reqBody;
-							std::cout << "\ncontent-type = " << _headers["Content-Type"] <<std::endl;
-							// setContentType(_request.getHead()["Content-Type"]);
-							_status = 201;
-						}
-						close(fd);
-						if (_status == -1)
-							_status = 400;
-					}
-					else
-						_status = 404;
-				}
-				else
-				{
-					CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-					_body = cgi.exec_cgi();
-					std::cout << _body;
-					_status = 200;
-				}
-			}
-		}
-		else if (_currentMethod == DELETE)
-		{
-			_status = execteDelete();
-		}
-	}
-
+		buildBodywithMethod(ext);
 	if (_status >= 400)
-	{
-		std::cout << "status -- " << _status << std::endl;
-		std::map<int, std::string> ep = _server.getErrorPages();
-		if (ep.find(_status) != ep.end())
-		{
-			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
-		}
-		else
-		{
-			_body = makeErrorPage(_status);
-		}
-		_connect = "Close";
-	}
+		buildErrorBody(ext);	
 
 	/* REDIRECTION HEADER */
 	if ((!_location.getRet().empty() && isRedirect && _req_status == false) || _status == 201)
@@ -308,9 +273,9 @@ std::cout << "\ntarget file : " << _target_path << std::endl;
 		_connect = "Keep-Alive";
 		this->_headers["Connection"] = _connect;
 	}
+
 	/* MAKE HEADER */
-	std::cout << "\n\n00000000000000000000000 CURRENT METHOD : " << _request.getMethodStr() <<std::endl;
-	if (((_currentMethod == GET || _currentMethod == POST) && ext != "php") || _status >= 400)
+	if ((_currentMethod == GET && ext != "php") || _status >= 400)
 		_headerStr += buildHeader(_body.size(), _status);
 	else
 		_headerStr += buildHeaderCgi(_body, _status);
@@ -318,6 +283,113 @@ std::cout << "\ntarget file : " << _target_path << std::endl;
 	_buffer = (_currentMethod == DELETE) ? _headerStr + "\r\n" : _headerStr + _body + "\r\n";
 
 	return _buffer;
+}
+
+void Response::buildBodywithMethod(std::string ext)
+{
+
+	if (_currentMethod == GET || _currentMethod == POST)
+	{
+		if (_currentMethod == GET && ext != "php")	//html
+		{
+			if (_location.getAutoIndex())
+			{
+				struct stat			fileinfo;
+
+				int ret = 1;
+				std::cout << "Target Path : " << _target_path << std::endl;
+				ret = stat(_target_path.c_str(), &fileinfo);
+
+				std::cout << "STAT result  : "<< ret;
+				if (S_ISDIR(fileinfo.st_mode))
+				{
+					std::cout << "\n\n... target file is directory ...\n\n";
+					_body = writeBodyAutoindex(_request.getURL());
+					_status = 200;
+				}
+				else if (S_ISREG(fileinfo.st_mode))						//regular file
+				{
+					std::cout << "\n\n... target file is regular file ...\n\n";
+					_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
+					if (_status == -1)
+						_status = 200;
+				}
+			}
+			else
+			{
+				std::cout << "\n\n... MANUAL BODY WRITER ...\n\n";
+
+				std::pair<bool, std::string> body_pair;
+				body_pair = writeBodyHtmlPair(_target_path, _mimeList.getMimeType(ext) == "text/html");
+				if (body_pair.first == true)
+				{
+					_status = 200;
+					_body = body_pair.second;
+				}
+				else
+				{
+					_status = 404;
+					_body = body_pair.second;
+				}
+			}
+
+		}
+		else
+		{
+			CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
+			_body = cgi.exec_cgi();
+			std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
+			std::cout << _body;
+			std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
+			// if (_currentMethod == POST)
+			// {
+			// 	struct stat			fileinfo;
+			// 	int ret;
+
+			// 	ret = stat(_target_path.c_str(), &fileinfo);
+			// 	if (ret != 0)
+			// 	{
+			// 		std::string reqBody = _request.getBody();
+			// 		int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
+			// 		if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
+			// 		{
+			// 			std::cout << "Created by POST of " << _target_path <<std::endl;
+			// 		}
+			// 		close(fd);
+			// 		_status = 201;
+			// 	}
+
+			// }
+			// if (_location.getIsCGI())
+			// {
+			// 	CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
+			// 	_body = cgi.exec_cgi();
+			// }
+
+		}
+	}
+	else if (_currentMethod == DELETE)
+	{
+		_status = execteDelete();
+	}
+
+}
+
+void Response::buildErrorBody(std::string ext)
+{
+
+	if (_status >= 400)
+	{
+		std::cout << "status -- " << _status << std::endl;
+		std::map<int, std::string> ep = _server.getErrorPages();
+		if (ep.find(_status) != ep.end())
+			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
+		else
+			_body = makeErrorPage(_status);
+
+		_connect = "Close";
+	}
+
 }
 
 std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, bool isHTML)
@@ -349,6 +421,7 @@ std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, 
 		}
 		ret += str;
 	}
+
 	return (std::make_pair(true, ret));
 }
 
@@ -487,41 +560,43 @@ std::string	Response::getExt(std::string const &filename) const
 	std::string	ext;
 	std::string::size_type	idx;
 	idx = filename.rfind(".");
-	std::cout << "get extension-------------> "<< filename <<std::endl;
 	if (idx != std::string::npos) {
 		ext = filename.substr(idx + 1);
 	}
 	else
 		ext = "default";
+	//std::cout << ext << " is ext in getExit" << std::endl;
+	//std::cout << filename << " is filename in getExt"  << std::endl;
     return ext;
 }
 
-void	Response::setRequestVal(void)
-{
-	std::map<std::string, std::string> reqHead = _request.getHead();
-	// std::map<std::string, std::string>::iterator it = reqHead.begin();
+// void	Response::setRequestVal(void)
+// {
+	// std::map<std::string, std::string> reqHead = _request.getHead();
+	// std::map<std::string, std::string>::iterator it=reqHead.begin();
 
-	// if (it->first != "Content-Length" && _headers.find(it->first) != _headers.end())
+
+		// if (it->first != "Content-Length" && _headers.find(it->first) != _headers.end())
+		// {
+		// 	std::cout <<"IN?????" <<std::endl;
+		// 	_headers[it->first] = it->second;
+		// 	std::cout << "[ " << it->first << " ] : " << it->second << std::endl;
+		// }
+
+	// std::map<std::string, std::string>::iterator	itForHeader;
+	// // std::map<std::string, std::string>::iterator	it = ReqHead.begin();
+
+	// std::cout << "===========HERE==================" << std::endl;
+	// for (std::map<std::string, std::string>::iterator it = ReqHead.begin(); it != ReqHead.end(); ++it)
 	// {
-	// 	std::cout <<"IN?????" <<std::endl;
-	// 	_headers[it->first] = it->second;
-	// 	std::cout << "[ " << it->first << " ] : " << it->second << std::endl;
-	// }
-
-	std::map<std::string, std::string>::iterator	itForHeader;
-	// std::map<std::string, std::string>::iterator	it = reqHead.begin();
-
-	std::cout << "===========HERE==================" << std::endl;
-	for (std::map<std::string, std::string>::iterator it = reqHead.begin(); it != reqHead.end(); ++it)
-	{
-		itForHeader = _headers.find(it->first);
-		if (itForHeader != _headers.end() && itForHeader->first != "Content-Length")
-		{
- 			_headers[itForHeader->first] = it->second;
-			std::cout << "[ " << itForHeader->first << " ] : " << it->second << std::endl;
-		}
-	} 
-}
+	// 	// itForHeader = _headers.find(it->first);
+	// 	// if (itForHeader != _headers.end() && itForHeader->first != "Content-Length")
+	// 	// {
+ 	// 		_headers[itForHeader->first] = it->second;
+			// std::cout << "[ " << itForHeader->first << " ] : " << it->second << std::endl;
+	// 	}
+	// }         
+// }
 
 void	Response::setContentType(std::string ext)
 {
@@ -549,6 +624,47 @@ void	Response::setStatus(int err)
 	this->_status = err;
 	this->_req_status = true;
 }
+
+// std::pair<bool, Location>	Response::getMatchLoc(const std::string& request_path)
+// {
+// 	size_t match = 0;
+// 	Location	ret;
+
+// 	std::vector<Location>::iterator cur = _server.getLocations().begin();
+// 	std::vector<Location>::iterator end = _server.getLocations().end();
+
+// std::cout << "\n\n\n";
+
+// std::cout << "REQUEST PATH : " << request_path << std::endl;
+// 	for (; cur != end; ++cur)
+// 	{
+// 		std::cout << "CHECKING.... " << cur->getPath() << "??" << std::endl;
+
+// 	}
+
+
+	// std::cout << "CHECKING... " << _server.getLocations().begin()->getPath() << std::endl;
+
+
+	// for (std::vector<Location>::iterator it = _server.getLocations().begin(); it != _server.getLocations().end(); ++it) 
+	// {
+	// 	std::cout << "it Path : " << it->getPath() << std::endl;
+	// 	if (request_path.find(it->getPath()) == 0)
+	// 	{
+	// 		// if( it->getPath() == "/" || request_path.length() == it->getPath().length() || request_path[it->getPath().length()] == '/')
+	// 		// {
+	// 			if(it->getPath().length() > match)
+	// 			{
+	// 				match = it->getPath().length();
+	// 				ret = *it;
+	// 			}
+	// 		// }
+	// 	}
+	// }
+// 	if (match > 0)
+// 		return (std::make_pair(true, ret));
+// 	return (std::make_pair(false, ret)); 
+// }
 
 void Response::setLocation(Location Loc)
 {
@@ -587,7 +703,7 @@ std::string		Response::makeErrorPage(int	status)
 int	Response::execteDelete(void)
 {
 	int	status(200);
-	std::cout << " -->> IT IS DELETING CONTENTS IN TARGET FILE PATH\n" << std::endl;
+
 	if (remove(const_cast<char*>(_target_path.c_str())) == -1)
 	{
 		status = 204;
@@ -613,7 +729,7 @@ std::string		Response::buildHeaderCgi(std::string &body, int status)
 	std::string	header;
 	std::string tmp(body);
 	std::string::size_type n;
-std::cout << "\n\nCGI HEADER GENERATOR\n\n" ;
+
 	header += makeStartLine(status);
 
 	n = tmp.find("\r\n\r\n");
@@ -671,8 +787,6 @@ std::string		Response::appendMapHeaders(bool isCGI, int statusCode)
 			|| (it->first == "Content-Type" && isCGI == true)
 			|| (it->first == "Transfer-Encoding"))
 			{
-				std::cout << "+++++++++++++++++ NOW ++++++++++++++++++\n";
-				std::cout << it->first << std::endl;
 				continue ;
 			} 
 			_headerStr += it->first;
@@ -743,3 +857,19 @@ std::string	Response::toString(const int& i) const
 	ss << i;
 	return (ss.str());
 }
+
+// bool Response::buildBody()
+// {
+// 	if (_request.getBody().length() > _server.getClientMaxBodySize())
+// 	{
+// 		_status = 413;
+// 		return (1);
+// 	}
+// 	if (set)
+// }
+
+// int	Response::buildResponse() 
+// {
+// 	if (checkECode() || buildBody())
+// 		buildErrorBody();
+// }

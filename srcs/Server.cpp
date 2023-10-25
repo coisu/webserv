@@ -7,6 +7,7 @@
 #include "Response.hpp"
 #include "CGI.hpp"
 
+
 void log(const std::string &message){
     std::cerr << message << std::endl;
 }
@@ -98,7 +99,7 @@ void    Server::setAttributes(std::string key, std::string value)
 {
     size_t      N = 6;
 
-    std::string keys[N] = {"port", 
+    std::string keys[6] = {"port", 
                           "host", 
                           "server_name", 
                           "error_page", 

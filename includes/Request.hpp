@@ -22,6 +22,7 @@ class Request
 {
 	public:
 		//OCCF
+		Request(Server& serv);
 		Request(std::string request, Server& serv);
 		// Request(std::map<std::string, std::string>	head);
 		virtual ~Request();

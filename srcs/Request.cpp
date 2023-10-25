@@ -1,4 +1,5 @@
 #include "Request.hpp"
+Request::Request(Server& serv) : server(serv){}
 
 Request::Request(std::string request, Server& serv) 
 : server(serv), _full_request(request), _head(parseRequest(request))

@@ -111,12 +111,13 @@ std::string makeResponse(int code, std::string body)
     return (ss.str());
 }
 
-Server* chooseServer(int clientSocket, ClientState client, std::vector<Server> servers)
+int chooseServer(int clientSocket, ClientState client, std::vector<Server> &servers)
 {
 	(void)client;
 	(void)servers;
 	(void)clientSocket;
-	Server*	selectedServer = NULL;
+	// Server*	selectedServer = NULL;
+	int	serverIndex = -1;
 	std::vector<Server>::iterator it;
 
 	// get the port of the connected client with clientSocket and getsockname()
@@ -139,7 +140,7 @@ Server* chooseServer(int clientSocket, ClientState client, std::vector<Server> s
 	{
 		if (it->getPort() == clientPort && it->getServerName().empty())
 		{
-			selectedServer = &(*it);
+			serverIndex = it - servers.begin();
 			break ;
 		}
 	}
@@ -148,7 +149,7 @@ Server* chooseServer(int clientSocket, ClientState client, std::vector<Server> s
 	{
 		if (it->getPort() == clientPort && it->getServerName() == clientName)
 		{
-			selectedServer = &(*it);
+			serverIndex = it - servers.begin();
 			break ;
 		}
 	}
@@ -165,7 +166,7 @@ Server* chooseServer(int clientSocket, ClientState client, std::vector<Server> s
 	// }
 
 	// return NULL if no server was found and there are no default servers (servers with no name)
-	return (selectedServer);
+	return (serverIndex);
 }
 
 void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<Server> &servers)
@@ -276,19 +277,26 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                     parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 					if (client.receivedLength == client.contentLength)
 					{
-						Server* server = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
-						std::cout << "SERVER PTR: " << server << std::endl;
-						Request request(client.header, client.body, client.info, *server); // <-- create request obj with ClientStatus info
-						Response response(request, *server); // <-- create response with request obj and selected server
+						int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
+						if (idx == -1)
+						{
+							std::cerr << "\n\n-------------------PROBLEM--------------------------\n\n";
+							// return 404 error
+						}
+						// std::cout << "Server Port: " << servers[idx]
+						// std::cout << "SERVER PTR: " << server << std::endl;
+						Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
+						Response response(request, servers[idx]); // <-- create response with request obj and selected server
 						client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
 					}
-                    if (bytesReceived < 1024)
-                        client.incompleteResponse = makeResponse(200, printClient(client));
+                    // if (bytesReceived < 1024)
+                    //     client.incompleteResponse = makeResponse(200, printClient(client));
                 }
             }
             if (FD_ISSET(clientSocket, &writeSet)) // <-- check if client is ready to write into
             {
-                int bytesSent = send(clientSocket, client.incompleteResponse.data(), client.incompleteResponse.size(), 0);
+				std::string	&responseStr = client.responseQueue.front();
+                int bytesSent = send(clientSocket, responseStr.data(), responseStr.size(), 0);
 				if(bytesSent < 0)
 				{
                     // Handle error or close
@@ -299,7 +307,9 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 				}
                 else
 				{
-                    client.incompleteResponse.erase(0, bytesSent); // <-- erase sent data
+                    responseStr.erase(0, bytesSent); // <-- erase sent data
+					if (responseStr.empty())
+						client.responseQueue.pop();
                 }
             }
         }

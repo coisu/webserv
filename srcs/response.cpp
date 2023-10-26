@@ -524,7 +524,12 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 			if (strcmp(dir_entry->d_name, ".") == 0 || strcmp(dir_entry->d_name, "..") == 0)
 				continue;
 			std::string filename = std::string(dir_entry->d_name);
-			if (stat((_target_path + filename).c_str(), &fileinfo) == 0)
+			std::string path_to_index;
+			if (!(*(_target_path.rbegin()) == '/'))
+				path_to_index = _target_path + "/" + filename;
+			else
+				path_to_index = _target_path + filename;
+			if (stat(path_to_index.c_str(), &fileinfo) == 0)
 			{
 				if (S_ISDIR(fileinfo.st_mode))
 				{
@@ -533,6 +538,11 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 				}
 				else
 					ret += "<a href=\"" + url + filename + "\">" + filename + "</a>";
+			}
+			else
+			{
+				perror("BIG ERROR");
+				continue ;
 			}
 			ret += std::string(30 - filename.size(), ' ');
 			ret += getFileDateTime(fileinfo.st_mtime);

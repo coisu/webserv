@@ -81,16 +81,28 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 	// this->_serverIncomingMessage = (),
 	// this->_socketSet = ();
 	// this->_maxSocket = 
+	// this->_port = 0;
+	this->_host = 0;
+	this->_serverName = "";
+	this->_clientBodySize = 0;
+	this->_root = "";
+	this->_listenFd = 0;
+	this->_block = "";
+	this->_sIpAddress = "";
+	this->_serverSocket = 0;
+	this->_clientSocket = 0;
+	this->_serverIncomingMessage = 0;
+	this->_maxSocket = 0;
+    // this->_serverSocketAddress.sin_family = AF_INET; // for IPv4
+    // this->_serverSocketAddress.sin_port = this->_port;
+    // this->_serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
 	this->_socketAddressLen = sizeof(_serverSocketAddress);
 	this->_serverMessage = buildResponse(200, "hello worldywoo!");
-    this->_serverSocketAddress.sin_family = AF_INET; // for IPv4
-    this->_serverSocketAddress.sin_port = this->_port;
-    this->_serverSocketAddress.sin_addr.s_addr = INADDR_ANY; // is the address 0.0.0.0
     this->_timeout.tv_sec = 3 * 60;
     this->_timeout.tv_usec = 0;
-    inet_addr(this->_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
-    startServer();
-    startListen();
+    // inet_addr(this->_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
+    // startServer();
+    // startListen();
     // std::cout << "SERVER:\n" << *this << std::endl;
 }
 
@@ -308,7 +320,7 @@ void    Server::runServer(){
 						// Request request = process_request(buffer);
 						try
 						{
-							Request	request(buffer, *this);
+							// Request	request(buffer, *this);
                             // std::string requestUrl = request.getURL();
                             // CGI*    cgiTest = NULL;
                             // if (requestUrl.find("cgi-bin") != requestUrl.npos)
@@ -346,16 +358,16 @@ void    Server::runServer(){
 								// log("------ Server Response sent to client check------\n\n");
 							// else
 								// log("Error sending response to client");
-                            request.printRequest();
+                            // request.printRequest();
                             std::string responseBuffer;
-                            Response response(request, *this);
+                            // Response response(request, *this);
 
-                            responseBuffer = response.processResponse();
+                            // responseBuffer = response.processResponse();
 
-                            std::cout << "\n\n\n >> Response result buffer PRINT >>>>> \n\n" << responseBuffer <<std::endl;
-                            bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
+                            // std::cout << "\n\n\n >> Response result buffer PRINT >>>>> \n\n" << responseBuffer <<std::endl;
+                            // bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
                             
-                            response.clear();
+                            // response.clear();
 						}
 						catch(int errcode)
 						{
@@ -363,16 +375,16 @@ void    Server::runServer(){
 							// std::cerr << "error code: " << errcode << std::endl;
 							// std::string	errorbod(buildResponse(404, "error code: " + SSTR(errcode)));
 
-                            Request	request(buffer, *this);
+                            // Request	request(buffer, *this);
 
-                            std::string responseBuffer;
-                            Response response(request, *this);
+                            // std::string responseBuffer;
+                            // Response response(request, *this);
 
-                            response.setStatus(errcode);
-                            responseBuffer = response.processResponse();
-                            bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
+                            // response.setStatus(errcode);
+                            // responseBuffer = response.processResponse();
+                            // bytesSent = send(socket, responseBuffer.c_str(), responseBuffer.size(), 0);
                             
-                            response.clear();
+                            // response.clear();
 							// bytesSent = send(socket, errorbod.c_str(), errorbod.size(), 0);
 						}
 						

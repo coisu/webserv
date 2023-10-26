@@ -24,6 +24,7 @@ struct ClientState {
     bool		isReceivingBody;
 	bool		isClosing;
 	bool		isClosed;
+	bool		requestCompleted;
     size_t		contentLength;
     size_t		receivedLength;
     std::map<std::string, std::string>	header;
@@ -50,7 +51,9 @@ void    parseHttpRequest(ClientState &client)
         client.incompleteRequest.erase(0, pos + 4); // <-- erase what has been parsed
 
         // if Content-Length is present in header setup values to start receiving the body
-        if (!client.header["Content-Length"].empty())
+        if (client.header["Content-Length"].empty())
+			client.requestCompleted = true;
+		else
         {
             client.contentLength = atoi(client.header["Content-Length"].c_str());
             client.isReceivingBody = true;
@@ -68,6 +71,8 @@ void    parseHttpRequest(ClientState &client)
     client.incompleteRequest.erase(0, i); // <-- erase what has been saved
     if (client.receivedLength == client.contentLength) // <-- check if the body has been fully received
 	{
+		if (client.isReceivingBody == true)
+			client.requestCompleted = true;
         client.isReceivingBody = false;
 	}
 }
@@ -198,7 +203,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 			else
 			{
 				FD_SET(it->first, &readSet);
-				if (!it->second.incompleteResponse.empty()) // <-- only add to writeSet if there is something to send
+				// if (!it->second.incompleteResponse.empty()) // <-- only add to writeSet if there is something to send
 					FD_SET(it->first, &writeSet);
 				it++;
 			}
@@ -233,8 +238,8 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                 if (clientSocket > maxSocket)
                     maxSocket = clientSocket;
                 // clients[clientSocket] = (ClientState){};
-                clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, 0, 0, std::map<std::string, std::string>(), 
-													  std::string(), std::string(), std::queue<std::string>()};
+                clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, false, 0, 0, 
+													  std::map<std::string, std::string>(), std::string(), std::string(), std::queue<std::string>()};
                 // clients[clientSocket] = (ClientState){0, 0, 0, 0, 0, 0, std::map<std::string, std::string>(), 0, 0};
                 std::cout << "New connection incomming: " 
                             << inet_ntoa(clientSocketAddress.sin_addr) 
@@ -275,7 +280,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                 {
                     client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
                     parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
-					if (client.receivedLength == client.contentLength)
+					if (client.requestCompleted == true)
 					{
 						int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
 						if (idx == -1)
@@ -288,12 +293,13 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 						Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
 						Response response(request, servers[idx]); // <-- create response with request obj and selected server
 						client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
+						client.requestCompleted = false;
 					}
                     // if (bytesReceived < 1024)
                     //     client.incompleteResponse = makeResponse(200, printClient(client));
                 }
             }
-            if (FD_ISSET(clientSocket, &writeSet)) // <-- check if client is ready to write into
+            if (FD_ISSET(clientSocket, &writeSet) && client.responseQueue.empty() == false) // <-- check if client is ready to write into
             {
 				std::string	&responseStr = client.responseQueue.front();
                 int bytesSent = send(clientSocket, responseStr.data(), responseStr.size(), 0);

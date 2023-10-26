@@ -1,4 +1,5 @@
 #include "Location.hpp"
+#include "utils.hpp"
 
 Location::Location( void ) : _isCgi(false) {}
 

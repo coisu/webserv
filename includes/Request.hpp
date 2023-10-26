@@ -11,7 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 // #include "CGI.hpp"
-#include "utils.h"
+#include "utils.hpp"
 #include "Server.hpp"
 
 
@@ -24,6 +24,7 @@ class Request
 		//OCCF
 		Request(Server& serv);
 		Request(std::string request, Server& serv);
+		Request(std::map<std::string, std::string> header, std::string body, std::string info, Server& serv);
 		// Request(std::map<std::string, std::string>	head);
 		virtual ~Request();
 		Request(const Request& copy);
@@ -53,7 +54,7 @@ class Request
 
 	protected:
 		//private methods
-		std::map<std::string, std::string>	parseRequest(std::string request);
+		void		parseRequest(std::string request);
 		e_method	extractMethodType(std::string info);
 		std::string	extractURL(std::string info);
 		// bool		extractDirStatus(std::string url);

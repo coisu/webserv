@@ -1,0 +1,10 @@
+ALL THE ATTRIBUTES JISU USES FROM THE REQUST OBJECT:
+
+1. _locPath -> _target_path: The url from the request without the query string
+2. _method_enum -> _currentMethod: The method from the request
+3. _body: The body from the request
+4. _url: The url from the request (with the query string)
+5. _method_str: The method from the request as a string
+6. _head: The headers from the request (as a map)
+
+# 2. _locQuery -> _target_query: The query string from the request

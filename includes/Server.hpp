@@ -45,11 +45,11 @@ class Server
         //setters
         void    setLocations( std::vector<Location> locationVec );
 
+		int		startServer();
+		void	startListen();
 	private:
 
     /*methods*/
-		int		startServer();
-		void	startListen();
 		void	acceptConnection();
 		void    closeServer();
 

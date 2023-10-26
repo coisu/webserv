@@ -16,7 +16,7 @@
 #include "Request.hpp"
 #include "Mime.hpp"
 #include "Server.hpp"
-#include "utils.h"
+#include "utils.hpp"
 #include "CGI.hpp"
 
 extern   Mime   _mimeList;

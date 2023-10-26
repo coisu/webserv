@@ -1,7 +1,7 @@
 *
 !*/
 
-# track this file
+# track this file: !file
 !.gitignore
 !*.cpp
 !*.hpp
@@ -10,10 +10,8 @@
 !*.c
 !*.tpp
 !Makefile
-# whitelist everything in ./folder/
-# !folder/
-# !folder/*
-!resources/
+
+# whitelist everything in ./folder/: !folder/*
 !resources/*
-!cgi-bin/
 !cgi-bin/*
+!notes/*

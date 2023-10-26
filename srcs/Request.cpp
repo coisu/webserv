@@ -1,4 +1,5 @@
 #include "Request.hpp"
+Request::Request(Server& serv) : server(serv){}
 
 Request::Request(std::string request, Server& serv)
 : server(serv), _full_request(request)
@@ -120,9 +121,9 @@ void	Request::printRequest( void )
 		std::cout << "[" << it->first << " : " << it->second << "]" << std::endl;
 		++it;
 	}
-	std::cout << "\n--------END---------\n" << std::endl;
 	std::cout << "\n\n-------BODY-------\n" << std::endl;
 	// _body.append("THIS IS 413 TESTING");
+	_body = "name=JISU+CHOI&age=10";
 	std::cout << this->_body << std::endl;
 	std::cout << "\n--------END---------\n" << std::endl;
 }

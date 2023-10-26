@@ -1,6 +1,7 @@
 // #include "http_tcpServer.hpp"
 #include "utils.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 #include "parseConfig.hpp"
 
 std::map<std::string, std::string>	cgi_types;
@@ -16,6 +17,12 @@ int main(int ac, char **av) {
 	{
 		std::vector<Server>	servers;
 		
+		// Server s;
+		// Request r(s);
+		// Response Error(404, r, s);
+
+		// ParseConfig	config("./resources/default.conf");
+
 		servers = parseConfig("./resources/default.conf");
 
 		for (size_t i = 0; i < servers.size(); i++)

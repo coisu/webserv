@@ -1,8 +1,27 @@
 
 #include "Response.hpp"
 
-
 Mime   _mimeList;
+
+Response::Response(int status, Request &r, Server &s) : _request(r), _server(s)
+{
+	_target_path = "";
+	_body = "";
+	_buffer = "";
+	_headerStr = "";
+	_body_len = 0;
+	_auto_index = false;
+	_status = -1;
+	_req_status = false;
+	_connect = "Keep-Alive";
+	initStatusCode();
+	initHeaders();
+	std::string responseBuffer = jumpToErrorPage(status);
+	std::cout << "============================\n";
+	std::cout << responseBuffer << std::endl;
+	std::cout << "============================\n";
+	
+}
 
 Response::Response(const Request &request, Server &server ) : _request(request), _server(server)
 {
@@ -116,6 +135,17 @@ bool Response::isAllowedMethod(int currentMethod)
 //     return (res);
 // }
 
+std::string Response::jumpToErrorPage(int status)
+{
+	std::string errorBody;
+	std::string errorHeader;
+
+	errorBody = makeErrorPage(status);
+	setContentType("default");
+	errorHeader = buildHeader(errorBody.size(), status);
+
+	return (errorHeader + errorBody + "\r\n");
+}
 
 std::string Response::processResponse()
 {
@@ -218,111 +248,11 @@ std::string Response::processResponse()
 		std::cout << "[TARGET] : " << _target_path << std::endl;
 		std::cout << "[E-CODE] : " << _status << std::endl;
 	}
+
 	if (isAllowedMethod(_currentMethod) && (_status == -1 || _status == 302))
-	{
-		if (_currentMethod == GET || _currentMethod == POST)
-		{
-			if (_currentMethod == GET && ext != "php")	//html
-			{
-				if (_location.getAutoIndex())
-				{
-					struct stat			fileinfo;
-
-					int ret = 1;
-					std::cout << "Target Path : " << _target_path << std::endl;
-					ret = stat(_target_path.c_str(), &fileinfo);
-
-					std::cout << "STAT result  : "<< ret;
-					if (S_ISDIR(fileinfo.st_mode))
-					{
-						std::cout << "\n\n... target file is directory ...\n\n";
-						_body = writeBodyAutoindex(_request.getURL());
-						_status = 200;
-					}
-					else if (S_ISREG(fileinfo.st_mode))						//regular file
-					{
-						std::cout << "\n\n... target file is regular file ...\n\n";
-						_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
-						if (_status == -1)
-							_status = 200;
-					}
-				}
-				else
-				{
-					std::cout << "\n\n... MANUAL BODY WRITER ...\n\n";
-
-					std::pair<bool, std::string> body_pair;
-					body_pair = writeBodyHtmlPair(_target_path, _mimeList.getMimeType(ext) == "text/html");
-					if (body_pair.first == true)
-					{
-						_status = 200;
-						_body = body_pair.second;
-					}
-					else
-					{
-						_status = 404;
-						_body = body_pair.second;
-					}
-				}
-
-			}
-			else
-			{
-				CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-				_body = cgi.exec_cgi();
-				std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
-				std::cout << _body;
-				std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
-				// if (_currentMethod == POST)
-				// {
-				// 	struct stat			fileinfo;
-				// 	int ret;
-
-				// 	ret = stat(_target_path.c_str(), &fileinfo);
-				// 	if (ret != 0)
-				// 	{
-				// 		std::string reqBody = _request.getBody();
-				// 		int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
-				// 		if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
-				// 		{
-				// 			std::cout << "Created by POST of " << _target_path <<std::endl;
-				// 		}
-				// 		close(fd);
-				// 		_status = 201;
-				// 	}
-
-				// }
-				// if (_location.getIsCGI())
-				// {
-				// 	CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-				// 	_body = cgi.exec_cgi();
-				// }
-
-			}
-		}
-		else if (_currentMethod == DELETE)
-		{
-			_status = execteDelete();
-		}
-	}
-
+		buildBodywithMethod(ext);
 	if (_status >= 400)
-	{
-		std::cout << "status -- " << _status << std::endl;
-		std::map<int, std::string> ep = _server.getErrorPages();
-		if (ep.find(_status) != ep.end())
-		{
-						std::cout << "2:ERROR_STATUS ============ : " << _status <<std::endl;
-
-			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
-		}
-		else
-		{
-			std::cout << "ERROR_STATUS ============ : " << _status <<std::endl;
-			_body = makeErrorPage(_status);
-		}
-		_connect = "Close";
-	}
+		buildErrorBody(ext);	
 
 	/* REDIRECTION HEADER */
 	if ((!_location.getRet().empty() && isRedirect && _req_status == false) || _status == 201)
@@ -343,10 +273,7 @@ std::string Response::processResponse()
 		_connect = "Keep-Alive";
 		this->_headers["Connection"] = _connect;
 	}
-	// if (_status == -1)
-	// {
-	// 	_status = 200;
-	// }
+
 	/* MAKE HEADER */
 	if ((_currentMethod == GET && ext != "php") || _status >= 400)
 		_headerStr += buildHeader(_body.size(), _status);
@@ -357,6 +284,114 @@ std::string Response::processResponse()
 
 	return _buffer;
 }
+
+void Response::buildBodywithMethod(std::string ext)
+{
+
+	if (_currentMethod == GET || _currentMethod == POST)
+	{
+		if (_currentMethod == GET && ext != "php")	//html
+		{
+			if (_location.getAutoIndex())
+			{
+				struct stat			fileinfo;
+
+				int ret = 1;
+				std::cout << "Target Path : " << _target_path << std::endl;
+				ret = stat(_target_path.c_str(), &fileinfo);
+
+				std::cout << "STAT result  : "<< ret;
+				if (S_ISDIR(fileinfo.st_mode))
+				{
+					std::cout << "\n\n... target file is directory ...\n\n";
+					_body = writeBodyAutoindex(_request.getURL());
+					_status = 200;
+				}
+				else if (S_ISREG(fileinfo.st_mode))						//regular file
+				{
+					std::cout << "\n\n... target file is regular file ...\n\n";
+					_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
+					if (_status == -1)
+						_status = 200;
+				}
+			}
+			else
+			{
+				std::cout << "\n\n... MANUAL BODY WRITER ...\n\n";
+
+				std::pair<bool, std::string> body_pair;
+				body_pair = writeBodyHtmlPair(_target_path, _mimeList.getMimeType(ext) == "text/html");
+				if (body_pair.first == true)
+				{
+					_status = 200;
+					_body = body_pair.second;
+				}
+				else
+				{
+					_status = 404;
+					_body = body_pair.second;
+				}
+			}
+
+		}
+		else
+		{
+			CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
+			_body = cgi.exec_cgi();
+			std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
+			std::cout << _body;
+			std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
+			// if (_currentMethod == POST)
+			// {
+			// 	struct stat			fileinfo;
+			// 	int ret;
+
+			// 	ret = stat(_target_path.c_str(), &fileinfo);
+			// 	if (ret != 0)
+			// 	{
+			// 		std::string reqBody = _request.getBody();
+			// 		int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
+			// 		if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
+			// 		{
+			// 			std::cout << "Created by POST of " << _target_path <<std::endl;
+			// 		}
+			// 		close(fd);
+			// 		_status = 201;
+			// 	}
+
+			// }
+			// if (_location.getIsCGI())
+			// {
+			// 	CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
+			// 	_body = cgi.exec_cgi();
+			// }
+
+		}
+	}
+	else if (_currentMethod == DELETE)
+	{
+		_status = execteDelete();
+	}
+
+}
+
+void Response::buildErrorBody(std::string ext)
+{
+
+	if (_status >= 400)
+	{
+		std::cout << "status -- " << _status << std::endl;
+		std::map<int, std::string> ep = _server.getErrorPages();
+		if (ep.find(_status) != ep.end())
+			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
+		else
+			_body = makeErrorPage(_status);
+
+		_connect = "Close";
+	}
+
+}
+
 std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, bool isHTML)
 {
 	std::string		ret;

@@ -7,6 +7,7 @@
 #include "Response.hpp"
 #include "CGI.hpp"
 
+
 void log(const std::string &message){
     std::cerr << message << std::endl;
 }
@@ -110,7 +111,7 @@ void    Server::setAttributes(std::string key, std::string value)
 {
     size_t      N = 6;
 
-    std::string keys[N] = {"port", 
+    std::string keys[6] = {"port", 
                           "host", 
                           "server_name", 
                           "error_page", 
@@ -280,7 +281,7 @@ void    Server::runServer(){
     long    bytesSent;
     fd_set  tempSet;
     int     activity;
-	char	buffer[1024];
+	char	buffer[10024];
 
     FD_ZERO(&tempSet);
     memcpy(&tempSet, &_socketSet, sizeof(_socketSet));
@@ -358,6 +359,7 @@ void    Server::runServer(){
 								// log("------ Server Response sent to client check------\n\n");
 							// else
 								// log("Error sending response to client");
+              
                             // request.printRequest();
                             std::string responseBuffer;
                             // Response response(request, *this);

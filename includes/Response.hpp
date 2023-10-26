@@ -41,11 +41,11 @@ class Response
 
     public:
         // Mime           _mimeList;
-        const   Request&        _request;
-        Server&         _server;
-        t_method	_currentMethod;
+        const Request&      _request;
+        Server&             _server;
+        t_method            _currentMethod;
 
-        // Response();
+        Response( int status, Request &r, Server &s );
         Response( const Request &request, Server& server );
         // Response( int status, const Server& server );
         ~Response();
@@ -60,8 +60,14 @@ class Response
     void		    initHeaders(void);
     void		    initStatusCode(void);
 
+    /* Serer Not Found Error */
+    std::string     jumpToErrorPage(int status);
+
+
     /* Process */
     std::string     processResponse(void);
+    void            buildBodywithMethod(std::string ext);
+    void            buildErrorBody(std::string ext);
     std::pair<bool, Location>	getMatchLoc(const std::string& request_path);
 
 

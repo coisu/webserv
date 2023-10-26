@@ -18,6 +18,7 @@ class Server
     public:
     /*OCCF*/
         ~Server( void );
+        Server( void );
         Server( std::string serverBlock, std::vector<Location> locationVec );
         Server( const Server& src );
         Server& operator=( const Server& src );
@@ -47,7 +48,7 @@ class Server
 		int		startServer();
 		void	startListen();
 	private:
-        Server( void );
+
     /*methods*/
 		void	acceptConnection();
 		void    closeServer();

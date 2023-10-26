@@ -301,7 +301,9 @@ void Response::buildBodywithMethod(std::string ext)
 				ret = stat(_target_path.c_str(), &fileinfo);
 
 				std::cout << "STAT result  : "<< ret;
-				if (S_ISDIR(fileinfo.st_mode))
+				if (ret == -1)
+					_status = 404;
+				else if (S_ISDIR(fileinfo.st_mode))
 				{
 					std::cout << "\n\n... target file is directory ...\n\n";
 					_body = writeBodyAutoindex(_request.getURL());

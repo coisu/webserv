@@ -305,6 +305,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 						Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
 						Response response(request, servers[idx]); // <-- create response with request obj and selected server
 						client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
+						std::cout << "---------RESPONSE----------\n" << client.responseQueue.back() << "\n-----------END------------\n";
 						client.requestCompleted = false;
 					}
                     // if (bytesReceived < 1024)

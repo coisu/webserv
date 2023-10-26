@@ -535,7 +535,7 @@ void Server::initRoot(std::string value)
         throw std::runtime_error("root path must start with \'/\': path: " + value);
     if (value.at(value.length() - 1) == '/' && value.size() > 1)
         throw std::runtime_error("root path must *not* end with \'/\': path: " + value);
-    if (!pathIsDir(value))
+    if (pathIsDir(value) != IS_DIR)
         throw std::runtime_error("root path is not a valid directory: path: " + value);
     // if (!pathExists(value))
     //     throw std::runtime_error("bananaaaaaaaaaaaaa");

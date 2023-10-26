@@ -282,6 +282,8 @@ std::string Response::processResponse()
 
 	_buffer = (_currentMethod == DELETE) ? _headerStr + "\r\n" : _headerStr + _body + "\r\n";
 
+
+	std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
 	return _buffer;
 }
 
@@ -294,28 +296,27 @@ void Response::buildBodywithMethod(std::string ext)
 		{
 			if (_location.getAutoIndex())
 			{
-				struct stat			fileinfo;
 
-				int ret = 1;
+				int ret = pathIsDir(_target_path);
+
 				std::cout << "Target Path : " << _target_path << std::endl;
-				ret = stat(_target_path.c_str(), &fileinfo);
-
-				std::cout << "STAT result  : "<< ret;
-				if (ret == -1)
+				if (ret == N_FOUND)
 					_status = 404;
-				else if (S_ISDIR(fileinfo.st_mode))
+				else if (ret == IS_DIR)
 				{
 					std::cout << "\n\n... target file is directory ...\n\n";
 					_body = writeBodyAutoindex(_request.getURL());
 					_status = 200;
 				}
-				else if (S_ISREG(fileinfo.st_mode))						//regular file
+				else if (ret == IS_REG)						//regular file
 				{
 					std::cout << "\n\n... target file is regular file ...\n\n";
 					_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
 					if (_status == -1)
 						_status = 200;
 				}
+				else
+					_status = 403;
 			}
 			else
 			{
@@ -470,7 +471,7 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 
 	if (in.is_open())
 	{
-
+		std::cout << "file opened\n\n";
 		while (std::getline(in, line))
 		{
 			if (isHTML)

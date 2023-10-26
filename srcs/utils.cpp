@@ -76,6 +76,10 @@ int	pathIsDir(std::string path)
 
 	if (stat(path.c_str(), &statbuf) != 0)
 		return (std::cerr << "file or directory not found\n", N_FOUND);
+	else if (S_ISDIR(statbuf.st_mode))
+		return (IS_DIR);
+	else if (S_ISREG(statbuf.st_mode))
+		return (IS_REG);
 	else
 	{
         if (!S_ISDIR(statbuf.st_mode))
@@ -85,9 +89,9 @@ int	pathIsDir(std::string path)
 		if (!(statbuf.st_mode & S_IWUSR))	// write permissions
 			return (std::cerr << "no write permissions", N_PERMIT_WRTIE);
 		if (!(statbuf.st_mode & S_IXUSR))	// exec permission
-			return (std::cerr << "no exec permissions", N_PERMIT_WRTIE);
+			return (std::cerr << "no exec permissions", N_PERMIT_EXEC);
 	}
-	return (IS_DIR);
+	return (UNDEFINE);
 }
 
 bool isNumeric(std::string const &str)

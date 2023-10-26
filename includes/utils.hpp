@@ -47,11 +47,13 @@
 \nAccept-Language: en-US,en;q=0.9"
 
 #define IS_DIR 0
-#define N_DIR 1
-#define N_FOUND 2
-#define N_PERMIT_READ 3
-#define N_PERMIT_WRTIE 4
+#define IS_REG 1
+#define N_DIR 2
+#define N_FOUND 3
+#define N_PERMIT_READ 4
 #define N_PERMIT_WRTIE 5
+#define N_PERMIT_EXEC 6
+#define UNDEFINE 7
 
 #define reset "\e[m"                 //ANSI CODE 0   → resets all styles, it's the same of \e[0m
 

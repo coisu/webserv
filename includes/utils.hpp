@@ -121,7 +121,7 @@ typedef enum e_method
 bool						pathExists(std::string path);
 std::string					readFile(std::string location);
 std::vector<std::string>	splitUrl(std::string url);
-bool						pathIsDir(std::string path);
+int						pathIsDir(std::string path);
 bool						isNumeric(std::string const &str);
 std::string					trimWhiteSpace( const std::string &str );
 

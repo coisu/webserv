@@ -70,7 +70,7 @@ std::vector<std::string>	splitUrl(std::string url)
 	return (vec);
 }
 
-bool	pathIsDir(std::string path)
+int	pathIsDir(std::string path)
 {
 	struct stat	statbuf;
 

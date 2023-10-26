@@ -334,6 +334,8 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
     }
 	FD_ZERO(&readSet);
 	FD_ZERO(&writeSet);
+	for (it = clients.begin(); it != clients.end(); )
+		close(it->first);
     for (size_t i = 0; i < serverSockets.size(); i++)
         close(serverSockets[i]);
 }

@@ -46,12 +46,51 @@
 \nAccept-Encoding: gzip, deflate, br \
 \nAccept-Language: en-US,en;q=0.9"
 
+#define reset "\e[m"                 //ANSI CODE 0   → resets all styles, it's the same of \e[0m
+
+#define bold "\e[1m"                //# ANSI CODE 1   → increases intensity, with a slight color change
+// #define rbold "\e[22m"              # ANSI CODE 22  → resets bold or dim (they are mutually exclusive styles)
+
+#define dim "\e[2m"                 //# ANSI CODE 2   → decreases intensity, with a slight color change
+// #define rdim "\e[22m"               # ANSI CODE 22  → resets bold or dim (they are mutually exclusive styles)
+
+#define italic "\e[3m"              //# ANSI CODE 3   → italic
+// #define ritalic "\e[23m"             # ANSI CODE 23  → resets italic
+
+#define underline "\e[4m"           //# ANSI CODE 4   → underline
+// #define runderline "\e[24m"         # ANSI CODE 24  → resets underline or doubleunderline (they are mutually exclusive styles)
+
+#define doubleunderline "\e[21m"    //# ANSI CODE 21  → double underline (not supported by Konsole)
+// #define rdoubleunderline "\e[24m"   # ANSI CODE 24  → resets underline or doubleunderline (they are mutually exclusive styles)
+
+#define curlyunderline "\e[4:3m"    //# ANSI CODE 4:3 → curly underline (not supported by Konsole)
+// #define rcurlyunderline "\e[4:0m"   # ANSI CODE 4:0 → resets curly underline
+
+#define blink "\e[5m"               //# ANSI CODE 5   → blink
+// #define rblink "\e[25m"             # ANSI CODE 25  → resets blink
+
+// #define reverse "\e[7m"             //# ANSI CODE 7   → swaps text and background colors
+// #define rreverse "\e[27m"           # ANSI CODE 27  → resets reverse
+
+#define hidden "\e[8m"              //# ANSI CODE 8   → characters not displayed, helpful for passwords
+// #define rhidden "\e[28m"            # ANSI CODE 28  → resets hidden
+
+#define strikethrough "\e[9m"       //# ANSI CODE 9   → characters crossed by a central line
+// #define rstrikethrough "\e[29m"     # ANSI CODE 29  → resets strikethrough
+
+#define overline "\e[53m"           //# ANSI CODE 53 → overline
+// #define roverline "\e[55m"          # ANSI CODE 55 → resets overline
+
+#define yellowBg "\e[48;2;255;255;0m"
+
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
 #define ERROR		-1
 #define SUCCESS		0
 #define BUFFER_SIZE	1024
+
+extern int global_running_flag;
 
 typedef enum e_method
 {

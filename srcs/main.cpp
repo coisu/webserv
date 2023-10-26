@@ -6,6 +6,9 @@
 std::map<std::string, std::string>	cgi_types;
 // Tconfig	temp_config = (Tconfig){"/workspaces/webserv", "/cgi-bin", "127.0.0.1", 8080, cgi_types};
 
+int global_running_flag = 1;  // Set the flag to break out of the loop
+
+
 int main(int ac, char **av) {
 	(void)ac;
 	(void)av;

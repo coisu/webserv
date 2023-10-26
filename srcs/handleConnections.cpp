@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/select.h>
+#include "signal.h"
 #include <queue>
 #include "Response.hpp"
 #include "Request.hpp"
@@ -174,13 +175,23 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 	return (serverIndex);
 }
 
+void signalHandler(int signum)
+{
+	(void)signum;
+	std::string msg = "\nTerminating server...";
+	std::cout << msg << std::endl;
+	global_running_flag = 0; // Set the flag to break out of the loop
+}
+
 void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<Server> &servers)
 {
     fd_set  readSet, writeSet;
     std::map<int, ClientState> clients;
     std::map<int, ClientState>::iterator   it;
 
-    while (true)
+	signal(SIGINT, signalHandler);
+
+    while (global_running_flag)
     {
         ssize_t bytesReceived = 0;
         FD_ZERO(&readSet);
@@ -212,7 +223,8 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
         if (select(maxSocket + 1, &readSet, &writeSet, NULL, NULL) == -1)
         {
             // throw std::runtime_error("Select() failed");
-			std::cerr << "Error: Select() failed\n";
+			if (global_running_flag == true)
+				std::cerr << "Error: select() failed\n";
             continue ;
         }
         // Loop through the server sockets to find the one that is ready.
@@ -320,6 +332,8 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
             }
         }
     }
+	FD_ZERO(&readSet);
+	FD_ZERO(&writeSet);
     for (size_t i = 0; i < serverSockets.size(); i++)
         close(serverSockets[i]);
 }

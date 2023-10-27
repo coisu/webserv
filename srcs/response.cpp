@@ -96,9 +96,6 @@ void		Response::initStatusCode(void)
 	this->_errorPages[505] = "HTTP Version Not Supported";	
 }
 
-
-// ERROR MANAGING: 405, 413
-
 bool Response::isAllowedMethod(int currentMethod)
 {
     std::vector<int> methods = _location.getAllowMethods();
@@ -158,11 +155,17 @@ std::string Response::processResponse()
 		_status = -1;
 
 	if (_request.getBody().length() > _server.getClientBodySize())
+	{
 		_status = 413;
-
+	}
 	// setRequestVal();
 	setContentType(ext); 
-	checkSetLocation(_target_path);
+	if(!checkSetLocation(_target_path))
+	{
+		Location L("location/;allow_methods:DELETE,POST,GET;autoindex:on;");
+		std::cout << "Location set with default\n";
+		setLocation(L);
+	}
 	if (_location.getIndex() != "" && pathExists(_target_path + _location.getIndex()))
 	{
 		_target_path += _location.getIndex();
@@ -171,24 +174,19 @@ std::string Response::processResponse()
 	{
 		_target_path += "index.html";
 	}
-	if (!_location.getAutoIndex() &&  _location.getRet().empty())
+	if (!_location.getAutoIndex() && _location.getRet().empty() && _currentMethod != POST)
 	{
-		std::cout << "[TARGET_FILE] : " << _target_path << std::endl;
-		if (pathExists(_target_path) && pathIsDir(_target_path))
+		std::cout << "**[TARGET_FILE] : " << _target_path << std::endl;
+		int ret = pathIsDir(_target_path);
+		if (ret == IS_DIR)
 		{
 			setStatus(403);
 		}
-		else if (!pathExists(_target_path))
+		if (!pathExists(_target_path))
 		{
 			setStatus(404);
 		}
 	}
-
-// else if (_location.getIndex() == "" && _location.getRet().empty())
-// {
-// 	_target_path += "index.html";
-// }
-
 
 	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;
 	std::cout << "  [PATH] : " << _location.getPath() << std::endl;
@@ -249,6 +247,8 @@ std::string Response::processResponse()
 		std::cout << "[E-CODE] : " << _status << std::endl;
 	}
 
+	if (_location.getIndex() != "" && ext != getExt(_location.getIndex()))
+		_status = 400;
 	if (isAllowedMethod(_currentMethod) && (_status == -1 || _status == 302))
 		buildBodywithMethod(ext);
 	if (_status >= 400)
@@ -282,6 +282,8 @@ std::string Response::processResponse()
 
 	_buffer = (_currentMethod == DELETE) ? _headerStr + "\r\n" : _headerStr + _body + "\r\n";
 
+
+	std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
 	return _buffer;
 }
 
@@ -294,27 +296,29 @@ void Response::buildBodywithMethod(std::string ext)
 		{
 			if (_location.getAutoIndex())
 			{
-				struct stat			fileinfo;
 
-				int ret = 1;
+				int ret = pathIsDir(_target_path);
+
 				std::cout << "Target Path : " << _target_path << std::endl;
-				ret = stat(_target_path.c_str(), &fileinfo);
-
-				std::cout << "STAT result  : "<< ret;
-				if (ret == -1)
+				if (ret == N_FOUND)
 					_status = 404;
-				else if (S_ISDIR(fileinfo.st_mode))
+				else if (ret == IS_DIR)
 				{
 					std::cout << "\n\n... target file is directory ...\n\n";
 					_body = writeBodyAutoindex(_request.getURL());
 					_status = 200;
 				}
-				else if (S_ISREG(fileinfo.st_mode))						//regular file
+				else if (ret == IS_REG)						//regular file
 				{
 					std::cout << "\n\n... target file is regular file ...\n\n";
 					_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
 					if (_status == -1)
 						_status = 200;
+				}
+				else
+				{
+					std::cout << "STAT : " << ret <<std::endl;
+					_status = 403;
 				}
 			}
 			else
@@ -338,35 +342,38 @@ void Response::buildBodywithMethod(std::string ext)
 		}
 		else
 		{
-			CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-			_body = cgi.exec_cgi();
-			std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
-			std::cout << _body;
-			std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
-			// if (_currentMethod == POST)
-			// {
-			// 	struct stat			fileinfo;
-			// 	int ret;
+			// CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
+			// _body = cgi.exec_cgi();
+			// std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
+			// std::cout << _body;
+			// std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
+			if (_currentMethod == POST)
+			{
+				int ret = pathIsDir(_target_path);
+				if (ret == IS_REG || (ret == N_FOUND && _target_path.find(".")))
+				{
+					std::string reqBody = _request.getBody();
+					reqBody = "\r\n\r\nkey1=value1&key2=value2\r\n";
+					std::cout << "\n   request body : " << reqBody << std::endl;
+					_body = reqBody;
+					std::cout << "Content-type : " << _headers["Content-Type"] <<std::endl;
+					int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
+					if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
+					{
+						std::cout << "Created by POST of " << _target_path <<std::endl;
+					}
+					close(fd);
+					_status = 201;
+				}
+				else
+					std::cout << "POST creating failed : stat : " << ret <<std::endl;
 
-			// 	ret = stat(_target_path.c_str(), &fileinfo);
-			// 	if (ret != 0)
-			// 	{
-			// 		std::string reqBody = _request.getBody();
-			// 		int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
-			// 		if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
-			// 		{
-			// 			std::cout << "Created by POST of " << _target_path <<std::endl;
-			// 		}
-			// 		close(fd);
-			// 		_status = 201;
-			// 	}
-
-			// }
-			// if (_location.getIsCGI())
-			// {
-			// 	CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-			// 	_body = cgi.exec_cgi();
-			// }
+			}
+			if (_location.getIsCGI())
+			{
+				CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
+				_body = cgi.exec_cgi();
+			}
 
 		}
 	}
@@ -470,7 +477,7 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 
 	if (in.is_open())
 	{
-
+		std::cout << "file opened\n\n";
 		while (std::getline(in, line))
 		{
 			if (isHTML)
@@ -624,6 +631,7 @@ bool	Response::checkSetLocation(std::string path)
 	location_pair = _server.srchLocation(path);
 	if (location_pair.first == true)
 	{
+		std::cout << "Location successfully set\n";
 		setLocation(location_pair.second);
 		return (true);
 	}

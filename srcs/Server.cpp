@@ -535,7 +535,7 @@ void Server::initRoot(std::string value)
         throw std::runtime_error("root path must start with \'/\': path: " + value);
     if (value.at(value.length() - 1) == '/' && value.size() > 1)
         throw std::runtime_error("root path must *not* end with \'/\': path: " + value);
-    if (!pathIsDir(value))
+    if (pathIsDir(value) != IS_DIR)
         throw std::runtime_error("root path is not a valid directory: path: " + value);
     // if (!pathExists(value))
     //     throw std::runtime_error("bananaaaaaaaaaaaaa");
@@ -616,23 +616,26 @@ const std::pair<bool, Location> Server::srchLocation(std::string& path) const
     std::vector<Location>::const_iterator cur = _locations.begin();
     std::vector<Location>::const_iterator end = _locations.end();
 
+    unsigned long p;
+    int idx;
+
     for (; cur != end; ++cur)
     {
-        if (path.find(cur->getPath()) != std::string::npos)
+        p = path.find(cur->getPath());
+        if (p != std::string::npos)
         {
-            std::cout << "\n----------------------------------------------------\n";
             if(cur->getPath().length() > match)
+            {                
+                idx = p + cur->getPath().length();
+                if (path[idx] == '/' || path[idx] == '\0')
                 {
                     match = cur->getPath().length();
                     int tmp = static_cast<int>(match);
                     std::stringstream ssIn;
                     ssIn << tmp;
                     ret = *cur;
-                    std::cout << "< match > : " << tmp << std::endl;
                 }
-                std::cout << "< curent > : " << cur->getPath() << std::endl;
-                std::cout << "< Loc_path > :" << path << std::endl;
-                std::cout << "----------------------------------------------------\n";
+            }
         }
     }
     if (match != 0)

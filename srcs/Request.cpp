@@ -19,7 +19,7 @@ Request::Request(std::string request, Server& serv)
 	std::cout << "suby: " << this->_url.substr(0, this->_url.find_first_of('?')) << std::endl;
 	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
 	// this->_location = extractLocation(this->server, this->_locPath);
-	this->_isDir = pathIsDir(this->_locPath);
+	this->_isDir = pathIsDir(this->_locPath) == IS_DIR;
 	// this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
 	// this->_is_cgi = this->_location->getIsCGI();
 

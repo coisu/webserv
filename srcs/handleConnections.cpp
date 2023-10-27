@@ -1,5 +1,3 @@
-#include "utils.hpp"
-#include "Server.hpp"
 #include <iostream>
 #include <cstring>
 #include <sys/socket.h>
@@ -7,16 +5,15 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/select.h>
-#include "signal.h"
 #include <queue>
-#include "Response.hpp"
-#include "Request.hpp"
-
-#define WRITEREADY true
-#define READREADY false
-
 #include <fstream>
 #include <sstream>
+#include <signal.h>
+
+#include "utils.hpp"
+#include "Response.hpp"
+#include "Request.hpp"
+#include "Server.hpp"
 
 struct ClientState {
     std::string	incompleteRequest; // buffer for storing partial HTTP request

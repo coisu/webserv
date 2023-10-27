@@ -44,12 +44,7 @@ Request::Request(std::map<std::string, std::string> header, std::string body, st
 	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
 }
 
-Request::~Request()
-{
-	// if (this->_cgi)
-		// delete this->_cgi;
-	// std::cout << "Request destroyed\n";
-}
+Request::~Request() {}
 
 Request::Request(const Request& copy) : server(copy.server)//, _cgi(copy.getCGI())
 {
@@ -67,47 +62,6 @@ Request&	Request::operator = (const Request& copy)
 	return (*this);
 }
 
-// Location*	Request::extractLocation(const Server& server, std::string locPath)
-// {
-// 	std::vector<Location> locations = server.getLocations();
-
-// 	for (std::vector<Location>::iterator it = locations.begin(); 
-// 	it != locations.end(); it++)
-// 	{
-// 		if ((*it).getPath() == locPath)
-// 			this->_location = new Location(*it);
-// 	}
-// 	return (NULL);
-// }
-
-// void	Request::parseRequest(std::string request)
-// {
-// 	// std::map<std::string, std::string> requestHeader;
-// 	std::string key, val;
-// 	std::istringstream iss(request);
-// 	std::string methods[3] = {"GET", "POST", "DELETE"};
-
-// 	// std::getline(iss, this->_info);
-
-// 	this->_method_enum = extractMethodType(this->_info);
-// 	this->_method_str = methods[this->_method_enum];
-// 	this->_url = extractURL(this->_info);
-// 	// std::vector<std::string> urlvec = splitUrl(this->_url);
-// 	std::cout << "root: " << this->server.getRoot() << std::endl;
-// 	std::cout << "url: " << this->_url << std::endl;
-// 	std::cout << "suby: " << this->_url.substr(0, this->_url.find_first_of('?')) << std::endl;
-// 	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
-// 	// this->_location = extractLocation(this->server, this->_locPath);
-// 	this->_isDir = pathIsDir(this->_locPath);
-// 	// this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
-// 	// this->_is_cgi = this->_location->getIsCGI();
-
-// 	// while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-// 		// requestHeader[key] = val.substr(0, val.size() - 1);
-
-// 	// return requestHeader;
-// }
-
 void	Request::printRequest( void )
 {
 	std::map<std::string, std::string>::iterator it = this->_head.begin();
@@ -122,8 +76,7 @@ void	Request::printRequest( void )
 		++it;
 	}
 	std::cout << "\n\n-------BODY-------\n" << std::endl;
-	// _body.append("THIS IS 413 TESTING");
-	_body = "name=JISU+CHOI&age=10";
+	// _body = "name=JISU+CHOI&age=10";
 	std::cout << this->_body << std::endl;
 	std::cout << "\n--------END---------\n" << std::endl;
 }
@@ -151,23 +104,6 @@ std::string	Request::extractURL(std::string info)
 		n++;
 	return (info.substr(i, n));
 }
-
-// std::string	Request::extractUrlNoQuery(std::string url)
-// {
-// 	return (url.substr(0, url.find_first_of('?')));
-// }
-
-//GETTERS
-
-// CGI*	Request::getCGI() const
-// {
-// 	return (this->_cgi);
-// }
-
-// bool	Request::isCGI() const
-// {
-// 	return (this->_is_cgi);
-// }
 
 bool	Request::UrlIsDir() const
 {
@@ -203,22 +139,8 @@ std::string Request::getLocPath() const
 {
 	return (this->_locPath);
 }
-// std::string	Request::getLocation() const
-//{
-// 	return (this->_location);
-// }
-
-// std::string	Request::getQuery() const
-//{
-// 	return (this->_query);
-// }
 
 std::map<std::string, std::string>	Request::getHead() const
 {
 	return (this->_head);
 }
-
-// Location*	Request::getLocation() const
-// {
-// 	return (this->_location);_is_dir
-// }

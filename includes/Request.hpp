@@ -54,7 +54,7 @@ class Request
 
 	protected:
 		//private methods
-		void		parseRequest(std::string request);
+		// void		parseRequest(std::string request);
 		e_method	extractMethodType(std::string info);
 		std::string	extractURL(std::string info);
 		// bool		extractDirStatus(std::string url);

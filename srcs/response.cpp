@@ -160,7 +160,12 @@ std::string Response::processResponse()
 	}
 	// setRequestVal();
 	setContentType(ext); 
-	checkSetLocation(_target_path);
+	if(!checkSetLocation(_target_path))
+	{
+		Location L("location/;allow_methods:DELETE,POST,GET;autoindex:on;");
+		std::cout << "Location set with default\n";
+		setLocation(L);
+	}
 	if (_location.getIndex() != "" && pathExists(_target_path + _location.getIndex()))
 	{
 		_target_path += _location.getIndex();

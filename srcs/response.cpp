@@ -174,7 +174,7 @@ std::string Response::processResponse()
 	if (!_location.getAutoIndex() &&  _location.getRet().empty())
 	{
 		std::cout << "[TARGET_FILE] : " << _target_path << std::endl;
-		if (pathExists(_target_path) && pathIsDir(_target_path))
+		if (pathExists(_target_path) && pathIsDir(_target_path) == IS_DIR)
 		{
 			setStatus(403);
 		}
@@ -316,7 +316,10 @@ void Response::buildBodywithMethod(std::string ext)
 						_status = 200;
 				}
 				else
+				{
+					std::cout << "STAT : " << ret <<std::endl;
 					_status = 403;
+				}
 			}
 			else
 			{
@@ -344,30 +347,30 @@ void Response::buildBodywithMethod(std::string ext)
 			std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
 			std::cout << _body;
 			std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
-			// if (_currentMethod == POST)
-			// {
-			// 	struct stat			fileinfo;
-			// 	int ret;
+			if (_currentMethod == POST)
+			{
+				struct stat			fileinfo;
+				int ret;
 
-			// 	ret = stat(_target_path.c_str(), &fileinfo);
-			// 	if (ret != 0)
-			// 	{
-			// 		std::string reqBody = _request.getBody();
-			// 		int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
-			// 		if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
-			// 		{
-			// 			std::cout << "Created by POST of " << _target_path <<std::endl;
-			// 		}
-			// 		close(fd);
-			// 		_status = 201;
-			// 	}
+				ret = stat(_target_path.c_str(), &fileinfo);
+				if (ret != 0)
+				{
+					std::string reqBody = _request.getBody();
+					int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
+					if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
+					{
+						std::cout << "Created by POST of " << _target_path <<std::endl;
+					}
+					close(fd);
+					_status = 201;
+				}
 
-			// }
-			// if (_location.getIsCGI())
-			// {
-			// 	CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-			// 	_body = cgi.exec_cgi();
-			// }
+			}
+			if (_location.getIsCGI())
+			{
+				CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
+				_body = cgi.exec_cgi();
+			}
 
 		}
 	}

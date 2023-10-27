@@ -52,6 +52,7 @@ class Request
 		const Server&	server;
 		// char const**	cgi_env;
 
+
 	protected:
 		//private methods
 		// void		parseRequest(std::string request);

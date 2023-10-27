@@ -73,16 +73,17 @@ std::vector<std::string>	splitUrl(std::string url)
 int	pathIsDir(std::string path)
 {
 	struct stat	statbuf;
+	int ret = UNDEFINE;
 
 	if (stat(path.c_str(), &statbuf) != 0)
-		return (std::cerr << "file or directory not found\n", N_FOUND);
+		return ( N_FOUND);
 	else if (S_ISDIR(statbuf.st_mode))
-		return (IS_DIR);
+		ret = IS_DIR;
 	else if (S_ISREG(statbuf.st_mode))
-		return (IS_REG);
-	else
-	{
-        if (!S_ISDIR(statbuf.st_mode))
+		ret = IS_REG;
+	else{
+
+		if (!S_ISDIR(statbuf.st_mode))
 			return (std::cerr << "not a directory", N_DIR);
 		if (!(statbuf.st_mode & S_IRUSR))	// read permissions
 			return (std::cerr << "no read permissions", N_PERMIT_READ);
@@ -91,7 +92,7 @@ int	pathIsDir(std::string path)
 		if (!(statbuf.st_mode & S_IXUSR))	// exec permission
 			return (std::cerr << "no exec permissions", N_PERMIT_EXEC);
 	}
-	return (UNDEFINE);
+	return (ret);
 }
 
 bool isNumeric(std::string const &str)

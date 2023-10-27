@@ -96,9 +96,6 @@ void		Response::initStatusCode(void)
 	this->_errorPages[505] = "HTTP Version Not Supported";	
 }
 
-
-// ERROR MANAGING: 405, 413
-
 bool Response::isAllowedMethod(int currentMethod)
 {
     std::vector<int> methods = _location.getAllowMethods();
@@ -158,8 +155,9 @@ std::string Response::processResponse()
 		_status = -1;
 
 	if (_request.getBody().length() > _server.getClientBodySize())
+	{
 		_status = 413;
-
+	}
 	// setRequestVal();
 	setContentType(ext); 
 	checkSetLocation(_target_path);
@@ -171,24 +169,19 @@ std::string Response::processResponse()
 	{
 		_target_path += "index.html";
 	}
-	if (!_location.getAutoIndex() &&  _location.getRet().empty())
+	if (!_location.getAutoIndex() && _location.getRet().empty() && _currentMethod != POST)
 	{
-		std::cout << "[TARGET_FILE] : " << _target_path << std::endl;
-		if (pathExists(_target_path) && pathIsDir(_target_path) == IS_DIR)
+		std::cout << "**[TARGET_FILE] : " << _target_path << std::endl;
+		int ret = pathIsDir(_target_path);
+		if (ret == IS_DIR)
 		{
 			setStatus(403);
 		}
-		else if (!pathExists(_target_path))
+		if (!pathExists(_target_path))
 		{
 			setStatus(404);
 		}
 	}
-
-// else if (_location.getIndex() == "" && _location.getRet().empty())
-// {
-// 	_target_path += "index.html";
-// }
-
 
 	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;
 	std::cout << "  [PATH] : " << _location.getPath() << std::endl;
@@ -249,6 +242,8 @@ std::string Response::processResponse()
 		std::cout << "[E-CODE] : " << _status << std::endl;
 	}
 
+	if (_location.getIndex() != "" && ext != getExt(_location.getIndex()))
+		_status = 400;
 	if (isAllowedMethod(_currentMethod) && (_status == -1 || _status == 302))
 		buildBodywithMethod(ext);
 	if (_status >= 400)
@@ -342,20 +337,21 @@ void Response::buildBodywithMethod(std::string ext)
 		}
 		else
 		{
-			CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-			_body = cgi.exec_cgi();
-			std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
-			std::cout << _body;
-			std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
+			// CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
+			// _body = cgi.exec_cgi();
+			// std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
+			// std::cout << _body;
+			// std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
 			if (_currentMethod == POST)
 			{
-				struct stat			fileinfo;
-				int ret;
-
-				ret = stat(_target_path.c_str(), &fileinfo);
-				if (ret != 0)
+				int ret = pathIsDir(_target_path);
+				if (ret == IS_REG || (ret == N_FOUND && _target_path.find(".")))
 				{
 					std::string reqBody = _request.getBody();
+					reqBody = "\r\n\r\nkey1=value1&key2=value2\r\n";
+					std::cout << "\n   request body : " << reqBody << std::endl;
+					_body = reqBody;
+					std::cout << "Content-type : " << _headers["Content-Type"] <<std::endl;
 					int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
 					if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
 					{
@@ -364,6 +360,8 @@ void Response::buildBodywithMethod(std::string ext)
 					close(fd);
 					_status = 201;
 				}
+				else
+					std::cout << "POST creating failed : stat : " << ret <<std::endl;
 
 			}
 			if (_location.getIsCGI())
@@ -628,6 +626,7 @@ bool	Response::checkSetLocation(std::string path)
 	location_pair = _server.srchLocation(path);
 	if (location_pair.first == true)
 	{
+		std::cout << "Location successfully set\n";
 		setLocation(location_pair.second);
 		return (true);
 	}

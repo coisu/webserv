@@ -1,36 +1,6 @@
 #include "Request.hpp"
 Request::Request(Server& serv) : server(serv){}
 
-Request::Request(std::string request, Server& serv)
-: server(serv), _full_request(request)
-{
-	// parseRequest(request);
-	std::string key, val;
-	std::istringstream iss(request);
-	std::string methods[3] = {"GET", "POST", "DELETE"};
-
-	std::getline(iss, this->_info);
-
-	this->_method_enum = extractMethodType(this->_info);
-	this->_method_str = methods[this->_method_enum];
-	this->_url = extractURL(this->_info);
-	std::cout << "root: " << this->server.getRoot() << std::endl;
-	std::cout << "url: " << this->_url << std::endl;
-	std::cout << "suby: " << this->_url.substr(0, this->_url.find_first_of('?')) << std::endl;
-	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
-	// this->_location = extractLocation(this->server, this->_locPath);
-	this->_isDir = pathIsDir(this->_locPath) == IS_DIR;
-	// this->_is_cgi = (this->_url.find(temp_config.cgi_folder) == 0);
-	// this->_is_cgi = this->_location->getIsCGI();
-
-	// while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-		// requestHeader[key] = val.substr(0, val.size() - 1);
-
-	// return requestHeader;
-	// std::cout << "Request created\n";
-	// this->_body = readFile(this->_locPath);
-}
-
 Request::Request(std::map<std::string, std::string> header, std::string body, std::string info, Server& serv) 
 : server(serv), _info(info), _head(header), _body(body) 
 {

@@ -23,9 +23,7 @@ class Request
 	public:
 		//OCCF
 		Request(Server& serv);
-		Request(std::string request, Server& serv);
 		Request(std::map<std::string, std::string> header, std::string body, std::string info, Server& serv);
-		// Request(std::map<std::string, std::string>	head);
 		virtual ~Request();
 		Request(const Request& copy);
 		Request&	operator = (const Request& copy);

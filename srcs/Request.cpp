@@ -1,8 +1,8 @@
 #include "Request.hpp"
-Request::Request(Server& serv) : server(serv){}
+Request::Request(Server& serv) : _server(serv){}
 
 Request::Request(std::map<std::string, std::string> header, std::string body, std::string info, Server& serv) 
-: server(serv), _info(info), _head(header), _body(body) 
+: _server(serv), _info(info), _head(header), _body(body) 
 {
 
 	std::string key, val;
@@ -11,23 +11,37 @@ Request::Request(std::map<std::string, std::string> header, std::string body, st
 	this->_method_enum = extractMethodType(this->_info);
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
-	this->_locPath = this->server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
+	this->_locPath = this->_server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
 }
 
-Request::~Request() {}
+Request::~Request() {} 
 
-Request::Request(const Request& copy) : server(copy.server)//, _cgi(copy.getCGI())
+Request::Request(const Request& copy) : _server(copy._server)
 {
-	std::cout << "Request is being copied\n";
-	*this = copy;
+	// std::cout << "Request is being copied\n";
+	this->_full_request = copy._full_request;
+	this->_info = copy._info;
+	this->_method_enum = copy._method_enum;
+	this->_method_str = copy._method_str;
+	this->_url = copy._url;
+	this->_locPath = copy._locPath;
+	this->_head = copy._head;
+	this->_body = copy._body;
 }
 
 Request&	Request::operator = (const Request& copy)
 {
-	std::cout << "Request is being assigned\n";
+	// std::cout << "Request is being assigned\n";
 	if (this != &copy)
 	{
-		// this->_body = copy.getBody().copy()
+		this->_full_request = copy._full_request;
+		this->_info = copy._info;
+		this->_method_enum = copy._method_enum;
+		this->_method_str = copy._method_str;
+		this->_url = copy._url;
+		this->_locPath = copy._locPath;
+		this->_head = copy._head;
+		this->_body = copy._body;
 	}
 	return (*this);
 }
@@ -73,11 +87,6 @@ std::string	Request::extractURL(std::string info)
 	while (!std::isspace(info[i + n]))
 		n++;
 	return (info.substr(i, n));
-}
-
-bool	Request::UrlIsDir() const
-{
-	return (this->_isDir);
 }
 
 std::string	Request::getBody() const

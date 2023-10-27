@@ -43,11 +43,10 @@ class Request
 		Location*	extractLocation(const Server& server, std::string locPath);
 		// std::string	getLocation();
 		// std::string	getQuery();
-		bool	UrlIsDir() const;
+		// bool	UrlIsDir() const;
 		// bool	isCGI() const;
 		
 		//public attributes
-		const Server&	server;
 		// char const**	cgi_env;
 
 
@@ -59,21 +58,15 @@ class Request
 		// bool		extractDirStatus(std::string url);
 
 		//private attributes
-		// bool		_is_cgi;
-		std::string	_full_request;
-		std::string	_info;
-		t_method	_method_enum;
-		std::string	_method_str;
-		std::string	_url;
-		std::string	_locPath;
-		bool		_isDir;
+		const Server&						_server;
+		std::string							_full_request;
+		std::string							_info;
+		t_method							_method_enum;
+		std::string							_method_str;
+		std::string							_url;
+		std::string							_locPath;
 		std::map<std::string, std::string>	_head;
-		// std::string	_location;
-		// Location*	_location;
-		// CGI*		_cgi;
-		std::string	_body;
-		// std::string	_location;
-		// std::string	_query;
+		std::string							_body;
 };
 
 #endif

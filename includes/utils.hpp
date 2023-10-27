@@ -51,7 +51,7 @@
 #define N_DIR 2
 #define N_FOUND 3
 #define N_PERMIT_READ 4
-#define N_PERMIT_WRTIE 5
+#define N_PERMIT_WRITE 5
 #define N_PERMIT_EXEC 6
 #define UNDEFINE 7
 

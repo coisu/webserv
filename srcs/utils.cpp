@@ -88,7 +88,7 @@ int	pathIsDir(std::string path)
 		if (!(statbuf.st_mode & S_IRUSR))	// read permissions
 			return (std::cerr << "no read permissions", N_PERMIT_READ);
 		if (!(statbuf.st_mode & S_IWUSR))	// write permissions
-			return (std::cerr << "no write permissions", N_PERMIT_WRTIE);
+			return (std::cerr << "no write permissions", N_PERMIT_WRITE);
 		if (!(statbuf.st_mode & S_IXUSR))	// exec permission
 			return (std::cerr << "no exec permissions", N_PERMIT_EXEC);
 	}

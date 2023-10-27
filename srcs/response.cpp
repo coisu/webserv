@@ -112,26 +112,6 @@ bool Response::isAllowedMethod(int currentMethod)
 	return (1);
 }
 
-// static std::string combinePaths(std::string p1, std::string p2, std::string p3)
-// {
-//     std::string res;
-//     int         len1;
-//     int         len2;
-
-//     len1 = p1.length();
-//     len2 = p2.length();
-//     if (p1[len1 - 1] == '/' && (!p2.empty() && p2[0] == '/') )
-//         p2.erase(0, 1);
-//     if (p1[len1 - 1] != '/' && (!p2.empty() && p2[0] != '/'))
-//         p1.insert(p1.end(), '/');
-//     if (p2[len2 - 1] == '/' && (!p3.empty() && p3[0] == '/') )
-//         p3.erase(0, 1);
-//     if (p2[len2 - 1] != '/' && (!p3.empty() && p3[0] != '/'))
-//         p2.insert(p1.end(), '/');
-//     res = p1 + p2 + p3;
-//     return (res);
-// }
-
 std::string Response::jumpToErrorPage(int status)
 {
 	std::string errorBody;
@@ -156,6 +136,7 @@ std::string Response::processResponse()
 
 	if (_request.getBody().length() > _server.getClientBodySize())
 	{
+		std::cout << "_request.getBody() : " << _request.getBody() << std::endl;
 		_status = 413;
 	}
 	// setRequestVal();
@@ -353,7 +334,6 @@ void Response::buildBodywithMethod(std::string ext)
 				if (ret == IS_REG || (ret == N_FOUND && _target_path.find(".")))
 				{
 					std::string reqBody = _request.getBody();
-					reqBody = "\r\n\r\nkey1=value1&key2=value2\r\n";
 					std::cout << "\n   request body : " << reqBody << std::endl;
 					_body = reqBody;
 					std::cout << "Content-type : " << _headers["Content-Type"] <<std::endl;
@@ -408,8 +388,6 @@ std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, 
 	
 	// if (path[0] != '/')
 	// 	filePath = "/" + path;
-	std::cout << "\n\n >> >> >> >> >> >> filePath: " << filePath << std::endl;
-
 	ifs.open(const_cast<char*>(filePath.c_str()));
 	
 	if (ifs.fail())
@@ -417,7 +395,6 @@ std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, 
 		return (std::make_pair(false, makeErrorPage(404)));
 	}
 	std::string	str;
-	std::cout << "\n\n >> >> >> >> >> >> filePath: " << filePath << std::endl;
 	while (std::getline(ifs, str))
 	{
 		if (isHTML)
@@ -584,8 +561,6 @@ std::string	Response::getExt(std::string const &filename) const
 	}
 	else
 		ext = "default";
-	//std::cout << ext << " is ext in getExit" << std::endl;
-	//std::cout << filename << " is filename in getExt"  << std::endl;
     return ext;
 }
 
@@ -644,47 +619,6 @@ void	Response::setStatus(int err)
 	this->_status = err;
 	this->_req_status = true;
 }
-
-// std::pair<bool, Location>	Response::getMatchLoc(const std::string& request_path)
-// {
-// 	size_t match = 0;
-// 	Location	ret;
-
-// 	std::vector<Location>::iterator cur = _server.getLocations().begin();
-// 	std::vector<Location>::iterator end = _server.getLocations().end();
-
-// std::cout << "\n\n\n";
-
-// std::cout << "REQUEST PATH : " << request_path << std::endl;
-// 	for (; cur != end; ++cur)
-// 	{
-// 		std::cout << "CHECKING.... " << cur->getPath() << "??" << std::endl;
-
-// 	}
-
-
-	// std::cout << "CHECKING... " << _server.getLocations().begin()->getPath() << std::endl;
-
-
-	// for (std::vector<Location>::iterator it = _server.getLocations().begin(); it != _server.getLocations().end(); ++it) 
-	// {
-	// 	std::cout << "it Path : " << it->getPath() << std::endl;
-	// 	if (request_path.find(it->getPath()) == 0)
-	// 	{
-	// 		// if( it->getPath() == "/" || request_path.length() == it->getPath().length() || request_path[it->getPath().length()] == '/')
-	// 		// {
-	// 			if(it->getPath().length() > match)
-	// 			{
-	// 				match = it->getPath().length();
-	// 				ret = *it;
-	// 			}
-	// 		// }
-	// 	}
-	// }
-// 	if (match > 0)
-// 		return (std::make_pair(true, ret));
-// 	return (std::make_pair(false, ret)); 
-// }
 
 void Response::setLocation(Location Loc)
 {
@@ -877,19 +811,3 @@ std::string	Response::toString(const int& i) const
 	ss << i;
 	return (ss.str());
 }
-
-// bool Response::buildBody()
-// {
-// 	if (_request.getBody().length() > _server.getClientMaxBodySize())
-// 	{
-// 		_status = 413;
-// 		return (1);
-// 	}
-// 	if (set)
-// }
-
-// int	Response::buildResponse() 
-// {
-// 	if (checkECode() || buildBody())
-// 		buildErrorBody();
-// }

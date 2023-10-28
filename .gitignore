@@ -12,7 +12,8 @@
 !Makefile
 
 # whitelist everything in ./folder/: !folder/*
-!resources/*
-!cgi-bin/*
-!notes/*
+!resources/**
+!cgi-bin/**
+!notes/**
 !.vscode/launch.json
+!public_html/**

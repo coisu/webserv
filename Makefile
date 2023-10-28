@@ -50,4 +50,7 @@ re:
 	@make --no-print-directory clean
 	@make --no-print-directory all
 
-.PHONY: clean fclean re all
+run:
+	valgrind --quiet --leak-check=full --show-leak-kinds=all --track-fds=yes --exit-on-first-error=yes --error-exitcode=1 ./$(BINARY)
+
+.PHONY: clean fclean re all run

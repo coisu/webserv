@@ -12,6 +12,7 @@ Request::Request(std::map<std::string, std::string> header, std::string body, st
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
 	this->_locPath = this->_server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
+	std::cerr << "CONSTRUCT locPath: " << this->_locPath << std::endl;
 }
 
 Request::~Request() {} 

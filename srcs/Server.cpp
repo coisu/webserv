@@ -494,6 +494,7 @@ void Server::initHost(std::string value)
             throw std::runtime_error("(4) invalid host address in server block.");
     }
     this->_host = inet_addr(value.c_str());
+	std::cerr << "INITHOST: host: " << this->_host << std::endl;
 }
 
 void Server::initServerName(std::string value)

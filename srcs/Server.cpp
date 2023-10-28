@@ -531,8 +531,6 @@ void Server::initClientBodySize(std::string value)
 
 void Server::initRoot(std::string value)
 {
-    if (value[0] != '/')
-        throw std::runtime_error("root path must start with \'/\': path: " + value);
     if (value.at(value.length() - 1) == '/' && value.size() > 1)
         throw std::runtime_error("root path must *not* end with \'/\': path: " + value);
     if (pathIsDir(value) != IS_DIR)

@@ -149,10 +149,9 @@ std::string Response::processResponse()
 		setLocation(L);
 	}
 	std::cout << "****target path : " << _target_path << "\n****method : " << _currentMethod << std::endl;
-	std::cout <<  "is there a .  : "<< (_target_path.find(".", 1)) << std::endl;
-	int start = _target_path[0] == '.' ? 1 : 0;
+
 	if (_location.getIndex() != "" && \
-		(pathExists(_target_path + _location.getIndex()) || (_target_path.rfind(".", start) == std::string::npos && _currentMethod == POST)))
+		(pathExists(_target_path + _location.getIndex()) || (pathIsDir(_target_path) == IS_DIR && _currentMethod == POST)))
 	{
 		std::cout << "\nSUCCEED!!!!\n\n";
 		_target_path += _location.getIndex();
@@ -177,11 +176,11 @@ std::string Response::processResponse()
 	std::string ext = getExt(_target_path);
 	setContentType(ext); 
 	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;
-	std::cout << "  [PATH] : " << _location.getPath() << std::endl;
-	std::cout << "[RETURN] : " << _location.getRet() << std::endl;
-	std::cout << " [INDEX] : " << _location.getIndex() << std::endl;
-	std::cout << "[TARGET] : " << _target_path << std::endl;
-	std::cout << "[E-CODE] : " << _status << std::endl;
+	std::cout << "LOC   [PATH] : " << _location.getPath() << std::endl;
+	std::cout << "LOC [RETURN] : " << _location.getRet() << std::endl;
+	std::cout << "LOC  [INDEX] : " << _location.getIndex() << std::endl;
+	std::cout << "    [TARGET] : " << _target_path << std::endl;
+	std::cout << "    [E-CODE] : " << _status << std::endl;
 	std::cout << "\n-------------->>>>>>>> INFO CHECK <<<<<<<<--------------\n" << std::endl;
 
 	if (!_location.getRet().empty())
@@ -265,12 +264,12 @@ std::string Response::processResponse()
 	}
 
 	/* MAKE HEADER */
-	if ((_currentMethod == GET && ext != "php") || _status >= 400)
+	if (((_currentMethod == GET || _currentMethod == POST) && ext != "php") || _status >= 400)
 		_headerStr += buildHeader(_body.size(), _status);
 	else
 		_headerStr += buildHeaderCgi(_body, _status);
 
-	_buffer = (_currentMethod == DELETE) ? _headerStr + "\r\n" : _headerStr + _body + "\r\n";
+	_buffer = (_currentMethod == DELETE) ? _headerStr + "\r\n" : _headerStr + "\r\n" + _body + "\r\n";
 
 
 	std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
@@ -289,7 +288,7 @@ void Response::buildBodywithMethod(std::string ext)
 
 				int ret = pathIsDir(_target_path);
 
-				std::cout << "Target Path : " << _target_path << std::endl;
+				std::cout << " &&& Target Path : " << _target_path << std::endl;
 				if (ret == N_FOUND)
 					_status = 404;
 				else if (ret == IS_DIR)
@@ -340,22 +339,26 @@ void Response::buildBodywithMethod(std::string ext)
 			if (_currentMethod == POST)
 			{
 				int ret = pathIsDir(_target_path);
-				if (ret == IS_REG || (ret == N_FOUND && _target_path.find(".")))
+				if (ret == IS_REG || ret == N_FOUND)
 				{
 					std::string reqBody = _request.getBody();
 					std::cout << "\n   request body : " << reqBody << std::endl;
 					_body = reqBody;
 					std::cout << "Content-type : " << _headers["Content-Type"] <<std::endl;
-					int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
+					int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC);
 					if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
 					{
-						std::cout << "Created by POST of " << _target_path <<std::endl;
+						std::cout << "Created by POST at " << _target_path <<std::endl;
 					}
 					close(fd);
-					_status = 201;
+					_status = (ret == N_FOUND) ? 201 : 200;
 				}
 				else
+				{
 					std::cout << "POST creating failed : stat : " << ret <<std::endl;
+					_status = 403;
+					_body = _request.getBody();
+				}
 
 			}
 			if (_location.getIsCGI())
@@ -751,6 +754,8 @@ std::string		Response::appendMapHeaders(bool isCGI, int statusCode)
 			|| (it->first == "Content-Type" && isCGI == true)
 			|| (it->first == "Transfer-Encoding"))
 			{
+				std::cout << "\n\nisCGI : " << isCGI <<std::endl;
+				std::cout << "skip : " <<it->first <<std::endl<<std::endl;
 				continue ;
 			} 
 			_headerStr += it->first;
@@ -785,7 +790,7 @@ std::string		Response::makeTimeLine(bool isCGI)
   	strftime(buffer, 80, "%a, %d %b %Y %T GMT", timeinfo);
 
 	timeLine += buffer;
-	if (isCGI == false || _request.getMethodEnum() == DELETE)
+	if (isCGI == false || _request.getMethodEnum() != DELETE)
 	{
 		timeLine += "\r\n";
 	}

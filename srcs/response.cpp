@@ -128,7 +128,7 @@ std::string Response::processResponse()
 {
 	// std::string	currentMethod(_request.getMethodEnum());
 	_currentMethod = _request.getMethodEnum();
-	std::string	ext(getExt(_request.getLocPath()));
+	// std::string	ext(getExt(_request.getLocPath()));
 	bool isRedirect = false;
 
 	if (_currentMethod == DELETE && _status == 404)
@@ -137,18 +137,20 @@ std::string Response::processResponse()
 	if (_request.getBody().length() > _server.getClientBodySize())
 	{
 		std::cout << "_request.getBody() : " << _request.getBody() << std::endl;
-		_status = 413;
+		std::cout << "clien max body size : " << _server.getClientBodySize() << std::endl << std::endl;
+		setStatus(413);
 	}
 	// setRequestVal();
-	setContentType(ext); 
 	if(!checkSetLocation(_target_path))
 	{
 		Location L("location/;allow_methods:DELETE,POST,GET;autoindex:on;");
 		std::cout << "Location set with default\n";
 		setLocation(L);
 	}
-	if (_location.getIndex() != "" && pathExists(_target_path + _location.getIndex()))
+	if (_location.getIndex() != "" && \
+		(pathExists(_target_path + _location.getIndex()) || (_target_path.find(".") == std::string::npos && _currentMethod == POST)))
 	{
+	
 		_target_path += _location.getIndex();
 	}
 	else if (_location.getIndex() == "" && _location.getRet() == "" && !_location.getIsCGI() && pathExists(_target_path + "index.html"))
@@ -168,7 +170,8 @@ std::string Response::processResponse()
 			setStatus(404);
 		}
 	}
-
+	std::string ext = getExt(_target_path);
+	setContentType(ext); 
 	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;
 	std::cout << "  [PATH] : " << _location.getPath() << std::endl;
 	std::cout << "[RETURN] : " << _location.getRet() << std::endl;
@@ -229,7 +232,9 @@ std::string Response::processResponse()
 	}
 
 	if (_location.getIndex() != "" && ext != getExt(_location.getIndex()))
+	{
 		_status = 400;
+	}
 	if (isAllowedMethod(_currentMethod) && (_status == -1 || _status == 302))
 		buildBodywithMethod(ext);
 	if (_status >= 400)
@@ -418,7 +423,8 @@ std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 	
 	// if (path[0] != '/')
 	// 	filePath = "/" + path;
-
+std::cout << "root : " <<_server.getRoot() << std::endl;
+std::cout<< "__filePath in writeBodyHtml : " << filePath << std::endl;
 	ifs.open(const_cast<char*>(filePath.c_str()));
 	
 	if (ifs.fail())

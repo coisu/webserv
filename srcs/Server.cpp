@@ -537,6 +537,7 @@ void Server::initRoot(std::string value)
         throw std::runtime_error("root path is not a valid directory: path: " + value);
     // if (!pathExists(value))
     //     throw std::runtime_error("bananaaaaaaaaaaaaa");
+	// things
     this->_root = value;
 }
 

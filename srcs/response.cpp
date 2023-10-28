@@ -27,6 +27,7 @@ Response::Response(const Request &request, Server &server ) : _request(request),
 {
 	// _target_path = _server.getRoot() + "/";
 	_target_path = _request.getLocPath();
+	std::cerr << "target path: " << _target_path << std::endl;
 	_body = "";
 	_buffer = "";
 	_headerStr = "";
@@ -147,10 +148,13 @@ std::string Response::processResponse()
 		std::cout << "Location set with default\n";
 		setLocation(L);
 	}
+	std::cout << "****target path : " << _target_path << "\n****method : " << _currentMethod << std::endl;
+	std::cout <<  "is there a .  : "<< (_target_path.find(".", 1)) << std::endl;
+	int start = _target_path[0] == '.' ? 1 : 0;
 	if (_location.getIndex() != "" && \
-		(pathExists(_target_path + _location.getIndex()) || (_target_path.find(".") == std::string::npos && _currentMethod == POST)))
+		(pathExists(_target_path + _location.getIndex()) || (_target_path.rfind(".", start) == std::string::npos && _currentMethod == POST)))
 	{
-	
+		std::cout << "\nSUCCEED!!!!\n\n";
 		_target_path += _location.getIndex();
 	}
 	else if (_location.getIndex() == "" && _location.getRet() == "" && !_location.getIsCGI() && pathExists(_target_path + "index.html"))

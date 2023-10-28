@@ -68,14 +68,6 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
     this->_locations = locationVec;
     this->_block = serverBlock;
 
-    /*Fill Server Values*/
-    while (std::getline(ss, part, ';'))
-    {
-        std::string key = part.substr(0, part.find(':'));
-        std::string value = part.substr(part.find(':')+1);
-        setAttributes(key, value);
-    }
-
 	//this->_serverPort = this->_port;
 	// this->_serverSocket = ();
 	// this->_clientSocket = ();
@@ -104,6 +96,14 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
     // inet_addr(this->_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
     // startServer();
     // startListen();
+
+    /*Fill Server Values*/
+    while (std::getline(ss, part, ';'))
+    {
+        std::string key = part.substr(0, part.find(':'));
+        std::string value = part.substr(part.find(':')+1);
+        setAttributes(key, value);
+    }
     // std::cout << "SERVER:\n" << *this << std::endl;
 }
 

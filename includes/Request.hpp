@@ -23,9 +23,7 @@ class Request
 	public:
 		//OCCF
 		Request(Server& serv);
-		Request(std::string request, Server& serv);
 		Request(std::map<std::string, std::string> header, std::string body, std::string info, Server& serv);
-		// Request(std::map<std::string, std::string>	head);
 		virtual ~Request();
 		Request(const Request& copy);
 		Request&	operator = (const Request& copy);
@@ -45,37 +43,30 @@ class Request
 		Location*	extractLocation(const Server& server, std::string locPath);
 		// std::string	getLocation();
 		// std::string	getQuery();
-		bool	UrlIsDir() const;
+		// bool	UrlIsDir() const;
 		// bool	isCGI() const;
 		
 		//public attributes
-		const Server&	server;
 		// char const**	cgi_env;
 
 
 	protected:
 		//private methods
-		void		parseRequest(std::string request);
+		// void		parseRequest(std::string request);
 		e_method	extractMethodType(std::string info);
 		std::string	extractURL(std::string info);
 		// bool		extractDirStatus(std::string url);
 
 		//private attributes
-		// bool		_is_cgi;
-		std::string	_full_request;
-		std::string	_info;
-		t_method	_method_enum;
-		std::string	_method_str;
-		std::string	_url;
-		std::string	_locPath;
-		bool		_isDir;
+		const Server&						_server;
+		std::string							_full_request;
+		std::string							_info;
+		t_method							_method_enum;
+		std::string							_method_str;
+		std::string							_url;
+		std::string							_locPath;
 		std::map<std::string, std::string>	_head;
-		// std::string	_location;
-		// Location*	_location;
-		// CGI*		_cgi;
-		std::string	_body;
-		// std::string	_location;
-		// std::string	_query;
+		std::string							_body;
 };
 
 #endif

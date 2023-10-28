@@ -27,6 +27,7 @@ Response::Response(const Request &request, Server &server ) : _request(request),
 {
 	// _target_path = _server.getRoot() + "/";
 	_target_path = _request.getLocPath();
+	std::cerr << "target path: " << _target_path << std::endl;
 	_body = "";
 	_buffer = "";
 	_headerStr = "";

@@ -377,12 +377,16 @@ void handleConnections(std::vector<Server> &servers)
         // Bind the socket to the address and port.
         if (bind(currentSocket,(struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress)) < 0)
         {
-            throw std::runtime_error("Cannot connect socket to address");
+			close(currentSocket);
+            throw std::runtime_error("Cannot bind socket to address");
         }
 
         // Listen for incoming connections.
         if (listen(currentSocket, 10) < 0)
+		{
+			close(currentSocket);
             throw std::runtime_error("Socket listen failed");
+		}
 
         std::ostringstream ss;
         ss << "\n*** Listening on ADDRESS: " 

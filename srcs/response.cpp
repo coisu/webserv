@@ -352,8 +352,8 @@ void Response::buildBodywithMethod(std::string ext)
 			}
 			if (_location.getIsCGI())
 			{
-				CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-				_body = cgi.exec_cgi();
+				// CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
+				// _body = cgi.exec_cgi();
 			}
 
 		}

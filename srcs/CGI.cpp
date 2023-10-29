@@ -239,24 +239,40 @@ void	CGI::identifyCGI(std::vector<std::string> urlvec)
 	// for (size_t i = 0; i < urlvec.size(); i++)
 	// 	std::cout << urlvec[i] << ", ";
 	// std::cout << "end\n";
+	std::string path, ext;
 	std::string root = this->server.getRoot();
-	std::string path = this->_location.getPath();
-
-	for (size_t i = 0; i < urlvec.size(); i++)
+	for (size_t i = 0; i < urlvec.size() && urlvec[i][0] != '?'; i++)
+		path += urlvec[i];	
+	size_t pos = path.find_last_of('.');
+	if (pos != std::string::npos)
+		ext = path.substr(pos);
+	if (ext.empty())
 	{
-		for (std::map<std::string, std::string>::iterator it = this->_cgiConfig.begin(); 
-		it != this->_cgiConfig.end(); it++)
-		{
-			if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
-				this->_script = root + extractPathInfo(urlvec), this->_postfix = it->first;
-				// this->_script = this->server.getRoot() + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
-		}
+		path = path + "/" + this->_location.getIndex();
+		pos = path.find_last_of('.');
+		if (pos != std::string::npos)
+			ext = path.substr(pos);
 	}
-	// _script = "/workspaces/webserv/cgi-bin/";
-	// _script = "/workspaces/webserv/post/post.php";
-	if (this->_script.empty())
-		throw 501;
+	this->_script = root + path;
+	this->_postfix = ext;
 	this->_program = this->_cgiConfig[this->_postfix];
+	// this->_program = this->_cgiConfig[this->_postfix];
+
+	// for (size_t i = 0; i < urlvec.size(); i++)
+	// {
+	// 	for (std::map<std::string, std::string>::iterator it = this->_cgiConfig.begin(); 
+	// 	it != this->_cgiConfig.end(); it++)
+	// 	{
+	// 		if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
+	// 			this->_script = root + extractPathInfo(urlvec), this->_postfix = it->first;
+	// 			// this->_script = this->server.getRoot() + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
+	// 	}
+	// }
+	// // _script = "/workspaces/webserv/cgi-bin/";
+	// // _script = "/workspaces/webserv/post/post.php";
+	// if (this->_script.empty())
+	// 	throw 501;
+	// this->_program = this->_cgiConfig[this->_postfix];
 }
 
 std::string	CGI::extractScriptName(std::vector<std::string> urlvec)

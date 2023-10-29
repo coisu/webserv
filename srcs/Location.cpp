@@ -199,7 +199,7 @@ void Location::initCGI(std::string value)
 	this->_isCgi = true;
     while (std::getline(ss, cgiPath, ',') && std::getline(ss, suffix, ','))
     {
-        this->_cgiConfig[cgiPath] = suffix;
+        this->_cgiConfig[suffix] = cgiPath;
     }
 }
 

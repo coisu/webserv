@@ -1,18 +1,23 @@
 #include "CGI.hpp"
 
-CGI::CGI(Server& serv, std::string RequestUrl, std::string methodString, std::map<std::string, std::string> cgiConfig) 
-: server(serv), _cgiConfig(cgiConfig) // : _env(construct_env(request))
+CGI::CGI(Server& serv, Location& location, Request& request) 
+: server(serv), _location(location), _request(request), _cgiConfig(location.getCGIConfig())
 {
-	this->_env = constructEnv(RequestUrl, methodString);
+	this->_env = constructEnv(request.getURL(), request.getMethodStr());
 	// std::cout << "CGI created\n";
 }
+// : server(serv), _cgiConfig(cgiConfig) // : _env(construct_env(request))
+// {
+// 	this->_env = constructEnv(RequestUrl, methodString);
+// 	// std::cout << "CGI created\n";
+// }
 
 CGI::~CGI()
 {
 	// std::cout << "CGI destroyed\n";
 }
 
-CGI::CGI(const CGI& copy) : server(copy.server)
+CGI::CGI(const CGI& copy) : server(copy.server), _location(copy._location), _request(copy._request)
 {
 	std::cout << "CGI is being copied\n";
 	*this = copy;
@@ -234,15 +239,18 @@ void	CGI::identifyCGI(std::vector<std::string> urlvec)
 	// for (size_t i = 0; i < urlvec.size(); i++)
 	// 	std::cout << urlvec[i] << ", ";
 	// std::cout << "end\n";
+	std::string root = this->server.getRoot();
+	std::string path = this->_location.getPath();
+
 	for (size_t i = 0; i < urlvec.size(); i++)
 	{
-		// for (std::map<std::string, std::string>::iterator it = this->_cgiConfig.begin(); 
-		// it != this->_cgiConfig.end(); it++)
-		// {
-		// 	if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
-		// 		this->_script = this->server.getRoot() + this->request.getLocation()->getPath() + urlvec[i], this->_postfix = it->first;
-		// 		// this->_script = this->server.getRoot() + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
-		// }
+		for (std::map<std::string, std::string>::iterator it = this->_cgiConfig.begin(); 
+		it != this->_cgiConfig.end(); it++)
+		{
+			if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
+				this->_script = root + extractPathInfo(urlvec), this->_postfix = it->first;
+				// this->_script = this->server.getRoot() + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
+		}
 	}
 	// _script = "/workspaces/webserv/cgi-bin/";
 	// _script = "/workspaces/webserv/post/post.php";

@@ -14,6 +14,7 @@
 #include "Response.hpp"
 #include "Request.hpp"
 #include "Server.hpp"
+#include "CGI.hpp"
 
 struct ClientState {
     std::string	incompleteRequest; // buffer for storing partial HTTP request
@@ -287,6 +288,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                 }
                 else
                 {
+					std::string fullResponseStr;
                     client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
                     parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 					if (client.requestCompleted == true)
@@ -301,7 +303,17 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 						// std::cout << "SERVER PTR: " << server << std::endl;
 						Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
                         Response response(request, servers[idx]); // <-- create response with request obj and selected server
-						client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
+						std::pair<bool, Location> loc_pair = servers[idx].srchLocation(request.getLocPath());
+						if (loc_pair.first && loc_pair.second.getIsCGI() 
+						&& (!pathIsDir(request.getLocPath()) || !loc_pair.second.getIndex().empty()))
+						{
+							CGI cgi(servers[idx], loc_pair.second, request);
+							// CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
+							fullResponseStr = cgi.exec_cgi();
+						}
+						else
+							fullResponseStr = response.processResponse();
+						client.responseQueue.push(fullResponseStr); // <-- push processed response to the queue
 						// std::cout << "---------RESPONSE----------\n" << client.responseQueue.back() << "\n-----------END------------\n";
 						client.requestCompleted = false;
 					}

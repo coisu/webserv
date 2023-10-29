@@ -404,6 +404,7 @@ std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, 
 	
 	if (ifs.fail())
 	{
+		ifs.close();
 		return (std::make_pair(false, makeErrorPage(404)));
 	}
 	std::string	str;
@@ -419,6 +420,7 @@ std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, 
 		}
 		ret += str;
 	}
+	ifs.close();
 
 	return (std::make_pair(true, ret));
 }
@@ -440,7 +442,10 @@ std::cout<< "__filePath in writeBodyHtml : " << filePath << std::endl;
 		std::map<int, std::string> ep = _server.getErrorPages();
 		ifs.open(const_cast<char*>((_server.getRoot() + ep[404]).c_str()));
 		if (ifs.fail())
+		{
+			ifs.close();
 			return makeErrorPage(404);
+		}
 	}
 	std::string	str;
 	while (std::getline(ifs, str))
@@ -455,6 +460,7 @@ std::cout<< "__filePath in writeBodyHtml : " << filePath << std::endl;
 		}
 		ret += str;
 	}
+	ifs.close();
 
 	return (ret);
 }
@@ -481,6 +487,7 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 				ret += line;
 			}
 		}
+		in.close();
 	}
 	return (ret);
 }

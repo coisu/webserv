@@ -40,7 +40,7 @@ class Server
         std::vector<Location>       getLocations() const;
         int                         getListenFd() const;
         std::string                 getBlock() const;
-        const std::pair<bool, Location> srchLocation(std::string& path) const;
+        const std::pair<bool, Location> srchLocation(const std::string& path) const;
 
         //setters
         void    setLocations( std::vector<Location> locationVec );

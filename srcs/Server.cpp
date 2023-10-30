@@ -68,14 +68,6 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
     this->_locations = locationVec;
     this->_block = serverBlock;
 
-    /*Fill Server Values*/
-    while (std::getline(ss, part, ';'))
-    {
-        std::string key = part.substr(0, part.find(':'));
-        std::string value = part.substr(part.find(':')+1);
-        setAttributes(key, value);
-    }
-
 	//this->_serverPort = this->_port;
 	// this->_serverSocket = ();
 	// this->_clientSocket = ();
@@ -104,6 +96,14 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
     // inet_addr(this->_sIpAddress.c_str()); // convert the IP address from a char * to a unsigned long and have it stored in network byte order
     // startServer();
     // startListen();
+
+    /*Fill Server Values*/
+    while (std::getline(ss, part, ';'))
+    {
+        std::string key = part.substr(0, part.find(':'));
+        std::string value = part.substr(part.find(':')+1);
+        setAttributes(key, value);
+    }
     // std::cout << "SERVER:\n" << *this << std::endl;
 }
 
@@ -494,6 +494,7 @@ void Server::initHost(std::string value)
             throw std::runtime_error("(4) invalid host address in server block.");
     }
     this->_host = inet_addr(value.c_str());
+	std::cerr << "INITHOST: host: " << this->_host << std::endl;
 }
 
 void Server::initServerName(std::string value)
@@ -531,14 +532,13 @@ void Server::initClientBodySize(std::string value)
 
 void Server::initRoot(std::string value)
 {
-    if (value[0] != '/')
-        throw std::runtime_error("root path must start with \'/\': path: " + value);
     if (value.at(value.length() - 1) == '/' && value.size() > 1)
         throw std::runtime_error("root path must *not* end with \'/\': path: " + value);
     if (pathIsDir(value) != IS_DIR)
         throw std::runtime_error("root path is not a valid directory: path: " + value);
     // if (!pathExists(value))
     //     throw std::runtime_error("bananaaaaaaaaaaaaa");
+	// things
     this->_root = value;
 }
 

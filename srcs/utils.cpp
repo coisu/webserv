@@ -83,8 +83,8 @@ int	pathIsDir(std::string path)
 		ret = IS_REG;
 	else{
 
-		if (!S_ISDIR(statbuf.st_mode))
-			return (std::cerr << "not a directory", N_DIR);
+		// if (!S_ISDIR(statbuf.st_mode))
+		// 	return (std::cerr << "not a directory", N_DIR);
 		if (!(statbuf.st_mode & S_IRUSR))	// read permissions
 			return (std::cerr << "no read permissions", N_PERMIT_READ);
 		if (!(statbuf.st_mode & S_IWUSR))	// write permissions

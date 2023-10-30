@@ -4,7 +4,7 @@ INC_DIR = includes/
 INCLUDES = $(INC_DIR)*.h*
 FLAGS = -std=c++98
 FLAGS += -Wall -Werror -Wextra
-FLAGS += -g3
+FLAGS += -g3 -fno-limit-debug-info 
 FLAGS += -I$(INC_DIR)
 
 BINARY = serv

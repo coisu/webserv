@@ -22,8 +22,10 @@ int main(int ac, char **av) {
 		// Response Error(404, r, s);
 
 		// ParseConfig	config("./resources/default.conf");
-
-		servers = parseConfig("./resources/default.conf");
+		if (ac == 2)
+			servers = parseConfig(av[1]);
+		else
+			servers = parseConfig("./resources/default.conf");
 
 		for (size_t i = 0; i < servers.size(); i++)
 		{

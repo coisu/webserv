@@ -156,19 +156,24 @@ std::string Response::processResponse()
 		std::cout << "\nSUCCEED!!!!\n\n";
 		_target_path += _location.getIndex();
 	}
-	else if (_location.getIndex() == "" && _location.getRet() == "" && !_location.getIsCGI() && pathExists(_target_path + "index.html"))
+	else if (_location.getIndex() == "" && _location.getRet() == "" \
+			 && !_location.getIsCGI() && pathExists(_target_path + "index.html") \
+			 && _currentMethod != POST)
 	{
 		_target_path += "index.html";
 	}
-	if (!_location.getAutoIndex() && _location.getRet().empty() && _currentMethod != POST)
+	if (!_location.getAutoIndex() && _location.getRet() == "")
 	{
 		std::cout << "**[TARGET_FILE] : " << _target_path << std::endl;
 		int ret = pathIsDir(_target_path);
 		if (ret == IS_DIR)
 		{
-			setStatus(403);
+			if (_currentMethod == POST)
+				setStatus(405);
+			else
+				setStatus(403);
 		}
-		if (!pathExists(_target_path))
+		if (!pathExists(_target_path) && _currentMethod != POST)
 		{
 			setStatus(404);
 		}
@@ -356,8 +361,11 @@ void Response::buildBodywithMethod(std::string ext)
 				else
 				{
 					std::cout << "POST creating failed : stat : " << ret <<std::endl;
-					_status = 403;
-					_body = _request.getBody();
+					if (ret == IS_DIR)
+						_status = 405;
+					else
+						_status = 403;
+					// _body = _request.getBody();
 				}
 
 			}

@@ -28,6 +28,7 @@ class Location
 		std::string getPath() const;
         std::string getRet() const;
         std::string getIndex() const;
+        std::string getAlias() const;
 		bool		getIsCGI() const;
         bool        getAutoIndex() const;
 		std::map<std::string, std::string>		getCGIConfig() const;

@@ -134,7 +134,6 @@ std::string Response::processResponse()
 
 	if (_currentMethod == DELETE && _status == 404)
 		_status = -1;
-
 	if (_request.getBody().length() > _server.getClientBodySize())
 	{
 		std::cout << "_request.getBody() : " << _request.getBody() << std::endl;
@@ -147,6 +146,21 @@ std::string Response::processResponse()
 		Location L("location/;allow_methods:DELETE,POST,GET;autoindex:on;");
 		std::cout << "Location set with default\n";
 		setLocation(L);
+	}
+
+	setTargetPath();
+
+
+
+	if (_location.getAlias() != "")
+	{
+		std::string file;
+		std::string uri = _request.getURL();
+		std::cout <<  "request uri : " << uri << std::endl;
+		file = uri.substr(uri.rfind("/"), uri.length());
+		std::cout << "rfind index : " << uri.rfind("/") << ", length : " << uri.length() <<std::endl;
+		std::cout << "derective file is : " << file <<std::endl ;
+		_target_path = _location.getIndex() == "" ? _location.getAlias() + file : _location.getAlias() + file + _location.getIndex();
 	}
 	std::cout << "****target path : " << _target_path << "\n****method : " << _currentMethod << std::endl;
 
@@ -173,6 +187,8 @@ std::string Response::processResponse()
 			else
 				setStatus(403);
 		}
+		else
+
 		if (!pathExists(_target_path) && _currentMethod != POST)
 		{
 			setStatus(404);
@@ -279,6 +295,45 @@ std::string Response::processResponse()
 
 	std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
 	return _buffer;
+}
+
+void Response::setTargetPath()
+{
+	/* CASE: alias O */
+	if (_location.getAlias() != "")		// manage casese Alias Exist
+	{
+		std::string file;
+		std::string uri = _request.getURL();
+		int idx = uri.find(_location.getPath());
+		if (idx != std::string::npos)
+			idx += _location.getPath().length();
+		resource = uri.substr(idx, uri.length());
+		std::cout << "derective addr is : " << resource <<std::endl ;
+		if (_location.getIndex() == "")
+			_target_path = _location.getAlias() + resource;
+		else							// Alias with index
+		{
+			int aliasRes = pathIsDir(_location.getAlias() + resource;);
+			if (aliasRes == IS_DIR || (aliasRes == N_FOUND))
+			{
+				_target_path = _location.getAlias() + _location.getIndex();
+			}
+			else
+			{
+				_target_path = _target_path = _location.getAlias() + resource;
+				if (pathExists(_location.getAlias() + _location.getIndex()))
+				{
+					_target_path = _location.getAlias() + _location.getIndex();
+				}
+			}
+		}
+		std::cout << "****target path : " << _target_path << "\n****method : " << _currentMethod << std::endl;
+	}
+	/* CASE: alias X, index O */
+	else if (_location.getIndex() != "")
+	{
+
+	}
 }
 
 void Response::buildBodywithMethod(std::string ext)

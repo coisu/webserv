@@ -269,7 +269,7 @@ std::string Response::processResponse()
 	else
 		_headerStr += buildHeaderCgi(_body, _status);
 
-	_buffer = (_currentMethod == DELETE) ? _headerStr + "\r\n" : _headerStr + "\r\n" + _body + "\r\n";
+	_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + "\r\n" + _body + "\r\n";
 
 
 	std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
@@ -345,7 +345,7 @@ void Response::buildBodywithMethod(std::string ext)
 					std::cout << "\n   request body : " << reqBody << std::endl;
 					_body = reqBody;
 					std::cout << "Content-type : " << _headers["Content-Type"] <<std::endl;
-					int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC);
+					int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0665);
 					if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
 					{
 						std::cout << "Created by POST at " << _target_path <<std::endl;
@@ -682,6 +682,10 @@ int	Response::execteDelete(void)
 	{
 		status = 204;
 	}
+	else
+	{
+		_body = "\r\nSuccessfully deleted: " + _target_path;
+	}
 	return (status);
 }
 
@@ -694,7 +698,6 @@ std::string		Response::buildHeader(int bodySize, int status)
 	header += makeTimeLine(false);
 	header += appendMapHeaders(false, status);
 	
-
 	return (header);
 }
 
@@ -714,7 +717,7 @@ std::string		Response::buildHeaderCgi(std::string &body, int status)
 		body = tmp.substr(n, tmp.size());
 	}
 
-	if (_request.getMethodEnum() == DELETE)
+	if (_request.getMethodEnum() == DELETE && _status == 204)
 	{
 		setContentLength(0);
 	}

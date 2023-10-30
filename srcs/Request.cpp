@@ -13,6 +13,7 @@ Request::Request(std::map<std::string, std::string> header, std::string body, st
 	this->_url = extractURL(this->_info);
 	this->_locPath = this->_server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
 	std::cerr << "CONSTRUCT locPath: " << this->_locPath << std::endl;
+	std::cerr << "INFO: " << this->_info << std::endl;
 }
 
 Request::~Request() {} 
@@ -72,11 +73,13 @@ e_method	Request::extractMethodType(std::string info)
 	std::string methods[3] = {"GET", "POST", "DELETE"};
 	std::string	type;
 
-	while (!std::isspace(info[n]))
+	while (n < info.size() && !std::isspace(info[n]))
 		n++;
 	type = info.substr(0, n);
 	while (!methods[i].empty() && methods[i] != type)
 		i++;
+	// if (i > 2)
+	// 	i = -;
 	return ((t_method)i);
 }
 
@@ -85,7 +88,7 @@ std::string	Request::extractURL(std::string info)
 	size_t	i, n = 0;
 
 	i = info.find_first_of('/');
-	while (!std::isspace(info[i + n]))
+	while (i + n < info.size() && !std::isspace(info[i + n]))
 		n++;
 	return (info.substr(i, n));
 }

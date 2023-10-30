@@ -1,29 +1,5 @@
 #include "utils.hpp"
 
-// e_method	Request::extractMethodType(std::string info)
-// {
-// 	size_t		i = 0, n = 0;
-// 	std::string methods[3] = {"GET", "POST", "DELETE"};
-// 	std::string	type;
-
-// 	while (!std::isspace(info[n]))
-// 		n++;
-// 	type = info.substr(0, n);
-// 	while (!methods[i].empty() && methods[i] != type)
-// 		i++;
-// 	return ((t_method)i);
-// }
-
-// std::string	Request::extractURL(std::string info)
-// {
-// 	size_t	i, n = 0;
-
-// 	i = info.find_first_of('/');
-// 	while (!std::isspace(info[i + n]))
-// 		n++;
-// 	return (info.substr(i, n));
-// }
-
 bool	pathExists(std::string path)
 {
 	struct stat	statbuf;

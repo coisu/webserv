@@ -6,7 +6,7 @@ Request::Request(std::map<std::string, std::string> header, std::string body, st
 {
 
 	std::string key, val;
-	std::string methods[3] = {"GET", "POST", "DELETE"};
+	std::string methods[4] = {"GET", "POST", "DELETE", "INVALID"};
 
 	this->_method_enum = extractMethodType(this->_info);
 	this->_method_str = methods[this->_method_enum];
@@ -69,13 +69,13 @@ void	Request::printRequest( void )
 e_method	Request::extractMethodType(std::string info)
 {
 	size_t		i = 0, n = 0;
-	std::string methods[3] = {"GET", "POST", "DELETE"};
+	std::string methods[4] = {"GET", "POST", "DELETE", "INVALID"};
 	std::string	type;
 
-	while (!std::isspace(info[n]))
+	while (n < info.size() && !std::isspace(info[n]))
 		n++;
 	type = info.substr(0, n);
-	while (!methods[i].empty() && methods[i] != type)
+	while (i < 3 && !methods[i].empty() && methods[i] != type)
 		i++;
 	return ((t_method)i);
 }
@@ -85,7 +85,7 @@ std::string	Request::extractURL(std::string info)
 	size_t	i, n = 0;
 
 	i = info.find_first_of('/');
-	while (!std::isspace(info[i + n]))
+	while (i + n < info.size() && !std::isspace(info[i + n]))
 		n++;
 	return (info.substr(i, n));
 }

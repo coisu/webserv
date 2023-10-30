@@ -140,7 +140,7 @@ std::string Response::processResponse()
 		std::cout << "clien max body size : " << _server.getClientBodySize() << std::endl << std::endl;
 		setStatus(413);
 	}
-	// setRequestVal();
+	setRequestVal();
 	if(!checkSetLocation(_target_path))
 	{
 		Location L("location/;allow_methods:DELETE,POST,GET;autoindex:on;");
@@ -148,7 +148,7 @@ std::string Response::processResponse()
 		setLocation(L);
 	}
 
-	setTargetPath();
+	// setTargetPath();
 
 
 
@@ -195,7 +195,8 @@ std::string Response::processResponse()
 		}
 	}
 	std::string ext = getExt(_target_path);
-	setContentType(ext); 
+	if (_headers["Content-Type"] == "")
+		setContentType(ext); 
 	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;
 	std::cout << "LOC   [PATH] : " << _location.getPath() << std::endl;
 	std::cout << "LOC [RETURN] : " << _location.getRet() << std::endl;
@@ -299,12 +300,13 @@ std::string Response::processResponse()
 
 void Response::setTargetPath()
 {
+	// _Target_path = locPath
 	/* CASE: alias O */
+	std::string uri = _request.getURL();
 	if (_location.getAlias() != "")		// manage casese Alias Exist
 	{
-		std::string file;
-		std::string uri = _request.getURL();
-		int idx = uri.find(_location.getPath());
+		std::string resource;
+		unsigned int idx = uri.find(_location.getPath());
 		if (idx != std::string::npos)
 			idx += _location.getPath().length();
 		resource = uri.substr(idx, uri.length());
@@ -313,7 +315,7 @@ void Response::setTargetPath()
 			_target_path = _location.getAlias() + resource;
 		else							// Alias with index
 		{
-			int aliasRes = pathIsDir(_location.getAlias() + resource;);
+			int aliasRes = pathIsDir(_location.getAlias() + resource);
 			if (aliasRes == IS_DIR || (aliasRes == N_FOUND))
 			{
 				_target_path = _location.getAlias() + _location.getIndex();
@@ -329,11 +331,25 @@ void Response::setTargetPath()
 		}
 		std::cout << "****target path : " << _target_path << "\n****method : " << _currentMethod << std::endl;
 	}
-	/* CASE: alias X, index O */
-	else if (_location.getIndex() != "")
+	else 
 	{
+		/* CASE: alias X, index O */
+		if (pathIsDir(uri) == IS_REG || ())
+		if (_location.getIndex() != "")
+		{
+			if (pathIsDir(_target_path) == IS_DIR)
+			{
+				if (pathExists(_target_path + _location.getIndex()) 
+					|| _currentMethod == POST)
+			}
+		}
+		/* CASE: alias X, index X */
+		else 
+		{
 
+		}
 	}
+	/* handle return */
 }
 
 void Response::buildBodywithMethod(std::string ext)
@@ -404,6 +420,8 @@ void Response::buildBodywithMethod(std::string ext)
 					std::string reqBody = _request.getBody();
 					std::cout << "\n   request body : " << reqBody << std::endl;
 					_body = reqBody;
+					// if (ext == "html" && reqBody.find("&") != std::string::npos)
+					// 	_headers["Content-Type"] = "application/x-www-form-urlencoded";
 					std::cout << "Content-type : " << _headers["Content-Type"] <<std::endl;
 					int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0665);
 					if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
@@ -647,33 +665,32 @@ std::string	Response::getExt(std::string const &filename) const
     return ext;
 }
 
-// void	Response::setRequestVal(void)
-// {
-	// std::map<std::string, std::string> reqHead = _request.getHead();
-	// std::map<std::string, std::string>::iterator it=reqHead.begin();
+void	Response::setRequestVal(void)
+{
+	std::map<std::string, std::string> reqHead = _request.getHead();
+	// std::map<std::string, std::string>::iterator it = reqHead.begin();
 
 
-		// if (it->first != "Content-Length" && _headers.find(it->first) != _headers.end())
-		// {
-		// 	std::cout <<"IN?????" <<std::endl;
-		// 	_headers[it->first] = it->second;
-		// 	std::cout << "[ " << it->first << " ] : " << it->second << std::endl;
-		// }
-
-	// std::map<std::string, std::string>::iterator	itForHeader;
-	// // std::map<std::string, std::string>::iterator	it = ReqHead.begin();
-
-	// std::cout << "===========HERE==================" << std::endl;
-	// for (std::map<std::string, std::string>::iterator it = ReqHead.begin(); it != ReqHead.end(); ++it)
-	// {
-	// 	// itForHeader = _headers.find(it->first);
-	// 	// if (itForHeader != _headers.end() && itForHeader->first != "Content-Length")
-	// 	// {
- 	// 		_headers[itForHeader->first] = it->second;
-			// std::cout << "[ " << itForHeader->first << " ] : " << it->second << std::endl;
+	// 	if (it->first != "Content-Length" && _headers.find(it->first) != _headers.end())
+	// 	{
+	// 		std::cout <<"IN?????" <<std::endl;
+	// 		_headers[it->first] = it->second;
+	// 		std::cout << "[ " << it->first << " ] : " << it->second << std::endl;
 	// 	}
-	// }         
-// }
+	// std::map<std::string, std::string> Header = _request.getHead();
+
+	std::cout << "===========HERE==================" << std::endl;
+	for (std::map<std::string, std::string>::iterator it = reqHead.begin(); it != reqHead.end(); ++it)
+	{
+		// Header = _headers.find(it->first);
+		if (it != _headers.end() && it->first != "Content-Length" && _headers.find(it->first) != _headers.end())
+		{
+ 			_headers[it->first] = it->second;
+			std::cout << "[ " << it->first << " ] : " << it->second << std::endl;
+		}
+	}     
+}    
+
 
 void	Response::setContentType(std::string ext)
 {

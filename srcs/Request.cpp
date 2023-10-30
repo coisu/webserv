@@ -87,6 +87,8 @@ std::string	Request::extractURL(std::string info)
 	i = info.find_first_of('/');
 	while (i + n < info.size() && !std::isspace(info[i + n]))
 		n++;
+	// check differently for the request which contains http://
+	// check for all the enums in the code and make sure theres a case for when it is "INVALID"
 	return (info.substr(i, n));
 }
 

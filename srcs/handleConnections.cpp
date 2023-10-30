@@ -116,10 +116,6 @@ std::string makeResponse(int code, std::string body)
 
 int chooseServer(int clientSocket, ClientState client, std::vector<Server> &servers)
 {
-	(void)client;
-	(void)servers;
-	(void)clientSocket;
-	// Server*	selectedServer = NULL;
 	int	serverIndex = -1;
 	std::vector<Server>::iterator it;
 
@@ -130,23 +126,36 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 		std::cerr << "Error: problem directing to server\n"; // return server error
 	else
 		std::cout << "Port Number: " << ntohs(sin.sin_port) << std::endl;
+
 	// set the client values
 	unsigned int clientPort = sin.sin_port;
 	std::string clientName = client.header["Host"];
 	clientName = clientName.substr(0, clientName.find(':'));
+
 	std::cout << "HOST: " << clientName
 			  << "\nclient PORT: " << sin.sin_port
 			  << "\nserver[0] PORT: " << servers[0].getPort() << std::endl;
 
-	// select default server (server with no name)
+	// // select default server (server with no name)
+	// for (it = servers.begin(); it != servers.end(); it++)
+	// {
+	// 	if (it->getPort() == clientPort && it->getServerName().empty())
+	// 	{
+	// 		serverIndex = it - servers.begin();
+	// 		break ;
+	// 	}
+	// }
+
+	// The first server for a host:port will be the default for this host:port
 	for (it = servers.begin(); it != servers.end(); it++)
 	{
-		if (it->getPort() == clientPort && it->getServerName().empty())
+		if (it->getPort() == clientPort)
 		{
 			serverIndex = it - servers.begin();
 			break ;
 		}
 	}
+
 	// compare the client values with the server values to match the right server
 	for (it = servers.begin(); it != servers.end(); it++)
 	{

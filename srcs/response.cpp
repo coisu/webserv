@@ -241,7 +241,7 @@ std::string Response::processResponse()
 
 	if (_location.getIndex() != "" && ext != getExt(_location.getIndex()))
 	{
-		_status = 400;
+		_status = 404;
 	}
 	if (isAllowedMethod(_currentMethod) && (_status == -1 || _status == 302))
 		buildBodywithMethod(ext);

@@ -37,6 +37,7 @@ int main(int ac, char **av) {
 	}
 	catch(const std::exception& e)
 	{
+		std::cerr << "Error caught in main: ";
 		std::cerr << e.what() << '\n';
 	}
     return 0;

@@ -14,6 +14,7 @@
 #include "Response.hpp"
 #include "Request.hpp"
 #include "Server.hpp"
+#include "CGI.hpp"
 
 struct ClientState {
     std::string	incompleteRequest; // buffer for storing partial HTTP request
@@ -75,10 +76,10 @@ void    parseHttpRequest(ClientState &client)
 	}
 }
 
-std::string    printClient(ClientState &client)
+std::string    printClient(const ClientState &client)
 {
     std::ostringstream os;
-    std::map<std::string, std::string>::iterator it;
+    std::map<std::string, std::string>::const_iterator it;
     os << "INFO:" << std::endl << client.info << ";" << std::endl;
     os << "\nHEADER:" << std::endl;
     for (it = client.header.begin(); it != client.header.end(); it++)
@@ -87,19 +88,24 @@ std::string    printClient(ClientState &client)
     }
     os << "\nBODY:" << std::endl;
     os << "\"" << client.body << "\";" << std::endl;
-    std::string outy;
-    // std::map<std::string, std::string>::iterator it;
-    // outy += "INFO:\n" + client.info + ";\n";
-	// outy += "HEADER:\r\n\n\n\n\n\n";
-    // for (it = client.header.begin(); it != client.header.end(); it++)
-    // {
-    //     outy += it->first + ": " + it->second + ";\n";
-    // }
-    // outy += "BODY:\n";
-    // outy += client.body + ";\n";
-    // std::cout << os.str();
+
     return (os.str());
-    // return (outy);
+}
+
+std::string    printRequest(const Request &request)
+{
+    std::ostringstream os;
+    std::map<std::string, std::string>::const_iterator it;
+    
+	os << request.getInfo() << ";\n";
+    for (it = request.getHead().begin(); it != request.getHead().end(); it++)
+    {
+        os << it->first << ": " << it->second << ";" << std::endl;
+    }
+    os << "\n" << std::endl;
+    os << request.getBody() << ";" << std::endl;
+
+    return (os.str());
 }
 
 std::string makeResponse(int code, std::string body)
@@ -300,6 +306,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                 }
                 else
                 {
+					std::string fullResponseStr;
                     client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
                     parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 					if (client.requestCompleted == true) // <-- if the request has been fully parsed then create the response
@@ -313,7 +320,17 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 							try
 							{
 								Response response(request, servers[idx]); // <-- create response with request obj and selected server
-								client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
+                std::pair<bool, Location> loc_pair = servers[idx].srchLocation(request.getLocPath());
+                if (loc_pair.first && loc_pair.second.getIsCGI() 
+                && (!pathIsDir(request.getLocPath()) || !loc_pair.second.getIndex().empty()))
+                {
+                  CGI cgi(servers[idx], loc_pair.second, request);
+                  // CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
+                  fullResponseStr = cgi.exec_cgi();
+                }
+                else
+                  fullResponseStr = response.processResponse();
+                client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
 								client.requestCompleted = false; // <-- set to false so that next message will be read
 								// response.processResponse(statusCode);
 							}

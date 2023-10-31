@@ -71,7 +71,6 @@ debug: re
 
 # noinfo: FLAGS += -D LOG_LEVEL=1
 noinfo: re
-	FLAGS += -D LOG_LEVEL=1
 	./serv
 
 run: FLAGS += -D LOG_LEVEL=2

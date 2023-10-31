@@ -39,13 +39,14 @@ void	Location::initDefaults()
 
 void    Location::setAttributes(std::string key, std::string value)
 {
-    const int N = 7;
+    const int N = 8;
     std::string keys[N] = {"location", 
                           "alias", 
                           "index", 
                           "autoindex",
                           "return",
                           "allow_methods",
+                          "upload_store",
                           "cgi"};
     size_t i = 0;
     while (i < N && keys[i] != key)
@@ -71,6 +72,9 @@ void    Location::setAttributes(std::string key, std::string value)
         initAllowMethods(value);
         break;
     case 6:
+        initUploadStore(value);
+        break;
+    case 7:
         initCGI(value);
         break;
     default:
@@ -86,6 +90,7 @@ Location::Location( const Location& src )
     this->_autoIndex = src._autoIndex;
     this->_ret = src._ret;
     this->_allowMethods = src._allowMethods;
+    this->_uploadStore = src._uploadStore;
     this->_cgiConfig = src._cgiConfig;
     this->_block = src._block;
 	this->_isCgi = src._isCgi;
@@ -101,6 +106,7 @@ Location& Location::operator=( const Location& src )
         this->_autoIndex = src._autoIndex;
         this->_ret = src._ret;
         this->_allowMethods = src._allowMethods;
+        this->_uploadStore = src._uploadStore;
         this->_cgiConfig = src._cgiConfig;
         this->_block = src._block;
 		this->_isCgi = src._isCgi;
@@ -166,7 +172,7 @@ void Location::initAllowMethods(std::string value)
 {
     std::stringstream   ss(value);
     std::string         method;
-    std::string methods[3] = {"GET", "POST", "DELETE"};
+	std::string methods[4] = {"GET", "POST", "DELETE", "INVALID"};
 
     while (std::getline(ss, method, ','))
     {
@@ -188,6 +194,15 @@ void Location::initAllowMethods(std::string value)
             throw std::runtime_error("unrecognised/unsupported method: " + method);
         }
     }
+}
+
+void Location::initUploadStore(std::string value)
+{
+    if (value[0] != '/')
+        throw std::runtime_error("upload path must start with \'/\' - path: " + value);
+    if (value.at(value.length() - 1) == '/' && value.size() > 1)
+        throw std::runtime_error("upload path must *not* end with \'/\' - path: " + value);
+    this->_uploadStore = value;
 }
 
 void Location::initCGI(std::string value)
@@ -223,6 +238,10 @@ std::string Location::getIndex() const
     return (this->_index);
 }
 
+std::string Location::getAlias() const
+{
+    return (this->_alias);
+}
 
 bool	Location::getIsCGI() const
 {
@@ -243,4 +262,9 @@ std::map<std::string, std::string>	Location::getCGIConfig() const
 std::vector<int>    Location::getAllowMethods() const
 {
     return (this->_allowMethods);
+}
+
+std::string   Location::getUploadStore() const
+{
+    return (this->_uploadStore);
 }

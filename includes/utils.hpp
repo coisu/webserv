@@ -55,6 +55,10 @@
 #define N_PERMIT_EXEC 6
 #define UNDEFINE 7
 
+#ifndef LOG_LEVEL
+# define LOG_LEVEL 1
+#endif
+
 #define reset "\e[m"                 //ANSI CODE 0   → resets all styles, it's the same of \e[0m
 
 #define bold "\e[1m"                //# ANSI CODE 1   → increases intensity, with a slight color change
@@ -95,8 +99,8 @@
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
-#define ERROR		-1
-#define SUCCESS		0
+// #define ERROR		-1
+// #define SUCCESS		0
 #define BUFFER_SIZE	1024
 
 extern int global_running_flag;
@@ -106,9 +110,15 @@ typedef enum e_method
 	GET,
 	POST,
 	DELETE,
-	UNDEFINED
+	INVALID
 } t_method;
 
+typedef enum e_level
+{
+	ERROR,
+	INFO,
+	DEBUG
+} t_level;
 // typedef struct TempConfig
 // {
 // 	std::string	root;
@@ -124,10 +134,12 @@ bool						pathExists(std::string path);
 std::string					readFile(std::string location);
 std::vector<std::string>	splitUrl(std::string url);
 int						pathIsDir(std::string path);
+int getpermit(std::string path);
 bool						isNumeric(std::string const &str);
 std::string					trimWhiteSpace( const std::string &str );
 
 void	handleConnections(std::vector<Server> &servers);
+void	ft_logger(std::string thing, int level, std::string FILE, int LINE);
 
 
 #endif

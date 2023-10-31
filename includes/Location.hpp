@@ -28,11 +28,14 @@ class Location
 		std::string getPath() const;
         std::string getRet() const;
         std::string getIndex() const;
+        std::string getAlias() const;
 		bool		getIsCGI() const;
         bool        getAutoIndex() const;
 		std::map<std::string, std::string>		getCGIConfig() const;
-        std::vector<int>    getAllowMethods() const;
+        std::vector<int>                        getAllowMethods() const;
+        std::string                             getUploadStore() const;
         //setters
+    
     private:
     /*methods*/
         void    setAttributes(std::string key, std::string value);
@@ -42,8 +45,8 @@ class Location
         void    initAutoIndex(std::string value);
         void    initRet(std::string value);
         void    initAllowMethods(std::string value);
+        void    initUploadStore(std::string value);
         void    initCGI(std::string value);
-
 		void	initDefaults();
 
     /*attributes*/
@@ -53,6 +56,7 @@ class Location
         bool                                _autoIndex;
         std::string                         _ret;
         std::vector<int>                    _allowMethods;
+        std::string                         _uploadStore;
         std::map<std::string, std::string>  _cgiConfig;
         std::string                         _block;
 		bool								_isCgi;

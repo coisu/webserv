@@ -122,10 +122,6 @@ std::string makeResponse(int code, std::string body)
 
 int chooseServer(int clientSocket, ClientState client, std::vector<Server> &servers)
 {
-	(void)client;
-	(void)servers;
-	(void)clientSocket;
-	// Server*	selectedServer = NULL;
 	int	serverIndex = -1;
 	std::vector<Server>::iterator it;
 
@@ -136,23 +132,36 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 		std::cerr << "Error: problem directing to server\n"; // return server error
 	else
 		std::cout << "Port Number: " << ntohs(sin.sin_port) << std::endl;
+
 	// set the client values
 	unsigned int clientPort = sin.sin_port;
 	std::string clientName = client.header["Host"];
 	clientName = clientName.substr(0, clientName.find(':'));
-	// std::cout << "HOST: " << clientName
-			//   << "\nclient PORT: " << sin.sin_port
-			//   << "\nserver[0] PORT: " << servers[0].getPort() << std::endl;
 
-	// select default server (server with no name)
+	// std::cout << "HOST: " << clientName
+	// 		  << "\nclient PORT: " << sin.sin_port
+	// 		  << "\nserver[0] PORT: " << servers[0].getPort() << std::endl;
+
+	// // select default server (server with no name)
+	// for (it = servers.begin(); it != servers.end(); it++)
+	// {
+	// 	if (it->getPort() == clientPort && it->getServerName().empty())
+	// 	{
+	// 		serverIndex = it - servers.begin();
+	// 		break ;
+	// 	}
+	// }
+
+	// The first server for a host:port will be the default for this host:port
 	for (it = servers.begin(); it != servers.end(); it++)
 	{
-		if (it->getPort() == clientPort && it->getServerName().empty())
+		if (it->getPort() == clientPort)
 		{
 			serverIndex = it - servers.begin();
 			break ;
 		}
 	}
+
 	// compare the client values with the server values to match the right server
 	for (it = servers.begin(); it != servers.end(); it++)
 	{
@@ -227,7 +236,10 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
         {
             // throw std::runtime_error("Select() failed");
 			if (global_running_flag == true)
+			{
+				perror("select"); // <-- COMMENT THIS OUT LATER
 				std::cerr << "Error: select() failed\n";
+			}
             continue ;
         }
         // Loop through the server sockets to find the one that is ready.
@@ -260,6 +272,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                             << inet_ntoa(clientSocketAddress.sin_addr) 
                             << ":" << ntohs(clientSocketAddress.sin_port) 
                             << std::endl;
+				ft_logger("New connection incomming", INFO, __FILE__, __LINE__);
             }
         }
         // Loop through clients and check for readiness for reading and writing
@@ -296,31 +309,48 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 					std::string fullResponseStr;
                     client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
                     parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
-					if (client.requestCompleted == true)
+					if (client.requestCompleted == true) // <-- if the request has been fully parsed then create the response
 					{
-						int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
-						if (idx == -1)
+						try
 						{
-							std::cerr << "\n\n-------------------PROBLEM--------------------------\n\n";
-							// return 404 error
+							int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
+							if (idx < 0 || (size_t)idx >= servers.size())
+								throw 404;
+							Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
+							try
+							{
+								Response response(request, servers[idx]); // <-- create response with request obj and selected server
+                std::pair<bool, Location> loc_pair = servers[idx].srchLocation(request.getLocPath());
+                if (loc_pair.first && loc_pair.second.getIsCGI() 
+                && (!pathIsDir(request.getLocPath()) || !loc_pair.second.getIndex().empty()))
+                {
+                  CGI cgi(servers[idx], loc_pair.second, request);
+                  // CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
+                  fullResponseStr = cgi.exec_cgi();
+                }
+                else
+                  fullResponseStr = response.processResponse();
+                client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
+								client.requestCompleted = false; // <-- set to false so that next message will be read
+								// response.processResponse(statusCode);
+							}
+							catch(int errorCode)
+							{
+								std::cerr << "Error: " << errorCode << std::endl;
+								// response.processError(errorCode);
+								// return 404 error
+							}
 						}
-						// std::cout << "Server Port: " << servers[idx]
-						// std::cout << "SERVER PTR: " << server << std::endl;
-						Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
-                        Response response(request, servers[idx]); // <-- create response with request obj and selected server
-						std::pair<bool, Location> loc_pair = servers[idx].srchLocation(request.getLocPath());
-						if (loc_pair.first && loc_pair.second.getIsCGI() 
-						&& (!pathIsDir(request.getLocPath()) || !loc_pair.second.getIndex().empty()))
+						catch(int errorCode)
 						{
-							CGI cgi(servers[idx], loc_pair.second, request);
-							// CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
-							fullResponseStr = cgi.exec_cgi();
+							std::cerr << "Error: " << errorCode << std::endl;
+							// return the error that corresponds to the error code
 						}
-						else
-							fullResponseStr = response.processResponse();
-						client.responseQueue.push(fullResponseStr); // <-- push processed response to the queue
-						// std::cout << "---------RESPONSE----------\n" << client.responseQueue.back() << "\n-----------END------------\n";
-						client.requestCompleted = false;
+						catch(std::exception &e)
+						{
+							std::cerr << "Error: " << e.what() << std::endl;
+							// return server error 500
+						}
 					}
                     // if (bytesReceived < 1024)
                     //     client.incompleteResponse = makeResponse(200, printClient(client));
@@ -351,61 +381,81 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 	FD_ZERO(&writeSet);
 	for (it = clients.begin(); it != clients.end(); it++)
 		close(it->first);
-    for (size_t i = 0; i < serverSockets.size(); i++)
-        close(serverSockets[i]);
+	for (size_t i = 0; i < serverSockets.size(); i++)
+		close(serverSockets[i]);
 }
 
-std::vector<int> getPorts(std::vector<Server> &servers)
-{
-    std::vector<int> ports;
+// std::vector<int> getPorts(std::vector<Server> &servers)
+// {
+//     std::vector<int> ports;
 
-    for (size_t i = 0; i < servers.size(); i++)
+//     for (size_t i = 0; i < servers.size(); i++)
+//     {
+        
+//         ports.push_back(servers[i].getPort());
+//     }
+//     return ports;
+// }
+
+std::set<int> getPorts(const std::vector<Server>& servers)
+{
+    std::set<int> ports;
+
+    for (std::vector<Server>::const_iterator it = servers.begin(); it != servers.end(); ++it)
     {
-        ports.push_back(servers[i].getPort());
+        ports.insert(it->getPort());
     }
+    
     return ports;
 }
 
 void handleConnections(std::vector<Server> &servers)
 {
-    const std::vector<int> portVec = getPorts(servers);  // Get all the different ports in the servers
+    //const std::vector<int> portVec = getPorts(servers);  // Get all the different ports in the servers
+    const std::set<int> portSet = getPorts(servers);  // Get all the different ports in the servers
 
     // Create a vector to store socket descriptors for multiple ports.
     std::vector<int>    serverSockets;
     int                 maxSocket = 0;
 
     // Create and initialize sockets for each port.
-    for (size_t i = 0; i < portVec.size(); i++)
+    // for (size_t i = 0; i < portVec.size(); i++)
+    for (std::set<int>::iterator it = portSet.begin(); it != portSet.end(); it++)
     {
+        int port = *it;
         int currentSocket = socket(AF_INET, SOCK_STREAM, 0);
         if (currentSocket == -1) {
-            std::cerr << "Error creating socket for port " << i << std::endl;
+            // std::cerr << "Error creating socket for port " << i << std::endl;
+            std::cerr << "Error creating socket for port " << port << std::endl;
         }
         serverSockets.push_back(currentSocket);
 
         // Set up the server address structure.
         struct sockaddr_in  serverSocketAddress;
         serverSocketAddress.sin_family = AF_INET; // for IPv4
-        serverSocketAddress.sin_port = portVec[i];
+        // serverSocketAddress.sin_port = portVec[i];
+        serverSocketAddress.sin_port = port;
         serverSocketAddress.sin_addr.s_addr = INADDR_ANY;
 
-        std::cout << "PORT: " << ntohs(portVec[i]) << std::endl;
+        std::cout << "PORT: " << ntohs(port) << std::endl;
         
         // Bind the socket to the address and port.
+		    int yes = 1;
+		    if (setsockopt(currentSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
+			    perror("setsockopt"); // <-- COMMENT THIS OUT LATER
+		    }
         if (bind(currentSocket,(struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress)) < 0)
         {
-			perror("PERROR");
-			close(currentSocket);
+		        close(currentSocket);
+			      perror("bind failed"); // <-- COMMENT THIS OUT LATER
             throw std::runtime_error("Cannot bind socket to address");
         }
-
         // Listen for incoming connections.
         if (listen(currentSocket, 10) < 0)
-		{
-			close(currentSocket);
+		    {
+		        close(currentSocket);
             throw std::runtime_error("Socket listen failed");
-		}
-
+		    }
         std::ostringstream ss;
         ss << "\n*** Listening on ADDRESS: " 
         << inet_ntoa(serverSocketAddress.sin_addr) // convert the IP address (binary) in string
@@ -426,7 +476,6 @@ void handleConnections(std::vector<Server> &servers)
         if (currentSocket > maxSocket) {
             maxSocket = currentSocket;
         }
-
     }
 
     std::cout << "Server is listening on multiple ports..." << std::endl;

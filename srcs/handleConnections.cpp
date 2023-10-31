@@ -19,6 +19,7 @@
 struct ClientState {
 	std::string	incompleteRequest; // buffer for storing partial HTTP request
 	std::string	incompleteResponse; // buffer for storing partial HTTP response
+	bool		isCGI;
 	bool		isChunked;
 	bool		isReceivingBody;
 	bool		isClosing;
@@ -31,6 +32,12 @@ struct ClientState {
 	std::string							info;
 	std::queue<std::string>				responseQueue;
 	// ... other states like request headers, method, etc.
+};
+
+struct CgiState {
+	std::string incompleteResponse;
+	bool		isFinished;
+	int			clientSocket;
 };
 
 void    parseHttpRequest(ClientState &client)
@@ -172,17 +179,6 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 		}
 	}
 
-	// for (it = servers.begin(); it != servers.end(); )
-	// {
-	// 	std::string		serverName = it->getServerName();
-	// 	unsigned int	serverPort = it->getPort();
-	// 	// erase from list if the ports dont match or the names dont match, keep if name is empty (default server)
-	// 	if (serverPort != clientPort || (!serverName.empty() && serverName != clientName))
-	// 		servers.erase(it++);
-	// 	else
-	// 		it++;
-	// }
-
 	// return NULL if no server was found and there are no default servers (servers with no name)
 	return (serverIndex);
 }
@@ -195,11 +191,13 @@ void signalHandler(int signum)
 	global_running_flag = 0; // Set the flag to break out of the loop
 }
 
-void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<Server> &servers)
+void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<Server> &servers)
 {
 	fd_set  readSet, writeSet;
-	std::map<int, ClientState> clients;
-	std::map<int, ClientState>::iterator   it;
+	std::map<int, ClientState>				clients;
+	std::map<int, ClientState>::iterator	it;
+	std::map<int, CgiState>					cgi_map;
+	std::map<int, CgiState>::iterator		cgi_it;
 
 	signal(SIGINT, signalHandler);
 
@@ -212,6 +210,10 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 		// Add all server sockets to the set.
 		for (size_t i = 0; i < serverSockets.size(); i++)
 			FD_SET(serverSockets[i], &readSet);
+
+		// Add all cgis to the set.
+		for (cgi_it = cgi_map.begin(); cgi_it != cgi_map.end(); cgi_it++)
+			FD_SET(cgi_it->first, &readSet);
 
 		// Add all client sockets to writeSet and readSet
 		for (it = clients.begin(); it != clients.end(); )
@@ -231,12 +233,14 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 				it++;
 			}
 		}
+
 		// wait for activity on sockets in readSet and writeSet
 		if (select(maxSocket + 1, &readSet, &writeSet, NULL, NULL) == -1)
 		{
 			// throw std::runtime_error("Select() failed");
 			if (global_running_flag == true)
 			{
+				exit(1);
 				perror("select"); // <-- COMMENT THIS OUT LATER
 				std::cerr << "Error: select() failed\n";
 			}
@@ -265,7 +269,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 				if (clientSocket > maxSocket)
 					maxSocket = clientSocket;
 				// clients[clientSocket] = (ClientState){};
-				clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, false, 0, 0, 
+				clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, false, false, 0, 0, 
 													  std::map<std::string, std::string>(), std::string(), std::string(), std::queue<std::string>()};
 				// clients[clientSocket] = (ClientState){0, 0, 0, 0, 0, 0, std::map<std::string, std::string>(), 0, 0};
 				std::cout << "New connection incomming: " 
@@ -275,6 +279,68 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 				ft_logger("New connection incomming", INFO, __FILE__, __LINE__);
 			}
 		}
+
+		// Loop through cgi_map to check for readiness for reading
+		for (cgi_it = cgi_map.begin(); cgi_it != cgi_map.end(); )
+		{
+			int	cgiSocket = cgi_it->first;
+			CgiState &cgi = cgi_it->second;
+
+			if (cgi.incompleteResponse.empty() && cgi.isFinished == true)
+			{
+				ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+				close(cgiSocket);
+				FD_CLR(cgiSocket, &readSet);
+				cgi_map.erase(cgi_it++);
+				continue ;
+			}
+			else if (FD_ISSET(cgiSocket, &readSet))
+			{
+				char	buffer[1024];
+				bytesReceived = read(cgiSocket, buffer, sizeof(buffer));
+				if (bytesReceived <= 0)
+				{
+					if (bytesReceived == -1)
+					{
+						ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+						std::cerr << "Error reading from CGI" << std::endl;
+						close(cgiSocket);
+						FD_CLR(cgiSocket, &readSet);
+						cgi.isFinished = true;
+						cgi_map.erase(cgi_it++);
+						continue ;
+					}
+					if (bytesReceived == 0)
+					{
+						ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+						std::cout << "RECV CGI RETURNED ZERO\n";
+						cgi.isFinished = true;
+						clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
+						cgi.incompleteResponse.clear();
+						cgi_map.erase(cgi_it++);
+						continue ;
+					}
+				}
+				else
+				{
+					ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+					cgi.incompleteResponse.append(buffer, bytesReceived); // <-- append received data
+					if (cgi.incompleteResponse.find("\r\n\r\n") != std::string::npos)
+					{
+						ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+						std::cout << "CGI RESPONSE:\n" << cgi.incompleteResponse << std::endl;
+						cgi.isFinished = true;
+						clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
+						cgi.incompleteResponse.clear();
+						close(cgiSocket);
+						cgi_map.erase(cgi_it++);
+						continue ;
+					}
+				}
+			}
+			cgi_it++;
+		}
+
 		// Loop through clients and check for readiness for reading and writing
 		for (it = clients.begin(); it != clients.end(); it++)
 		{
@@ -326,7 +392,9 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 								{
 									CGI cgi(servers[idx], loc_pair.second, request);
 									// CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
-									fullResponseStr = cgi.exec_cgi();
+									int fd;
+									cgi.exec_cgi(fd);
+									cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
 								}
 								else
 								fullResponseStr = response.processResponse();
@@ -426,14 +494,14 @@ void handleConnections(std::vector<Server> &servers)
 		std::cout << "PORT: " << ntohs(port) << std::endl;
 		
 		// Bind the socket to the address and port.
-			int yes = 1;
-			if (setsockopt(currentSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
-				perror("setsockopt"); // <-- COMMENT THIS OUT LATER
-			}
+		int yes = 1;
+		if (setsockopt(currentSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
+			perror("setsockopt"); // <-- COMMENT THIS OUT LATER
+		}
 		if (bind(currentSocket,(struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress)) < 0)
 		{
-				close(currentSocket);
-				  perror("bind failed"); // <-- COMMENT THIS OUT LATER
+			close(currentSocket);
+				perror("bind failed"); // <-- COMMENT THIS OUT LATER
 			throw std::runtime_error("Cannot bind socket to address");
 		}
 		// Listen for incoming connections.

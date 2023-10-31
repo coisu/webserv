@@ -70,7 +70,7 @@ std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std
 	identifyCGI(urlvec);
 	this->_av[0] = const_cast<char*>(this->_program.c_str());
 	this->_av[1] = const_cast<char*>(this->_script.c_str());
-	this->_av[3] = NULL;
+	this->_av[2] = NULL;
 	return (env);
 }
 
@@ -104,7 +104,7 @@ char**	CGI::getCharEnv( void )
 #include <string.h>
 #include <stdio.h>
 
-std::string CGI::exec_cgi( void )
+void CGI::exec_cgi( int &fd )
 {
 	int pipefd[2];
 	pid_t pid;
@@ -113,7 +113,7 @@ std::string CGI::exec_cgi( void )
 		throw std::runtime_error("Failed to run CGI: argv is empty");
 	const char* cgi_path = argv[0];
 	char** const envp = this->getCharEnv();
-	std::string response;
+	// std::string response;
 
 	// Create a pipe
 	if (pipe(pipefd) == -1)
@@ -123,6 +123,7 @@ std::string CGI::exec_cgi( void )
 		throw std::runtime_error("Failed to create pipe");
 	}
 
+	fd = pipefd[0];
 	// Fork the process
 	pid = fork();
 	if (pid == -1)
@@ -154,21 +155,21 @@ std::string CGI::exec_cgi( void )
 		// Close write end in parent
 		close(pipefd[1]);
 
-		char buffer[1024];
-		ssize_t bytesRead;
-		while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
-		{
+		// char buffer[1024];
+		// ssize_t bytesRead;
+		// while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
+		// {
 			// Here, buffer contains bytesRead bytes of output from the CGI program.
 			// Send this back as the HTTP response.
-			response += buffer;
+			// response += buffer;
 			// write()
 			// write(STDOUT_FILENO, buffer, bytesRead);
-		}
+		// }
 
-		close(pipefd[0]);
-		waitpid(pid, NULL, 0);
+		// close(pipefd[0]);
+		// waitpid(pid, NULL, 0);
 	}
-	return (response);
+	// return (response);
 }
 
 // std::string	CGI::exec_cgi( void )

@@ -9,7 +9,7 @@ Request::Request(std::map<std::string, std::string> header, std::string body, st
 	std::string methods[4] = {"GET", "POST", "DELETE", "INVALID"};
 
 	this->_method_enum = extractMethodType(this->_info);
-	this->_method_str = methods[this->_method_enum];
+	this->_method_str = this->_method_enum < 3 ? methods[this->_method_enum] : "INVALID";
 	this->_url = extractURL(this->_info);
 	this->_locPath = this->_server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
 	std::cerr << "CONSTRUCT locPath: " << this->_locPath << std::endl;
@@ -84,7 +84,13 @@ std::string	Request::extractURL(std::string info)
 {
 	size_t	i, n = 0;
 
-	i = info.find_first_of('/');
+	if (info.find("http://") != std::string::npos)
+	{
+		i = info.find("http://") + 7;
+		i = info.find_first_of('/', i);
+	}
+	if (i == std::string::npos)
+		return (std::string());
 	while (i + n < info.size() && !std::isspace(info[i + n]))
 		n++;
 	// check differently for the request which contains http://

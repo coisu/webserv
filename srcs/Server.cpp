@@ -237,7 +237,7 @@ void Server::startListen()
     if (listen(_serverSocket, 10) < 0)
         exitWithError("Socket listen failed");
     if (setsockopt(_serverSocket,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes) == -1) {
-        perror("setsockopt");
+        perror("setsockopt"); // <-- COMMENT THIS OUT LATER
         exit(1);
     } 
     if (fcntl(_serverSocket, F_SETFL, O_NONBLOCK) < 0)

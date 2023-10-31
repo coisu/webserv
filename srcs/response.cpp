@@ -181,8 +181,12 @@ std::string Response::processResponse()
 				isRedirect = true;
 			}
 			if (code != 0)
+			{
 				_return = code;
 				// setStatus(code);
+				if (_location.getIndex() == "" && !_location.getAutoIndex())
+					setStatus(code);
+			}		
 			if (_status == 301 || _status == 302 || _status == 303 || _status == 307 || _status == 308)
 			{
 				if (!str.empty())

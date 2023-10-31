@@ -95,8 +95,8 @@
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
-#define ERROR		-1
-#define SUCCESS		0
+// #define ERROR		-1
+// #define SUCCESS		0
 #define BUFFER_SIZE	1024
 
 extern int global_running_flag;
@@ -109,6 +109,12 @@ typedef enum e_method
 	INVALID
 } t_method;
 
+typedef enum e_level
+{
+	ERROR,
+	INFO,
+	DEBUG
+} t_level;
 // typedef struct TempConfig
 // {
 // 	std::string	root;
@@ -129,6 +135,7 @@ bool						isNumeric(std::string const &str);
 std::string					trimWhiteSpace( const std::string &str );
 
 void	handleConnections(std::vector<Server> &servers);
+void	ft_logger(std::string thing, int level, std::string FUNCTION, int LINE);
 
 
 #endif

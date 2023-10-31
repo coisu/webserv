@@ -266,6 +266,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                             << inet_ntoa(clientSocketAddress.sin_addr) 
                             << ":" << ntohs(clientSocketAddress.sin_port) 
                             << std::endl;
+				ft_logger("New connection incomming", INFO, __FUNCTION__, __LINE__);
             }
         }
         // Loop through clients and check for readiness for reading and writing
@@ -309,15 +310,17 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 							if (idx < 0 || (size_t)idx >= servers.size())
 								throw 404;
 							Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
-							Response response(request, servers[idx]); // <-- create response with request obj and selected server
 							try
 							{
+								Response response(request, servers[idx]); // <-- create response with request obj and selected server
 								client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
 								client.requestCompleted = false; // <-- set to false so that next message will be read
+								// response.processResponse(statusCode);
 							}
 							catch(int errorCode)
 							{
 								std::cerr << "Error: " << errorCode << std::endl;
+								// response.processError(errorCode);
 								// return 404 error
 							}
 						}
@@ -329,7 +332,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 						catch(std::exception &e)
 						{
 							std::cerr << "Error: " << e.what() << std::endl;
-							// return server error 5XX
+							// return server error 500
 						}
 					}
                     // if (bytesReceived < 1024)

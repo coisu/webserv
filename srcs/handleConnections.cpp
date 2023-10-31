@@ -159,7 +159,7 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 	// 	}
 	// }
 
-	// The first server for a host:port will be the default for this host:port
+	// The first server for a host:port will be the{...} default for this host:port
 	for (it = servers.begin(); it != servers.end(); it++)
 	{
 		if (it->getPort() == clientPort)
@@ -234,13 +234,33 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			}
 		}
 
+		for (int i = 0; i < FD_SETSIZE; ++i) {
+			if (FD_ISSET(i, &readSet)) {
+				if (fcntl(i, F_GETFD) == -1) {
+					// Invalid file descriptor
+					perror("fcntl read");
+				}
+			}
+			if (FD_ISSET(i, &writeSet)) {
+				if (fcntl(i, F_GETFD) == -1) {
+					// Invalid file descriptor
+					perror("fcntl write");
+				}
+			}
+		}
+
 		// wait for activity on sockets in readSet and writeSet
 		if (select(maxSocket + 1, &readSet, &writeSet, NULL, NULL) == -1)
 		{
 			// throw std::runtime_error("Select() failed");
 			if (global_running_flag == true)
 			{
-				exit(1);
+				for (it = clients.begin(); it != clients.end(); )
+				{
+					close(it->first);
+					clients.erase(it++);
+				}
+				// exit(1);
 				perror("select"); // <-- COMMENT THIS OUT LATER
 				std::cerr << "Error: select() failed\n";
 			}
@@ -305,7 +325,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 						ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
 						std::cerr << "Error reading from CGI" << std::endl;
 						close(cgiSocket);
-						FD_CLR(cgiSocket, &readSet);
+						// FD_CLR(cgiSocket, &readSet);
 						cgi.isFinished = true;
 						cgi_map.erase(cgi_it++);
 						continue ;
@@ -373,7 +393,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else
 				{
-					std::string fullResponseStr;
+					// std::string fullResponseStr;
 					client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
 					parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 					if (client.requestCompleted == true) // <-- if the request has been fully parsed then create the response
@@ -401,9 +421,11 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 									cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
 								}
 								else
-								fullResponseStr = response.processResponse();
-								client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
-								client.requestCompleted = false; // <-- set to false so that next message will be read
+								{
+									client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
+									client.requestCompleted = false; // <-- set to false so that next message will be read
+								}
+									// fullResponseStr = response.processResponse();
 								// response.processResponse(statusCode);
 							}
 							catch(int errorCode)

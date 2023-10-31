@@ -75,6 +75,6 @@ noinfo: re
 
 run: FLAGS += -D LOG_LEVEL=2
 run: all
-	valgrind --quiet --leak-check=full --show-leak-kinds=all --track-fds=yes --exit-on-first-error=yes --error-exitcode=1 ./$(BINARY) resources/test_hard.config
+	valgrind --quiet --leak-check=full --show-leak-kinds=all --track-fds=yes --error-exitcode=1 -s ./$(BINARY)
 
 .PHONY: clean fclean re all run

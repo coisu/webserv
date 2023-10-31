@@ -32,6 +32,7 @@ class Response
         size_t          _body_len;
         bool            _auto_index;
         int             _status;
+        int             _return;
         bool            _req_status;
         std::string     _connect;
         std::map<std::string, std::string>     _headers;

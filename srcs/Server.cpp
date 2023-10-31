@@ -638,6 +638,7 @@ const std::pair<bool, Location> Server::srchLocation(std::string& path) const
             }
         }
     }
+    std::cout << "____>> MATCH!!!!! : " << match <<std::endl;
     if (match != 0)
     {
         return (std::make_pair(true, ret));

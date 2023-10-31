@@ -81,10 +81,26 @@ int	pathIsDir(std::string path)
 		ret = IS_DIR;
 	else if (S_ISREG(statbuf.st_mode))
 		ret = IS_REG;
-	else{
+	// else{
+	// 	if (!(statbuf.st_mode & S_IRUSR))	// read permissions
+	// 		return (std::cerr << "no read permissions", N_PERMIT_READ);
+	// 	if (!(statbuf.st_mode & S_IWUSR))	// write permissions
+	// 		return (std::cerr << "no write permissions", N_PERMIT_WRITE);
+	// 	if (!(statbuf.st_mode & S_IXUSR))	// exec permission
+	// 		return (std::cerr << "no exec permissions", N_PERMIT_EXEC);
+	// }
+	return (ret);
+}
 
-		// if (!S_ISDIR(statbuf.st_mode))
-		// 	return (std::cerr << "not a directory", N_DIR);
+int getpermit(std::string path)
+{
+	struct stat	statbuf;
+	int ret = UNDEFINE;
+
+	if (stat(path.c_str(), &statbuf) != 0)
+		return (N_FOUND);
+	else
+	{
 		if (!(statbuf.st_mode & S_IRUSR))	// read permissions
 			return (std::cerr << "no read permissions", N_PERMIT_READ);
 		if (!(statbuf.st_mode & S_IWUSR))	// write permissions

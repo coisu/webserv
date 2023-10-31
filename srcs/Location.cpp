@@ -238,6 +238,10 @@ std::string Location::getIndex() const
     return (this->_index);
 }
 
+std::string Location::getAlias() const
+{
+    return (this->_alias);
+}
 
 bool	Location::getIsCGI() const
 {

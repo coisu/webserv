@@ -172,7 +172,7 @@ void Location::initAllowMethods(std::string value)
 {
     std::stringstream   ss(value);
     std::string         method;
-    std::string methods[3] = {"GET", "POST", "DELETE"};
+	std::string methods[4] = {"GET", "POST", "DELETE", "INVALID"};
 
     while (std::getline(ss, method, ','))
     {

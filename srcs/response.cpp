@@ -566,7 +566,7 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 			}
 			else
 			{
-				perror("BIG ERROR");
+				perror("BIG ERROR"); // <-- COMMENT THIS OUT LATER
 				continue ;
 			}
 			ret += std::string(30 - filename.size(), ' ');

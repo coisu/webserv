@@ -106,7 +106,7 @@ typedef enum e_method
 	GET,
 	POST,
 	DELETE,
-	UNDEFINED
+	INVALID
 } t_method;
 
 // typedef struct TempConfig

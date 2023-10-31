@@ -34,14 +34,6 @@ int main(int ac, char **av) {
 		}
 		
 		handleConnections(servers);
-		// while (true)
-		// {
-		// 	for (size_t i = 0; i < servers.size(); i++)
-		// 	{
-		// 		servers[i].startListen();
-		// 		servers[i].runServer();
-		// 	}
-		// }
 	}
 	catch(const std::exception& e)
 	{

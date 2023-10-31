@@ -236,11 +236,7 @@ std::string Response::processResponse()
 
 	_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
 
-<<<<<<< HEAD
-	std::cout << "__________________RESPONSE HEADER___________________\n" << _headerStr << "\n______________________________________________\n";
-=======
 	// std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
->>>>>>> main
 	return _buffer;
 }
 

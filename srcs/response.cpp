@@ -127,9 +127,7 @@ std::string Response::jumpToErrorPage(int status)
 
 std::string Response::processResponse()
 {
-	// std::string	currentMethod(_request.getMethodEnum());
 	_currentMethod = _request.getMethodEnum();
-	// std::string	ext(getExt(_request.getLocPath()));
 	bool isRedirect = false;
 
 	if (_currentMethod == DELETE && _status == 404)
@@ -140,83 +138,34 @@ std::string Response::processResponse()
 		std::cout << "clien max body size : " << _server.getClientBodySize() << std::endl << std::endl;
 		setStatus(413);
 	}
+	/* copy if there are same header from request */
 	setRequestVal();
+
 	if(!checkSetLocation(_target_path))
 	{
-		Location L("location/;allow_methods:DELETE,POST,GET;autoindex:on;");
+		Location L("location/;index:index.html;allow_methods:DELETE,POST,GET;autoindex:off;");
 		std::cout << "Location set with default\n";
 		setLocation(L);
 	}
 
-	// setTargetPath();
+	setTargetPath();
 
-
-
-			// if (_location.getAlias() != "")
-			// {
-			// 	std::string file;
-			// 	std::string uri = _request.getURL();
-			// 	std::cout <<  "request uri : " << uri << std::endl;
-			// 	file = uri.substr(uri.rfind("/"), uri.length());
-			// 	std::cout << "rfind index : " << uri.rfind("/") << ", length : " << uri.length() <<std::endl;
-			// 	std::cout << "derective file is : " << file <<std::endl ;
-			// 	_target_path = _location.getIndex() == "" ? _location.getAlias() + file : _location.getAlias() + file + _location.getIndex();
-			// }
-			// std::cout << "****target path : " << _target_path << "\n****method : " << _currentMethod << std::endl;
-
-			// if (_location.getIndex() != "" && 
-			// 	(pathExists(_target_path + _location.getIndex()) || (pathIsDir(_target_path) == IS_DIR && _currentMethod == POST)))
-			// {
-			// 	std::cout << "\nSUCCEED!!!!\n\n";
-			// 	_target_path += _location.getIndex();
-			// }
-			// else if (_location.getIndex() == "" && _location.getRet() == "" 
-			// 		 && !_location.getIsCGI() && pathExists(_target_path + "index.html") 
-			// 		 && _currentMethod != POST)
-			// {
-			// 	_target_path += "index.html";
-			// }
-			// if (!_location.getAutoIndex() && _location.getRet() == "")
-			// {
-			// 	std::cout << "**[TARGET_FILE] : " << _target_path << std::endl;
-			// 	int ret = pathIsDir(_target_path);
-			// 	if (ret == IS_DIR)
-			// 	{
-			// 		if (_currentMethod == POST)
-			// 			setStatus(405);
-			// 		else
-			// 			setStatus(403);
-			// 	}
-			// 	else
-
-			// 	if (!pathExists(_target_path) && _currentMethod != POST)
-			// 	{
-			// 		setStatus(404);
-			// 	}
-			// }
 	std::string ext = getExt(_target_path);
 	if ((_headers["Content-Type"] == "" && pathIsDir(_target_path) != IS_DIR)\
 		|| (pathIsDir(_target_path) == IS_DIR && _location.getAutoIndex()))
 		setContentType(ext); 
-	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;
-	std::cout << "LOC   [PATH] : " << _location.getPath() << std::endl;
-	std::cout << "LOC [RETURN] : " << _location.getRet() << std::endl;
-	std::cout << "LOC  [INDEX] : " << _location.getIndex() << std::endl;
-	std::cout << "    [TARGET] : " << _target_path << std::endl;
-	std::cout << "    [E-CODE] : " << _status << std::endl;
-	std::cout << "\n-------------->>>>>>>> INFO CHECK <<<<<<<<--------------\n" << std::endl;
 
 	/* handle return */
 	if (_location.getRet() == "")
 	{
-		if (pathIsDir(_target_path) != IS_REG && !_location.getAutoIndex())
+		if (pathIsDir(_target_path) == IS_DIR && !_location.getAutoIndex())
 			setStatus(403);
 	}
 	else
 	{
 		int	code = 0;
 		std::string str = "";
-		if (!pathExists(_target_path)) // serve return
+		if (pathIsDir(_target_path) != IS_REG) // serve return
 		{
 			if (isNumeric(_location.getRet()))
 			{
@@ -250,7 +199,7 @@ std::string Response::processResponse()
 		}
 	}
 			
-	if (isAllowedMethod(_currentMethod) && (_status == -1 || _status == 302))
+	if (isAllowedMethod(_currentMethod) && (_status == -1))
 		buildBodywithMethod(ext);
 	if (_status >= 400)
 		buildErrorBody(ext);	
@@ -261,6 +210,7 @@ std::string Response::processResponse()
 		if (_headers["Location"] == "")
 			setLocationHeader(_request.getURL());
 	}
+	/* GENERAL HEADER MAP */
 	if (!_request.getHead()["Connection"].empty())
 	{
 		if (_request.getHead()["Connection"] == "close")
@@ -276,13 +226,12 @@ std::string Response::processResponse()
 	}
 
 	/* MAKE HEADER */
-	if (((_currentMethod == GET || _currentMethod == POST) && ext != "php") || _status >= 400)
+	if ((_currentMethod == GET && ext != "php") || _status >= 400)
 		_headerStr += buildHeader(_body.size(), _status);
 	else
 		_headerStr += buildHeaderCgi(_body, _status);
 
 	_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + "\r\n" + _body + "\r\n";
-
 
 	std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
 	return _buffer;
@@ -290,21 +239,17 @@ std::string Response::processResponse()
 
 void Response::setTargetPath()
 {
-	// _Target_path = locPath
 	/* CASE: alias O */
 	std::string uri = _request.getURL();
-	std::string resource;
-	unsigned int idx = uri.find(_location.getPath());
 
-	if (idx != std::string::npos)
-		idx += _location.getPath().length();
-	resource = uri.substr(idx, uri.length());
+	std::string resource = uri.substr(0, uri.find_first_of('?'));
+	std::cout << "\n\nresource : " << resource << std::endl;
 
 	if (_location.getAlias() != "")		// manage casese Alias Exist
 	{
 		std::cout << "derective addr is : " << resource <<std::endl ;
 
-		int aliasRes = pathIsDir(_location.getAlias() + resource);
+		int ret = pathIsDir(_target_path);
 
 		if (_location.getIndex() == "")
 		{
@@ -312,7 +257,7 @@ void Response::setTargetPath()
 		}
 		else							// Alias with index
 		{		
-			if (aliasRes == IS_DIR)
+			if (ret == IS_DIR)
 			{
 				if (!_location.getAutoIndex())
 					_target_path = _location.getAlias() + resource + _location.getIndex();
@@ -329,25 +274,20 @@ void Response::setTargetPath()
 	/* alias not exists*/
 	else 
 	{
+			std::cout << "^^*target path : " << _target_path << "\n****method : " << _currentMethod << std::endl;
 		/* CASE: alias X, index O */
 		if (_location.getIndex() != "")
 		{
-			if(pathIsDir(_target_path + resource) == IS_DIR && !_location.getAutoIndex())
+			if(pathIsDir(_target_path) == IS_DIR && !_location.getAutoIndex())
 			{
 				_target_path += _location.getIndex();
 			}
-			else
-				_target_path += resource;
 		}
 		/* CASE: alias X, index X */
 		/* specificed order for default index for Nginx */
 		/*  index.html
 			index.htm
 			index.php */
-		else 
-		{
-			_target_path += resource;
-		}
 	}
 }
 
@@ -393,7 +333,8 @@ void Response::buildBodywithMethod(std::string ext)
 				body_pair = writeBodyHtmlPair(_target_path, _mimeList.getMimeType(ext) == "text/html");
 				if (body_pair.first == true)
 				{
-					_status = 200;
+					if (_status == -1)
+						_status = 200;
 					_body = body_pair.second;
 				}
 				else

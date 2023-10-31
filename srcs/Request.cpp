@@ -9,7 +9,7 @@ Request::Request(std::map<std::string, std::string> header, std::string body, st
 	std::string methods[4] = {"GET", "POST", "DELETE", "INVALID"};
 
 	this->_method_enum = extractMethodType(this->_info);
-	this->_method_str = this->_method_enum < 3 ? methods[this->_method_enum] : "INVALID";
+	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
 	this->_locPath = this->_server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
 	std::cerr << "CONSTRUCT locPath: " << this->_locPath << std::endl;
@@ -77,24 +77,25 @@ e_method	Request::extractMethodType(std::string info)
 	type = info.substr(0, n);
 	while (i < 3 && !methods[i].empty() && methods[i] != type)
 		i++;
+	if (i >= 3)
+	{
+		std::cerr << "INVALID METHOD: " << type << std::endl;
+		throw 400;
+	}
 	return ((t_method)i);
 }
 
 std::string	Request::extractURL(std::string info)
 {
-	size_t	i, n = 0;
+	size_t	i = 0, n = 0;
 
 	if (info.find("http://") != std::string::npos)
-	{
 		i = info.find("http://") + 7;
-		i = info.find_first_of('/', i);
-	}
+	i = info.find_first_of('/', i);
 	if (i == std::string::npos)
 		return (std::string());
 	while (i + n < info.size() && !std::isspace(info[i + n]))
 		n++;
-	// check differently for the request which contains http://
-	// check for all the enums in the code and make sure theres a case for when it is "INVALID"
 	return (info.substr(i, n));
 }
 

@@ -1,37 +1,94 @@
 <html>
 <head>
-<title>404</title>
+	<meta charset="UTF-8">
+	<title>404</title>
 <style>
 h1{
-font-size:40px;
-font-weight:800;
-text-align:center;
+	color:rgb(113, 90, 153);
+	font-size:40px;
+	font-weight:800;
+	text-align:center;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco;
+	letter-spacing: 1px;
+	text-transform: uppercase;
 }
 h2
 {
-font-size:25px;
-text-align:center;
-margin-top:-40px;
+	color:rgb(78, 76, 85);
+	font-size:23px;
+	text-align:center;
+	margin-top:-40px;
+	margin-bottom: 25px;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+	word-spacing: 3px;
+	line-height: 1.5;
 }
-p{
-text-align:center;
-font-size:15px;
+
+p
+{
+	color:rgb(77, 74, 88);
+	text-align:center;
+	font-size:18px;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+}
+
+body
+{
+	background-color: rgb(237, 235, 245);
+	/*background-image: url(flowers.jpg);
+	background-size: cover;
+	background-position: center center; */
+}
+
+img {
+    max-width: 50%;  /* Ajustez selon la taille que vous souhaitez */
+	margin-top: 20px; /* Espace entre le texte et l'image */
+}
+
+a
+{
+	text-decoration:none;
+	color: rgb(255, 169, 135);
+	font-style: oblique;
+}
+
+a:hover
+{
+	color:blue;
+	text-decoration:underline;
+}
+
+.green-text
+{
+	color: rgb(94, 190, 150);
+	font-style: oblique;
+	font-weight: bold;
+}
+
+.orange-text
+{
+	color: rgb(228, 163, 133);
+	font-style: oblique;
+	font-weight:lighter;
 }
 
 .container
 {
-width:1000px;
-margin: 0 auto;
-margin-top:15%;
+	width:1200px;
+	margin: 0 auto;
+	margin-top:15%;
 }
+
 </style>
 </head>
 <body>
 <div class="container">
-	<h1>			error page 404	</h1><br>
-	<h1>			redirected page	</h1><br></br>
-<h2>If you see this page, the our web server is successfully installed and working.<br>Thank you for using our Webserv.</h2>
-<p>More information go to <a href="https://github.com/coisu/webserv">our git</a></p>
+	<h1>			error page 404	</h1><br><br><br>
+	<h2>			<span class="orange-text"> Oops! the page you were trying to reach on a website couldn't be found on their server </span></h2><br></br>
+	<h2>If you see this page, the our web server is <span class="green-text">successfully installed</span> and working.<br>
+		Thank you for using our Webserv.</h2>
+   <p>More information go to <a href="https://github.com/coisu/webserv" target="_blank">our git</a></p>
+   <!-- <img src="../images/error_404.png"> -->
 </div>
 </body>
 </html>

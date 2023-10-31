@@ -233,7 +233,7 @@ std::string Response::processResponse()
 
 	_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + "\r\n" + _body + "\r\n";
 
-	std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
+	// std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
 	return _buffer;
 }
 
@@ -349,9 +349,9 @@ void Response::buildBodywithMethod(std::string ext)
 		{
 			CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
 			_body = cgi.exec_cgi();
-			std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
-			std::cout << _body;
-			std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
+			//std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
+			//std::cout << _body;
+			//std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
 			// if (_currentMethod == POST)
 			// {
 			// 	int ret = pathIsDir(_target_path);
@@ -405,7 +405,10 @@ void Response::buildErrorBody(std::string ext)
 		std::cout << "status -- " << _status << std::endl;
 		std::map<int, std::string> ep = _server.getErrorPages();
 		if (ep.find(_status) != ep.end())
+		{
+			std::cout << "making error page with directive file \n\n";
 			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
+		}
 		else
 			_body = makeErrorPage(_status);
 

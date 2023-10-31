@@ -20,7 +20,7 @@ h2
 	margin-top:-40px;
 	margin-bottom: 25px;
 	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
-	word-spacing: 3px;
+	word-spacing: -1px;
 	line-height: 1.5;
 }
 
@@ -41,9 +41,12 @@ body
 }
 
 img {
-    max-width: 50%;  /* Ajustez selon la taille que vous souhaitez */
-	margin-top: 20px; /* Espace entre le texte et l'image */
+    max-width: 30%;  /* Ajustez selon la taille que vous souhaitez */
+	margin-top: -100px; /* Espace entre le texte et l'image */
+	
 }
+
+
 
 a
 {
@@ -56,6 +59,13 @@ a:hover
 {
 	color:blue;
 	text-decoration:underline;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
 }
 
 .green-text
@@ -83,12 +93,12 @@ a:hover
 </head>
 <body>
 <div class="container">
+	<img src="../images/error_404.png"class="center">
 	<h1>			error page 404	</h1><br><br><br>
 	<h2>			<span class="orange-text"> Oops! the page you were trying to reach on a website couldn't be found on their server </span></h2><br></br>
 	<h2>If you see this page, the our web server is <span class="green-text">successfully installed</span> and working.<br>
 		Thank you for using our Webserv.</h2>
    <p>More information go to <a href="https://github.com/coisu/webserv" target="_blank">our git</a></p>
-   <!-- <img src="../images/error_404.png"> -->
 </div>
 </body>
 </html>

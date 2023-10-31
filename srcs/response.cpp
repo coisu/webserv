@@ -164,14 +164,14 @@ std::string Response::processResponse()
 			// }
 			// std::cout << "****target path : " << _target_path << "\n****method : " << _currentMethod << std::endl;
 
-			// if (_location.getIndex() != "" && \
+			// if (_location.getIndex() != "" && 
 			// 	(pathExists(_target_path + _location.getIndex()) || (pathIsDir(_target_path) == IS_DIR && _currentMethod == POST)))
 			// {
 			// 	std::cout << "\nSUCCEED!!!!\n\n";
 			// 	_target_path += _location.getIndex();
 			// }
-			// else if (_location.getIndex() == "" && _location.getRet() == "" \
-			// 		 && !_location.getIsCGI() && pathExists(_target_path + "index.html") \
+			// else if (_location.getIndex() == "" && _location.getRet() == "" 
+			// 		 && !_location.getIsCGI() && pathExists(_target_path + "index.html") 
 			// 		 && _currentMethod != POST)
 			// {
 			// 	_target_path += "index.html";
@@ -195,8 +195,8 @@ std::string Response::processResponse()
 			// 	}
 			// }
 	std::string ext = getExt(_target_path);
-	if (_headers["Content-Type"] == "" && pathIsDir(_target_path) != IS_DIR\
-		|| pathIsDir(_target_path) == IS_DIR && _location.getAutoIndex())
+	if ((_headers["Content-Type"] == "" && pathIsDir(_target_path) != IS_DIR)\
+		|| (pathIsDir(_target_path) == IS_DIR && _location.getAutoIndex()))
 		setContentType(ext); 
 	std::cout << "\n\n--------------<<<<<<<< INFO CHECK >>>>>>>>--------------\n" << std::endl;
 	std::cout << "LOC   [PATH] : " << _location.getPath() << std::endl;
@@ -440,7 +440,7 @@ void Response::buildBodywithMethod(std::string ext)
 			// 		// _body = _request.getBody();
 			// 	}
 
-			}
+			// }
 			if (_location.getIsCGI())
 			{
 				CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
@@ -453,8 +453,8 @@ void Response::buildBodywithMethod(std::string ext)
 	{
 		_status = execteDelete();
 	}
-
 }
+
 
 void Response::buildErrorBody(std::string ext)
 {

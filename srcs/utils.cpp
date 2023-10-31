@@ -108,7 +108,7 @@ int getpermit(std::string path)
 		if (!(statbuf.st_mode & S_IXUSR))	// exec permission
 			return (std::cerr << "no exec permissions", N_PERMIT_EXEC);
 	}
-	retrun (ret);
+	return (ret);
 }
 
 bool isNumeric(std::string const &str)

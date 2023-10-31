@@ -627,7 +627,7 @@ const std::pair<bool, Location> Server::srchLocation(std::string& path) const
             if(cur->getPath().length() > match)
             {                
                 idx = p + cur->getPath().length();
-                if (path[idx] == '/' || path[idx] == '\0')
+                if (cur->getPath() == "/" || path[idx] == '/' || path[idx] == '\0')
                 {
                     match = cur->getPath().length();
                     int tmp = static_cast<int>(match);

@@ -33,6 +33,7 @@ Response::Response(const Request &request, Server &server ) : _request(request),
 	_body_len = 0;
 	_auto_index = false;
 	_status = -1;
+	_return = -1;
 	_req_status = false;
 	_connect = "Keep-Alive";
 	initStatusCode();
@@ -180,7 +181,8 @@ std::string Response::processResponse()
 				isRedirect = true;
 			}
 			if (code != 0)
-				setStatus(code);
+				_return = code;
+				// setStatus(code);
 			if (_status == 301 || _status == 302 || _status == 303 || _status == 307 || _status == 308)
 			{
 				if (!str.empty())
@@ -188,7 +190,7 @@ std::string Response::processResponse()
 				else
 					setLocationHeader(" ");
 			}
-			if (_status == -1 && _req_status == false && !isRedirect)
+			if (_status == -1 && _req_status == false && _return == -1 && !isRedirect)
 			{
 				_status = 301;	//MOVED_PERMANENTLY
 				isRedirect = true;
@@ -238,30 +240,27 @@ void Response::setTargetPath()
 {
 	/* CASE: alias O */
 	std::string uri = _request.getURL();
-
 	std::string resource = uri.substr(0, uri.find_first_of('?'));
-
-	if (_location.getAlias() != "")		// manage casese Alias Exist
+	if (_location.getAlias().find(resource) != std::string::npos)
+		resource = "";
+	if (_location.getAlias() != "")		// manage case Alias Exist
 	{
-		int ret = pathIsDir(_target_path);
-
+		resource.erase(0, _location.getPath().length());
+		resource = resource[0] != '/' ? ("/" + resource) : resource;
+		int ret = pathIsDir(_server.getRoot() + _location.getAlias() + resource);
 		if (_location.getIndex() == "")
-		{
-			_target_path = _location.getAlias() + resource;
-		}
+			_target_path = _server.getRoot() + _location.getAlias() +resource;
 		else							// Alias with index
 		{		
 			if (ret == IS_DIR)
 			{
 				if (!_location.getAutoIndex())
-					_target_path = _location.getAlias() + resource + _location.getIndex();
+					_target_path = _server.getRoot() + _location.getAlias() + resource + _location.getIndex();
 				else
-					_target_path = _location.getAlias() + resource;
+					_target_path = _server.getRoot() + _location.getAlias() + resource;
 			}
 			else
-			{
-				_target_path =  _location.getAlias() + resource;
-			}
+				_target_path =  _server.getRoot() + _location.getAlias() + resource;
 		}
 	}
 	/* alias not exists*/
@@ -275,11 +274,6 @@ void Response::setTargetPath()
 				_target_path += _location.getIndex();
 			}
 		}
-		/* CASE: alias X, index X */
-		/* specificed order for default index for Nginx */
-		/*  index.html
-			index.htm
-			index.php */
 	}
 	std::cout << "\n[ Directive Path ] " << _target_path << std::endl << std::endl;
 }
@@ -297,16 +291,14 @@ void Response::buildBodywithMethod(std::string ext)
 				int ret = pathIsDir(_target_path);
 
 				if (ret == N_FOUND)
-					_status = 404;
+					_status = _return == -1 ? 404 : _return;
 				else if (ret == IS_DIR)
 					_body = writeBodyAutoindex(_request.getURL());
-
 				else if (ret == IS_REG)						//regular file
 					_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
 				else
 				{
-					std::cout << "STAT : " << ret <<std::endl;
-					_status = 403;
+					_status = _return == -1 ? 403 : _return;
 				}
 			}
 			else
@@ -434,8 +426,6 @@ std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 	
 	// if (path[0] != '/')
 	// 	filePath = "/" + path;
-std::cout << "root : " <<_server.getRoot() << std::endl;
-std::cout<< "__filePath in writeBodyHtml : " << filePath << std::endl;
 	ifs.open(const_cast<char*>(filePath.c_str()));
 	if (ifs.fail())
 	{
@@ -474,7 +464,7 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 
 	if (getpermit(_target_path) == N_PERMIT_READ || getpermit(_target_path) == N_PERMIT_EXEC)
 	{
-		_status = 403;
+		_status = _return == -1 ? 403 : _return;		
 		return "";
 	}
 	if (in.is_open())
@@ -514,7 +504,7 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 
 	if (getpermit(_target_path) == N_PERMIT_READ || getpermit(_target_path) == N_PERMIT_EXEC)
 	{
-		_status = 403;
+		_status = _return == -1 ? 403 : _return;
 		return "";
 	}
 

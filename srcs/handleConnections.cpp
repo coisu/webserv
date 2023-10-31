@@ -230,7 +230,10 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
         {
             // throw std::runtime_error("Select() failed");
 			if (global_running_flag == true)
+			{
+				perror("select"); // <-- COMMENT THIS OUT LATER
 				std::cerr << "Error: select() failed\n";
+			}
             continue ;
         }
         // Loop through the server sockets to find the one that is ready.
@@ -358,8 +361,8 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 	FD_ZERO(&writeSet);
 	for (it = clients.begin(); it != clients.end(); it++)
 		close(it->first);
-    for (size_t i = 0; i < serverSockets.size(); i++)
-        close(serverSockets[i]);
+	for (size_t i = 0; i < serverSockets.size(); i++)
+		close(serverSockets[i]);
 }
 
 std::vector<int> getPorts(std::vector<Server> &servers)

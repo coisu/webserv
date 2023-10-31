@@ -8,3 +8,9 @@ ALL THE ATTRIBUTES JISU USES FROM THE REQUST OBJECT:
 6. _head: The headers from the request (as a map)
 
 # 2. _locQuery -> _target_query: The query string from the request
+
+Parse 
+
+CMD correction:
+
+curl --resolve example.com:8080:127.0.0.1  http://localhost:8080

@@ -608,7 +608,7 @@ std::string	Server::getBlock() const
 }
 
 #include <iostream>
-const std::pair<bool, Location> Server::srchLocation(std::string& path) const
+const std::pair<bool, Location> Server::srchLocation(const std::string& path) const
 {
     Location    ret;
     size_t match = 0;

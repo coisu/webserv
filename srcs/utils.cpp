@@ -96,3 +96,17 @@ bool isNumeric(std::string const &str)
     }
     return !str.empty() && i == str.length() - 1;
 }
+
+void ft_logger(std::string thing, int level, std::string FILE, int LINE)
+{
+	std::cerr << "LOG_LEVEL: " << LOG_LEVEL << std::endl;
+	if (level > LOG_LEVEL)
+		return ;
+	std::cout << "[\033[1;34m" << FILE << ":" << LINE << "\033[0m] ";
+	if (level == 0)
+		std::cout << "\033[1;31m" << thing << "\033[0m" << std::endl;
+	else if (level == 1)
+		std::cout << "\033[1;32m" << thing << "\033[0m" << std::endl;
+	else if (level == 2)
+		std::cout << "\033[1;33m" << thing << "\033[0m" << std::endl;
+}

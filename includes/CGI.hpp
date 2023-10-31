@@ -13,19 +13,21 @@
 // #include "http_tcpServer.hpp"
 #include "utils.hpp"
 #include "Server.hpp"
+#include "Request.hpp"
 
 class CGI
 {
 	public:
 		//OCCF
-		CGI(Server& serv, std::string RequestUrl, std::string methodString, std::map<std::string, std::string> cgiConfig);
+		// CGI(Server& serv, std::string RequestUrl, std::string methodString, std::map<std::string, std::string> cgiConfig);
+		CGI(Server& serv, Location& location, Request& request);
 		virtual ~CGI( void );
 		CGI(const CGI& copy);
 		CGI&	operator = (const CGI& copy);
 		
 		//public methods
 		char**		getCharEnv( void );
-		std::string	exec_cgi( void );
+		void		exec_cgi( int &fd );
 		// std::string exec_cgi(const char* cgi_path, char* const argv[], char* const envp[])
 
 		//public attributes
@@ -44,6 +46,8 @@ class CGI
 		//private attributes
 ;		std::string	_query;
 		std::map<std::string, std::string>	_env;
+		Location&	_location;
+		Request&	_request;
 		std::map<std::string, std::string>	_cgiConfig;
 		std::string	_program;
 		std::string	_script;

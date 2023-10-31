@@ -8,19 +8,19 @@ FLAGS += -Wall -Werror -Wextra
 FLAGS += -g3
 FLAGS += -I$(INC_DIR)
 
-LOG_LEVEL ?= 0
+# LOG_LEVEL ?= 0
 
-ifeq ($(LOG_LEVEL),0)
-FLAGS += -D LOG_LEVEL=0
-endif
+# ifeq ($(LOG_LEVEL),0)
+# FLAGS += -D LOG_LEVEL=0
+# endif
 
-ifeq ($(LOG_LEVEL),1)
-FLAGS += -D LOG_LEVEL=1
-endif
+# ifeq ($(LOG_LEVEL),1)
+# FLAGS += -D LOG_LEVEL=1
+# endif
 
-ifeq ($(LOG_LEVEL),2)
-FLAGS += -D LOG_LEVEL=2
-endif
+# ifeq ($(LOG_LEVEL),2)
+# FLAGS += -D LOG_LEVEL=2
+# endif
 
 BINARY = serv
 
@@ -65,7 +65,16 @@ re:
 	@make --no-print-directory clean
 	@make --no-print-directory all
 
-run: LOG_LEVEL=2
+debug: FLAGS += -D LOG_LEVEL=2
+debug: re
+	./serv
+
+# noinfo: FLAGS += -D LOG_LEVEL=1
+noinfo: re
+	FLAGS += -D LOG_LEVEL=1
+	./serv
+
+run: FLAGS += -D LOG_LEVEL=2
 run: all
 	valgrind --quiet --leak-check=full --show-leak-kinds=all --track-fds=yes --exit-on-first-error=yes --error-exitcode=1 ./$(BINARY)
 

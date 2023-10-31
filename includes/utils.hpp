@@ -55,6 +55,10 @@
 #define N_PERMIT_EXEC 6
 #define UNDEFINE 7
 
+#ifndef LOG_LEVEL
+# define LOG_LEVEL 1
+#endif
+
 #define reset "\e[m"                 //ANSI CODE 0   → resets all styles, it's the same of \e[0m
 
 #define bold "\e[1m"                //# ANSI CODE 1   → increases intensity, with a slight color change
@@ -135,7 +139,7 @@ bool						isNumeric(std::string const &str);
 std::string					trimWhiteSpace( const std::string &str );
 
 void	handleConnections(std::vector<Server> &servers);
-void	ft_logger(std::string thing, int level, std::string FUNCTION, int LINE);
+void	ft_logger(std::string thing, int level, std::string FILE, int LINE);
 
 
 #endif

@@ -266,7 +266,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                             << inet_ntoa(clientSocketAddress.sin_addr) 
                             << ":" << ntohs(clientSocketAddress.sin_port) 
                             << std::endl;
-				ft_logger("New connection incomming", INFO, __FUNCTION__, __LINE__);
+				ft_logger("New connection incomming", INFO, __FILE__, __LINE__);
             }
         }
         // Loop through clients and check for readiness for reading and writing
@@ -406,20 +406,22 @@ void handleConnections(std::vector<Server> &servers)
         std::cout << "PORT: " << ntohs(portVec[i]) << std::endl;
         
         // Bind the socket to the address and port.
+		int yes = 1;
+		if (setsockopt(currentSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
+			perror("setsockopt"); // <-- COMMENT THIS OUT LATER
+		}
         if (bind(currentSocket,(struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress)) < 0)
         {
 			close(currentSocket);
 			perror("bind failed"); // <-- COMMENT THIS OUT LATER
             throw std::runtime_error("Cannot bind socket to address");
         }
-
         // Listen for incoming connections.
         if (listen(currentSocket, 10) < 0)
 		{
 			close(currentSocket);
             throw std::runtime_error("Socket listen failed");
 		}
-
         std::ostringstream ss;
         ss << "\n*** Listening on ADDRESS: " 
         << inet_ntoa(serverSocketAddress.sin_addr) // convert the IP address (binary) in string

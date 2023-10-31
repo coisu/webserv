@@ -234,9 +234,9 @@ std::string Response::processResponse()
 	else
 		_headerStr += buildHeaderCgi(_body, _status);
 
-	_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + "\r\n" + _body + "\r\n";
+	_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
 
-	std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
+	std::cout << "__________________RESPONSE HEADER___________________\n" << _headerStr << "\n______________________________________________\n";
 	return _buffer;
 }
 

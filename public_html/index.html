@@ -6,37 +6,79 @@
 		<meta name="keywords" content="webserv42, ecole42">
 
 <style type="text/css">
-h1{
-color:blueviolet
-font-size:40px;
-font-weight:800;
-text-align:center;
+h1
+{
+	color:rgb(113, 90, 153);
+	font-size:65px;
+	font-weight:600;
+	text-align:center;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco;
+	letter-spacing: 1px;
+	text-transform: uppercase;
 }
+
 h2
 {
-font-size:25px;
-text-align:center;
-margin-top:-40px;
+	color:rgb(78, 76, 85);
+	font-size:23px;
+	text-align:center;
+	margin-top:-40px;
+	margin-bottom: 25px;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+	word-spacing: 3px;
+	line-height: 1.5;
 }
-p{
-text-align:center;
-font-size:15px;
+
+p
+{
+	color:rgb(77, 74, 88);
+	text-align:center;
+	font-size:18px;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+}
+
+body
+{
+	background-color: rgb(237, 235, 245);
+	/*background-image: url(flowers.jpg);
+	background-size: cover;
+	background-position: center center; */
+}
+
+a
+{
+	text-decoration:none;
+	color: rgb(255, 169, 135);
+	font-style: oblique;
+}
+a:hover
+{
+	color:blue;
+	text-decoration:underline;
+}
+
+.green-text
+{
+	color: rgb(94, 190, 150);
+	font-style: oblique;
+	font-weight: bold;
 }
 
 .container
 {
-width:1000px;
-margin: 0 auto;
-margin-top:15%;
+	width:1200px;
+	margin: 0 auto;
+	margin-top:15%;
 }
+
 </style>
 	</head>
 	<body>
 <div class="container">
-	<h1>Welcome to Webserv !</h1><br>
-<h2>If you see this page, the our web server is successfully installed and working.<br>
-	Thank you for using our Webserv.</h2>
-<p>More information go to <a href="https://github.com/coisu/webserv">our git</a></p>
+	<h1>Welcome to Webserv</h1><br>
+<h2>If you see this page, the our web server is <span class="green-text">successfully installed</span> and working.<br>
+	 Thank you for using our Webserv.</h2>
+<p>More information go to <a href="https://github.com/coisu/webserv" target="_blank">our git</a></p>
 </div>
 <div>
   	<body>
@@ -47,14 +89,6 @@ margin-top:15%;
     	  <input type="submit" value="Submit">
     	</form>
   	</body>
-</div>
-<div>
-	<body>
-	  <div>DELETE test</div>
-	  <form action="./delete/" method="delete">
-		<input type="submit" value="DELETE TEST">
-	  </form>
-	</body>
 </div>
 <div>
 	<body>

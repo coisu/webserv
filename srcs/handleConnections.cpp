@@ -368,60 +368,77 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 		close(serverSockets[i]);
 }
 
-std::vector<int> getPorts(std::vector<Server> &servers)
-{
-    std::vector<int> ports;
+// std::vector<int> getPorts(std::vector<Server> &servers)
+// {
+//     std::vector<int> ports;
 
-    for (size_t i = 0; i < servers.size(); i++)
+//     for (size_t i = 0; i < servers.size(); i++)
+//     {
+        
+//         ports.push_back(servers[i].getPort());
+//     }
+//     return ports;
+// }
+
+std::set<int> getPorts(const std::vector<Server>& servers)
+{
+    std::set<int> ports;
+
+    for (std::vector<Server>::const_iterator it = servers.begin(); it != servers.end(); ++it)
     {
-        ports.push_back(servers[i].getPort());
+        ports.insert(it->getPort());
     }
+    
     return ports;
 }
 
 void handleConnections(std::vector<Server> &servers)
 {
-    const std::vector<int> portVec = getPorts(servers);  // Get all the different ports in the servers
+    //const std::vector<int> portVec = getPorts(servers);  // Get all the different ports in the servers
+    const std::set<int> portSet = getPorts(servers);  // Get all the different ports in the servers
 
     // Create a vector to store socket descriptors for multiple ports.
     std::vector<int>    serverSockets;
     int                 maxSocket = 0;
 
     // Create and initialize sockets for each port.
-    for (size_t i = 0; i < portVec.size(); i++)
+    // for (size_t i = 0; i < portVec.size(); i++)
+    for (std::set<int>::iterator it = portSet.begin(); it != portSet.end(); it++)
     {
+        int port = *it;
         int currentSocket = socket(AF_INET, SOCK_STREAM, 0);
         if (currentSocket == -1) {
-            std::cerr << "Error creating socket for port " << i << std::endl;
-			continue ;
+            // std::cerr << "Error creating socket for port " << i << std::endl;
+            std::cerr << "Error creating socket for port " << port << std::endl;
         }
         serverSockets.push_back(currentSocket);
 
         // Set up the server address structure.
         struct sockaddr_in  serverSocketAddress;
         serverSocketAddress.sin_family = AF_INET; // for IPv4
-        serverSocketAddress.sin_port = portVec[i];
+        // serverSocketAddress.sin_port = portVec[i];
+        serverSocketAddress.sin_port = port;
         serverSocketAddress.sin_addr.s_addr = INADDR_ANY;
 
-        std::cout << "PORT: " << ntohs(portVec[i]) << std::endl;
+        std::cout << "PORT: " << ntohs(port) << std::endl;
         
         // Bind the socket to the address and port.
-		int yes = 1;
-		if (setsockopt(currentSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
-			perror("setsockopt"); // <-- COMMENT THIS OUT LATER
-		}
+		    int yes = 1;
+		    if (setsockopt(currentSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
+			    perror("setsockopt"); // <-- COMMENT THIS OUT LATER
+		    }
         if (bind(currentSocket,(struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress)) < 0)
         {
-			close(currentSocket);
-			perror("bind failed"); // <-- COMMENT THIS OUT LATER
+		        close(currentSocket);
+			      perror("bind failed"); // <-- COMMENT THIS OUT LATER
             throw std::runtime_error("Cannot bind socket to address");
         }
         // Listen for incoming connections.
         if (listen(currentSocket, 10) < 0)
-		{
-			close(currentSocket);
+		    {
+		        close(currentSocket);
             throw std::runtime_error("Socket listen failed");
-		}
+		    }
         std::ostringstream ss;
         ss << "\n*** Listening on ADDRESS: " 
         << inet_ntoa(serverSocketAddress.sin_addr) // convert the IP address (binary) in string

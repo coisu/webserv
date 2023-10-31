@@ -32,9 +32,10 @@ class Location
 		bool		getIsCGI() const;
         bool        getAutoIndex() const;
 		std::map<std::string, std::string>		getCGIConfig() const;
-        std::vector<int>    getAllowMethods() const;
-        std::string         getUploadStore() const;
+        std::vector<int>                        getAllowMethods() const;
+        std::string                             getUploadStore() const;
         //setters
+    
     private:
     /*methods*/
         void    setAttributes(std::string key, std::string value);
@@ -46,7 +47,6 @@ class Location
         void    initAllowMethods(std::string value);
         void    initUploadStore(std::string value);
         void    initCGI(std::string value);
-
 		void	initDefaults();
 
     /*attributes*/

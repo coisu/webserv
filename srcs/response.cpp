@@ -29,11 +29,11 @@ Response::Response(const Request &request, Server &server ) : _request(request),
 	_target_path = _request.getLocPath();
 	std::cerr << "target path: " << _target_path << std::endl;
 	_body = "";
-	_buffer = "";
 	_headerStr = "";
 	_body_len = 0;
 	_auto_index = false;
 	_status = -1;
+	_return = -1;
 	_req_status = false;
 	_connect = "Keep-Alive";
 	initStatusCode();
@@ -181,7 +181,12 @@ std::string Response::processResponse()
 				isRedirect = true;
 			}
 			if (code != 0)
-				setStatus(code);
+			{
+				_return = code;
+				// setStatus(code);
+				if (_location.getIndex() == "" && !_location.getAutoIndex())
+					setStatus(code);
+			}		
 			if (_status == 301 || _status == 302 || _status == 303 || _status == 307 || _status == 308)
 			{
 				if (!str.empty())
@@ -189,13 +194,11 @@ std::string Response::processResponse()
 				else
 					setLocationHeader(" ");
 			}
-			if (_status == -1 && _req_status == false && !isRedirect)
+			if (_status == -1 && _req_status == false && _return == -1 && !isRedirect)
 			{
 				_status = 301;	//MOVED_PERMANENTLY
 				isRedirect = true;
 			}
-			std::cout << "[TARGET] : " << _target_path << std::endl;
-			std::cout << "[E-CODE] : " << _status << std::endl;
 		}
 	}
 			
@@ -241,40 +244,32 @@ void Response::setTargetPath()
 {
 	/* CASE: alias O */
 	std::string uri = _request.getURL();
-
 	std::string resource = uri.substr(0, uri.find_first_of('?'));
-	std::cout << "\n\nresource : " << resource << std::endl;
-
-	if (_location.getAlias() != "")		// manage casese Alias Exist
+	if (_location.getAlias().find(resource) != std::string::npos)
+		resource = "";
+	if (_location.getAlias() != "")		// manage case Alias Exist
 	{
-		std::cout << "derective addr is : " << resource <<std::endl ;
-
-		int ret = pathIsDir(_target_path);
-
+		resource.erase(0, _location.getPath().length());
+		resource = resource[0] != '/' ? ("/" + resource) : resource;
+		int ret = pathIsDir(_server.getRoot() + _location.getAlias() + resource);
 		if (_location.getIndex() == "")
-		{
-			_target_path = _location.getAlias() + resource;
-		}
+			_target_path = _server.getRoot() + _location.getAlias() +resource;
 		else							// Alias with index
 		{		
 			if (ret == IS_DIR)
 			{
 				if (!_location.getAutoIndex())
-					_target_path = _location.getAlias() + resource + _location.getIndex();
+					_target_path = _server.getRoot() + _location.getAlias() + resource + _location.getIndex();
 				else
-					_target_path = _location.getAlias() + resource;
+					_target_path = _server.getRoot() + _location.getAlias() + resource;
 			}
 			else
-			{
-				_target_path =  _location.getAlias() + resource;
-			}
+				_target_path =  _server.getRoot() + _location.getAlias() + resource;
 		}
-		std::cout << "****target path : " << _target_path << "\n****method : " << _currentMethod << std::endl;
 	}
 	/* alias not exists*/
 	else 
 	{
-			std::cout << "^^*target path : " << _target_path << "\n****method : " << _currentMethod << std::endl;
 		/* CASE: alias X, index O */
 		if (_location.getIndex() != "")
 		{
@@ -283,12 +278,8 @@ void Response::setTargetPath()
 				_target_path += _location.getIndex();
 			}
 		}
-		/* CASE: alias X, index X */
-		/* specificed order for default index for Nginx */
-		/*  index.html
-			index.htm
-			index.php */
 	}
+	std::cout << "\n[ Directive Path ] " << _target_path << std::endl << std::endl;
 }
 
 void Response::buildBodywithMethod(std::string ext)
@@ -303,32 +294,19 @@ void Response::buildBodywithMethod(std::string ext)
 
 				int ret = pathIsDir(_target_path);
 
-				std::cout << " &&& Target Path : " << _target_path << std::endl;
 				if (ret == N_FOUND)
-					_status = 404;
+					_status = _return == -1 ? 404 : _return;
 				else if (ret == IS_DIR)
-				{
-					std::cout << "\n\n... target file is directory ...\n\n";
 					_body = writeBodyAutoindex(_request.getURL());
-					_status = 200;
-				}
 				else if (ret == IS_REG)						//regular file
-				{
-					std::cout << "\n\n... target file is regular file ...\n\n";
 					_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
-					if (_status == -1)
-						_status = 200;
-				}
 				else
 				{
-					std::cout << "STAT : " << ret <<std::endl;
-					_status = 403;
+					_status = _return == -1 ? 403 : _return;
 				}
 			}
 			else
 			{
-				std::cout << "\n\n... MANUAL BODY WRITER ...\n\n";
-
 				std::pair<bool, std::string> body_pair;
 				body_pair = writeBodyHtmlPair(_target_path, _mimeList.getMimeType(ext) == "text/html");
 				if (body_pair.first == true)
@@ -338,12 +316,8 @@ void Response::buildBodywithMethod(std::string ext)
 					_body = body_pair.second;
 				}
 				else
-				{
-					_status = 404;
 					_body = body_pair.second;
-				}
 			}
-
 		}
 		else
 		{
@@ -405,7 +379,10 @@ void Response::buildErrorBody(std::string ext)
 		std::cout << "status -- " << _status << std::endl;
 		std::map<int, std::string> ep = _server.getErrorPages();
 		if (ep.find(_status) != ep.end())
+		{
+			std::cout << "making error page with directive file \n\n";
 			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
+		}
 		else
 			_body = makeErrorPage(_status);
 
@@ -426,7 +403,16 @@ std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, 
 	if (ifs.fail())
 	{
 		ifs.close();
-		return (std::make_pair(false, makeErrorPage(404)));
+		if (getpermit(filePath) == N_FOUND)
+		{
+			_status = 404;
+			return (std::make_pair(false, makeErrorPage(404)));
+		}
+		else
+		{
+			_status = 403;
+			return (std::make_pair(false, makeErrorPage(403)));
+		}
 	}
 	std::string	str;
 	while (std::getline(ifs, str))
@@ -453,10 +439,7 @@ std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 	
 	// if (path[0] != '/')
 	// 	filePath = "/" + path;
-std::cout << "root : " <<_server.getRoot() << std::endl;
-std::cout<< "__filePath in writeBodyHtml : " << filePath << std::endl;
 	ifs.open(const_cast<char*>(filePath.c_str()));
-	
 	if (ifs.fail())
 	{
 		ifs.close();
@@ -492,6 +475,11 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 	std::string line;
 	std::string ret;
 
+	if (getpermit(_target_path) == N_PERMIT_READ || getpermit(_target_path) == N_PERMIT_EXEC)
+	{
+		_status = _return == -1 ? 403 : _return;		
+		return "";
+	}
 	if (in.is_open())
 	{
 		std::cout << "file opened\n\n";
@@ -510,6 +498,7 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 		}
 		in.close();
 	}
+	_status = 200;
 	return (ret);
 }
 
@@ -525,6 +514,12 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 	url = str.substr(0, str.find_first_of('?'));
 	if (!(*(url.rbegin()) == '/'))
 		url.append("/");
+
+	if (getpermit(_target_path) == N_PERMIT_READ || getpermit(_target_path) == N_PERMIT_EXEC)
+	{
+		_status = _return == -1 ? 403 : _return;
+		return "";
+	}
 
 	ret += "\r\n";
 	ret += "<!DOCTYPE html>\r\n";
@@ -589,6 +584,7 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 	ret += "</body>\r\n";
 	ret += "</html>\r\n";
 	closedir(dir_ptr);
+	_status = 200;
 	return (ret);
 }
 

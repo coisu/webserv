@@ -362,6 +362,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 						FD_CLR(clientSocket, &readSet);
 						FD_CLR(clientSocket, &writeSet);
 						client.isClosed = true;
+                        perror("bytes");
 						continue ;
 					}
 					if (bytesReceived == 0)
@@ -381,7 +382,10 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 						{
 							int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
 							if (idx < 0 || (size_t)idx >= servers.size())
+                            {
+                                std::cerr << "SERVER NOT FOUND" << std::endl;
 								throw 404;
+                            }
 							Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
 							try
 							{

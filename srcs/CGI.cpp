@@ -1,18 +1,23 @@
 #include "CGI.hpp"
 
-CGI::CGI(Server& serv, std::string RequestUrl, std::string methodString, std::map<std::string, std::string> cgiConfig) 
-: server(serv), _cgiConfig(cgiConfig) // : _env(construct_env(request))
+CGI::CGI(Server& serv, Location& location, Request& request) 
+: server(serv), _location(location), _request(request), _cgiConfig(location.getCGIConfig())
 {
-	this->_env = constructEnv(RequestUrl, methodString);
+	this->_env = constructEnv(request.getURL(), request.getMethodStr());
 	// std::cout << "CGI created\n";
 }
+// : server(serv), _cgiConfig(cgiConfig) // : _env(construct_env(request))
+// {
+// 	this->_env = constructEnv(RequestUrl, methodString);
+// 	// std::cout << "CGI created\n";
+// }
 
 CGI::~CGI()
 {
 	// std::cout << "CGI destroyed\n";
 }
 
-CGI::CGI(const CGI& copy) : server(copy.server)
+CGI::CGI(const CGI& copy) : server(copy.server), _location(copy._location), _request(copy._request)
 {
 	std::cout << "CGI is being copied\n";
 	*this = copy;
@@ -101,8 +106,8 @@ char**	CGI::getCharEnv( void )
 
 std::string CGI::exec_cgi( void )
 {
-    int pipefd[2];
-    pid_t pid;
+	int pipefd[2];
+	pid_t pid;
 	char** const argv = this->_av;
 	if (!argv)
 		throw std::runtime_error("Failed to run CGI: argv is empty");
@@ -110,59 +115,59 @@ std::string CGI::exec_cgi( void )
 	char** const envp = this->getCharEnv();
 	std::string response;
 
-    // Create a pipe
-    if (pipe(pipefd) == -1)
+	// Create a pipe
+	if (pipe(pipefd) == -1)
 	{
-        perror("pipe"); // <-- COMMENT THIS OUT LATER
-        throw std::runtime_error("Failed to create pipe");
-        throw std::runtime_error("Failed to create pipe");
-    }
+		perror("pipe"); // <-- COMMENT THIS OUT LATER
+		throw std::runtime_error("Failed to create pipe");
+		throw std::runtime_error("Failed to create pipe");
+	}
 
-    // Fork the process
-    pid = fork();
-    if (pid == -1)
+	// Fork the process
+	pid = fork();
+	if (pid == -1)
 	{
-        perror("fork"); // <-- COMMENT THIS OUT LATER
-        throw std::runtime_error("Failed to fork process");
-    }
+		perror("fork"); // <-- COMMENT THIS OUT LATER
+		throw std::runtime_error("Failed to fork process");
+	}
 
-    if (pid == 0)
+	if (pid == 0)
 	{
-        // Child process
+		// Child process
 
-        // Redirect stdout to the write end of the pipe
-        dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[0]);
-        close(pipefd[1]);
+		// Redirect stdout to the write end of the pipe
+		dup2(pipefd[1], STDOUT_FILENO);
+		close(pipefd[0]);
+		close(pipefd[1]);
 
-        // Execute the CGI program
-        if (execve(cgi_path, argv, envp) == -1)
+		// Execute the CGI program
+		if (execve(cgi_path, argv, envp) == -1)
 		{
-            perror("execve"); // <-- COMMENT THIS OUT LATER
-        }
-        exit(1);
-    }
+			perror("execve"); // <-- COMMENT THIS OUT LATER
+		}
+		exit(1);
+	}
 	else
 	{
-        // Parent process
+		// Parent process
 
-        // Close write end in parent
-        close(pipefd[1]);
+		// Close write end in parent
+		close(pipefd[1]);
 
-        char buffer[1024];
-        ssize_t bytesRead;
-        while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
+		char buffer[1024];
+		ssize_t bytesRead;
+		while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
 		{
-            // Here, buffer contains bytesRead bytes of output from the CGI program.
-            // Send this back as the HTTP response.
+			// Here, buffer contains bytesRead bytes of output from the CGI program.
+			// Send this back as the HTTP response.
 			response += buffer;
 			// write()
-            // write(STDOUT_FILENO, buffer, bytesRead);
-        }
+			// write(STDOUT_FILENO, buffer, bytesRead);
+		}
 
-        close(pipefd[0]);
-        waitpid(pid, NULL, 0);
-    }
+		close(pipefd[0]);
+		waitpid(pid, NULL, 0);
+	}
 	return (response);
 }
 
@@ -234,21 +239,40 @@ void	CGI::identifyCGI(std::vector<std::string> urlvec)
 	// for (size_t i = 0; i < urlvec.size(); i++)
 	// 	std::cout << urlvec[i] << ", ";
 	// std::cout << "end\n";
-	for (size_t i = 0; i < urlvec.size(); i++)
+	std::string path, ext;
+	std::string root = this->server.getRoot();
+	for (size_t i = 0; i < urlvec.size() && urlvec[i][0] != '?'; i++)
+		path += urlvec[i];	
+	size_t pos = path.find_last_of('.');
+	if (pos != std::string::npos)
+		ext = path.substr(pos);
+	if (ext.empty())
 	{
-		// for (std::map<std::string, std::string>::iterator it = this->_cgiConfig.begin(); 
-		// it != this->_cgiConfig.end(); it++)
-		// {
-		// 	if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
-		// 		this->_script = this->server.getRoot() + this->request.getLocation()->getPath() + urlvec[i], this->_postfix = it->first;
-		// 		// this->_script = this->server.getRoot() + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
-		// }
+		path = path + "/" + this->_location.getIndex();
+		pos = path.find_last_of('.');
+		if (pos != std::string::npos)
+			ext = path.substr(pos);
 	}
-	// _script = "/workspaces/webserv/cgi-bin/";
-	// _script = "/workspaces/webserv/post/post.php";
-	if (this->_script.empty())
-		throw 501;
+	this->_script = root + path;
+	this->_postfix = ext;
 	this->_program = this->_cgiConfig[this->_postfix];
+	// this->_program = this->_cgiConfig[this->_postfix];
+
+	// for (size_t i = 0; i < urlvec.size(); i++)
+	// {
+	// 	for (std::map<std::string, std::string>::iterator it = this->_cgiConfig.begin(); 
+	// 	it != this->_cgiConfig.end(); it++)
+	// 	{
+	// 		if (urlvec[i].find(it->first) == urlvec[i].size() - 3)
+	// 			this->_script = root + extractPathInfo(urlvec), this->_postfix = it->first;
+	// 			// this->_script = this->server.getRoot() + temp_config.cgi_folder + urlvec[i], this->_postfix = it->first;
+	// 	}
+	// }
+	// // _script = "/workspaces/webserv/cgi-bin/";
+	// // _script = "/workspaces/webserv/post/post.php";
+	// if (this->_script.empty())
+	// 	throw 501;
+	// this->_program = this->_cgiConfig[this->_postfix];
 }
 
 std::string	CGI::extractScriptName(std::vector<std::string> urlvec)

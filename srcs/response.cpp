@@ -347,11 +347,11 @@ void Response::buildBodywithMethod(std::string ext)
 		}
 		else
 		{
-			CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-			_body = cgi.exec_cgi();
-			std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
-			std::cout << _body;
-			std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
+			// CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
+			// _body = cgi.exec_cgi();
+			// std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
+			// std::cout << _body;
+			// std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
 			// if (_currentMethod == POST)
 			// {
 			// 	int ret = pathIsDir(_target_path);

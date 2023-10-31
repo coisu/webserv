@@ -13,6 +13,7 @@ Request::Request(std::map<std::string, std::string> header, std::string body, st
 	this->_url = extractURL(this->_info);
 	this->_locPath = this->_server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
 	std::cerr << "CONSTRUCT locPath: " << this->_locPath << std::endl;
+	std::cerr << "INFO: " << this->_info << std::endl;
 }
 
 Request::~Request() {} 

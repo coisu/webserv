@@ -8,6 +8,7 @@ Mime::Mime()
     mimeType["txt"] = "text/plain";
     mimeType["css"] = "text/css";
     mimeType["ico"] = "image/x-icon";
+    mimeType["json"] = "application/json";
     mimeType["jpg"] = "image/jpeg";
     mimeType["jpeg"] = "image/jpeg";
     mimeType["ico"] = "image/x-icon";

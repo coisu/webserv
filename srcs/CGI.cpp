@@ -113,7 +113,7 @@ std::string CGI::exec_cgi( void )
     // Create a pipe
     if (pipe(pipefd) == -1)
 	{
-        perror("pipe");
+        perror("pipe"); // <-- COMMENT THIS OUT LATER
         throw std::runtime_error("Failed to create pipe");
         throw std::runtime_error("Failed to create pipe");
     }
@@ -122,7 +122,7 @@ std::string CGI::exec_cgi( void )
     pid = fork();
     if (pid == -1)
 	{
-        perror("fork");
+        perror("fork"); // <-- COMMENT THIS OUT LATER
         throw std::runtime_error("Failed to fork process");
     }
 
@@ -138,7 +138,7 @@ std::string CGI::exec_cgi( void )
         // Execute the CGI program
         if (execve(cgi_path, argv, envp) == -1)
 		{
-            perror("execve");
+            perror("execve"); // <-- COMMENT THIS OUT LATER
         }
         exit(1);
     }

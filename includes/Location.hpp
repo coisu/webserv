@@ -24,12 +24,13 @@ class Location
     /*methods*/
         friend std::ostream& operator<<(std::ostream& os, const Location& location);
         //getters
-        std::string                             getBlock() const;
-		std::string                             getPath() const;
-        std::string                             getRet() const;
-        std::string                             getIndex() const;
-		bool		                            getIsCGI() const;
-        bool                                    getAutoIndex() const;
+        std::string getBlock() const;
+		std::string getPath() const;
+        std::string getRet() const;
+        std::string getIndex() const;
+        std::string getAlias() const;
+		bool		getIsCGI() const;
+        bool        getAutoIndex() const;
 		std::map<std::string, std::string>		getCGIConfig() const;
         std::vector<int>                        getAllowMethods() const;
         std::string                             getUploadStore() const;

@@ -172,7 +172,7 @@ void Location::initAllowMethods(std::string value)
 {
     std::stringstream   ss(value);
     std::string         method;
-    std::string methods[3] = {"GET", "POST", "DELETE"};
+	std::string methods[4] = {"GET", "POST", "DELETE", "INVALID"};
 
     while (std::getline(ss, method, ','))
     {
@@ -238,6 +238,10 @@ std::string Location::getIndex() const
     return (this->_index);
 }
 
+std::string Location::getAlias() const
+{
+    return (this->_alias);
+}
 
 bool	Location::getIsCGI() const
 {

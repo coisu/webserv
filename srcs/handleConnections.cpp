@@ -230,7 +230,10 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
         {
             // throw std::runtime_error("Select() failed");
 			if (global_running_flag == true)
+			{
+				perror("select"); // <-- COMMENT THIS OUT LATER
 				std::cerr << "Error: select() failed\n";
+			}
             continue ;
         }
         // Loop through the server sockets to find the one that is ready.
@@ -263,6 +266,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
                             << inet_ntoa(clientSocketAddress.sin_addr) 
                             << ":" << ntohs(clientSocketAddress.sin_port) 
                             << std::endl;
+				ft_logger("New connection incomming", INFO, __FILE__, __LINE__);
             }
         }
         // Loop through clients and check for readiness for reading and writing
@@ -306,15 +310,17 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 							if (idx < 0 || (size_t)idx >= servers.size())
 								throw 404;
 							Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
-							Response response(request, servers[idx]); // <-- create response with request obj and selected server
 							try
 							{
+								Response response(request, servers[idx]); // <-- create response with request obj and selected server
 								client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
 								client.requestCompleted = false; // <-- set to false so that next message will be read
+								// response.processResponse(statusCode);
 							}
 							catch(int errorCode)
 							{
 								std::cerr << "Error: " << errorCode << std::endl;
+								// response.processError(errorCode);
 								// return 404 error
 							}
 						}
@@ -326,7 +332,7 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 						catch(std::exception &e)
 						{
 							std::cerr << "Error: " << e.what() << std::endl;
-							// return server error 5XX
+							// return server error 500
 						}
 					}
                     // if (bytesReceived < 1024)
@@ -358,8 +364,8 @@ void    recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vecto
 	FD_ZERO(&writeSet);
 	for (it = clients.begin(); it != clients.end(); it++)
 		close(it->first);
-    for (size_t i = 0; i < serverSockets.size(); i++)
-        close(serverSockets[i]);
+	for (size_t i = 0; i < serverSockets.size(); i++)
+		close(serverSockets[i]);
 }
 
 // std::vector<int> getPorts(std::vector<Server> &servers)
@@ -417,6 +423,10 @@ void handleConnections(std::vector<Server> &servers)
         std::cout << "PORT: " << ntohs(port) << std::endl;
         
         // Bind the socket to the address and port.
+		    int yes = 1;
+		    if (setsockopt(currentSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
+			    perror("setsockopt"); // <-- COMMENT THIS OUT LATER
+		    }
         if (bind(currentSocket,(struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress)) < 0)
         {
 		        close(currentSocket);

@@ -390,67 +390,39 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 					if (client.requestCompleted == true) // <-- if the request has been fully parsed then create the response
 					{
+						int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
+						if (idx < 0 || (size_t)idx >= servers.size())
+						{
+							std::cerr << "SERVER NOT FOUND" << std::endl;
+							// throw 404;
+						}
+						Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
+						Response response(request, servers[idx]); // <-- create response with request obj and selected server
 						try
 						{
-							int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
-							if (idx < 0 || (size_t)idx >= servers.size())
-                            {
-                                std::cerr << "SERVER NOT FOUND" << std::endl;
-								throw 404;
-                            }
-							Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
-							try
-							{
-								Response response(request, servers[idx]); // <-- create response with request obj and selected server
-								int fd = -1, pid = -1;
-								std::string fullResponseStr = response.processResponse(fd, pid);
-								if (fd > 0)
-									cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
-								if (fd > maxSocket)
-									maxSocket = fd;
-								if (!fullResponseStr.empty())
-									client.responseQueue.push(fullResponseStr); // <-- push processed response to the queue
-								client.requestCompleted = false; // <-- set to false so that next message will be read
-
-								// Response response(request, servers[idx]); // <-- create response with request obj and selected server
-								// std::pair<bool, Location> loc_pair = servers[idx].srchLocation(request.getLocPath());
-								// if (loc_pair.first && loc_pair.second.getIsCGI() 
-								// && (!pathIsDir(request.getLocPath()) || !loc_pair.second.getIndex().empty()))
-								// {
-								// 	CGI cgi(servers[idx], loc_pair.second, request);
-								// 	// CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
-								// 	int fd;
-								// 	cgi.exec_cgi(fd);
-								// 	// update maxSocket as needed
-								// 	if (fd > maxSocket)
-								// 		maxSocket = fd;
-								// 	cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
-								// }
-								// else
-								// {
-								// 	client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
-								// 	client.requestCompleted = false; // <-- set to false so that next message will be read
-								// }
-									// fullResponseStr = response.processResponse();
-								// response.processResponse(statusCode);
-							}
-							catch(int errorCode)
-							{
-								std::cerr << "Error: " << errorCode << std::endl;
-								// response.processError(errorCode);
-								// return 404 error
-							}
+							int fd = -1, pid = -1;
+							std::string fullResponseStr = response.processResponse(fd, pid);
+							if (fd > 0) // <-- if fd is greater than 0 then it is a cgi
+								cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
+							// update maxSocket as needed
+							if (fd > maxSocket)
+								maxSocket = fd;
+							if (!fullResponseStr.empty()) // <-- if the response was created (not cgi) push to the queue
+								client.responseQueue.push(fullResponseStr);
 						}
-						catch(int errorCode)
+						catch(int errorCode) // <-- if there was an error creating the cgi then send error response
 						{
-							std::cerr << "Error: " << errorCode << std::endl;
-							// return the error that corresponds to the error code
+							std::string body = response.buildErrorBody(errorCode);
+							std::string header = response.buildHeader(body.size(), errorCode);
+							client.responseQueue.push(header + body);
 						}
-						catch(std::exception &e)
+						catch(...) // <-- if there was an error creating the cgi then send error response
 						{
-							std::cerr << "Error: " << e.what() << std::endl;
-							// return server error 500
+							std::string body = response.buildErrorBody(500);
+							std::string header = response.buildHeader(body.size(), 500);
+							client.responseQueue.push(header + body);
 						}
+						client.requestCompleted = false; // <-- set to false so that next message will be read
 					}
 				}
 			}

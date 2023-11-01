@@ -91,7 +91,10 @@ void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
 	pid_t pid;
 	char** const argv = this->_av;
 	if (!argv)
+	{
+		ft_logger("Failed to run CGI: argv is empty", ERROR, __FILE__, __LINE__);
 		throw std::runtime_error("Failed to run CGI: argv is empty");
+	}
 	const char* cgi_path = argv[0];
 	char** const envp = this->getCharEnv();
 	// std::string response;
@@ -100,6 +103,7 @@ void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
 	if (pipe(pipefd) == -1)
 	{
 		perror("pipe"); // <-- COMMENT THIS OUT LATER
+		ft_logger("Failed to create pipe", ERROR, __FILE__, __LINE__);
 		throw std::runtime_error("Failed to create pipe");
 	}
 
@@ -109,13 +113,12 @@ void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
 	if (pid == -1)
 	{
 		perror("fork"); // <-- COMMENT THIS OUT LATER
+		ft_logger("Failed to fork process", ERROR, __FILE__, __LINE__);
 		throw std::runtime_error("Failed to fork process");
 	}
 
-	if (pid == 0)
+	if (pid == 0) // Child process
 	{
-		// Child process
-
 		// Redirect stdout to the write end of the pipe
 		dup2(pipefd[1], STDOUT_FILENO);
 		close(pipefd[0]);
@@ -126,13 +129,12 @@ void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
 			perror("execve"); // <-- COMMENT THIS OUT LATER
 		exit(1);
 	}
-	else
+	else // Parent process
 	{
-		// Parent process
-
 		cgi_pid = pid; // <-- Save the CGI process ID
 		close(pipefd[1]); // <-- Close write end in parent
 	}
+	// free envp
 	for (int i = 0; envp[i]; i++)
 		delete[] envp[i];
 	delete[] envp;

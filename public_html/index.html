@@ -15,11 +15,12 @@ h1
 	font-family: 'Courier New', Courier, monospace, Lucida, Monaco;
 	letter-spacing: 1px;
 	text-transform: uppercase;
+	text-shadow: 2px 2px 5px rgb(59, 58, 60);
 }
 
 h2
 {
-	color:rgb(78, 76, 85);
+	color:rgb(34, 34, 37);
 	font-size:23px;
 	text-align:center;
 	margin-top:-40px;
@@ -27,20 +28,25 @@ h2
 	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
 	word-spacing: 3px;
 	line-height: 1.5;
+	/* text-shadow: 2px 2px 5px rgb(247, 246, 248); */
+	text-shadow: 1px 1px 3px rgb(85, 83, 86);
 }
 
 p
 {
-	color:rgb(77, 74, 88);
+	color:rgb(59, 56, 68);
 	text-align:center;
 	font-size:18px;
 	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+	font-weight: bold;
+	text-shadow: 2px 2px 3px rgb(59, 58, 60);
+	/* text-shadow: 2px 2px 5px rgb(247, 246, 248); */
 }
 
 body
 {
 	background-color: rgb(237, 235, 245);
-	background-image: url(backround2.png);
+	background-image: url(images/bc_02.png);
 	background-size: cover;
 	background-position: center center; 
 }
@@ -48,8 +54,56 @@ body
 a
 {
 	text-decoration:none;
-	color: rgb(255, 169, 135);
+	color: rgb(253, 159, 65);
 	font-style: oblique;
+	text-shadow: 2px 2px 3px rgb(125, 101, 69);
+}
+
+/* Style for div */
+div {
+	color: rgb(237, 222, 255);
+	font-weight: bold;
+    font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+	text-shadow: 2px 2px 5px rgb(59, 58, 60);
+	font-size: 20px;
+	/* text-align:center; */
+	/* margin: 10px auto;  */
+}
+
+/* Style for form */
+form 
+{
+	text-align:left; 
+    width: 200px;
+	display: inline-block;
+}
+
+input[type="text"] 
+{
+	display: block; 
+    width: 100%; 
+    margin-bottom: 5px; /* Espacement entre les champs de saisie */
+}
+
+/* Style pour le bouton "Submit" */
+input[type="submit"] {
+	width: 200px;
+    height: 35px; 
+	padding: 0;
+	border-radius: 5px; 
+	font-size:15px;
+	font-display:  Courier, monospace, Lucida, Monaco, Verdana, !important;
+	display: block;
+	margin: 5px auto; 
+	background-color: #fddec1;
+	color: rgb(51, 51, 51);
+	cursor: pointer; /* Change le curseur en une main lorsqu'il survole le bouton */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Ombre légère sous le bouton */
+    transition: transform 0.3s; /* Animation douce lors du clic */
+}
+
+input[type="submit"]:active {
+    transform: scale(0.96); /* Réduit légèrement la taille du bouton lorsqu'il est cliqué */
 }
 
 a:hover
@@ -60,9 +114,10 @@ a:hover
 
 .green-text
 {
-	color: rgb(94, 190, 150);
+	color: rgb(51, 254, 169);
 	font-style: oblique;
 	font-weight: bold;
+	text-shadow: 2px 2px 5px rgb(59, 58, 60);
 }
 
 .container
@@ -70,6 +125,11 @@ a:hover
 	width:1200px;
 	margin: 0 auto;
 	margin-top:15%;
+}
+
+.centered-container 
+{
+	text-align: center; 
 }
 
 </style>
@@ -83,6 +143,7 @@ a:hover
 </div>
 <div>
   	<body>
+		<div class="centered-container"></div>
     	<div>POST test</div>
     	<form action="./post/" method="post">
     	  <input type="text" id="name" name="name">
@@ -90,7 +151,6 @@ a:hover
     	  <input type="submit" value="Submit">
     	</form>
   	</body>
-	  r
 	<body>
 	  <div>CGI test</div>
 	  <form action="./cgi-bin/" method="get">
@@ -102,7 +162,7 @@ a:hover
 	<body>
 	  	<div>Autoindex</div>
 	  	<form action="autoindex_tester/" method="get">
-			<input type="submit" value="autoindex">
+			<input type="submit" value="Autoindex">
 	  	</form>
 	</body>
 </div>
@@ -110,7 +170,7 @@ a:hover
 	<body>
 	  	<div>Alias</div>
 	  	<form action="alias_tester/" method="get">
-			<input type="submit" value="alias tester">
+			<input type="submit" value="Alias tester">
 	  	</form>
 	</body>
 </div>
@@ -118,15 +178,15 @@ a:hover
 	<body>
 		<div>Redirection to google</div>
 		<form action="redirection_google/" method="get">
-		  <input type="submit" value="redirection to google">
+		  <input type="submit" value="Redirection to google">
 		</form>	
-		<div>error page (with FILE)</div>
+		<div>Error page (with FILE)</div>
 		<form action="error_pages_file/" method="get">
-		  <input type="submit" value="redirection to error page">
+		  <input type="submit" value="Redirection to error page">
 		</form>
-		<div>error page (Redirection)</div>
+		<div>Error page (Redirection)</div>
 		<form action="error_pages_redirection/" method="get">
-		  <input type="submit" value="redirection to error page">
+		  <input type="submit" value="Redirection to error page">
 		</form>
 	</body>
 </div>

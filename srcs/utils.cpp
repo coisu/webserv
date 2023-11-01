@@ -68,21 +68,21 @@ int	pathIsDir(std::string path)
 	return (ret);
 }
 
-int getpermit(std::string path)
+char isPermit(std::string path)
 {
 	struct stat	statbuf;
-	int ret = UNDEFINE;
+	char ret = 0;
 
 	if (stat(path.c_str(), &statbuf) != 0)
-		return (N_FOUND);
+		return (0);
 	else
 	{
 		if (!(statbuf.st_mode & S_IRUSR))	// read permissions
-			return (std::cerr << "no read permissions", N_PERMIT_READ);
+			ret += 4;
 		if (!(statbuf.st_mode & S_IWUSR))	// write permissions
-			return (std::cerr << "no write permissions", N_PERMIT_WRITE);
+			ret += 2;
 		if (!(statbuf.st_mode & S_IXUSR))	// exec permission
-			return (std::cerr << "no exec permissions", N_PERMIT_EXEC);
+			ret += 1;
 	}
 	return (ret);
 }

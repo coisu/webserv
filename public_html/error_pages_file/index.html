@@ -21,7 +21,7 @@ h1
 h2
 {
 	color:rgb(34, 34, 37);
-	font-size:23px;
+	font-size:40px;
 	text-align:center;
 	margin-top:-40px;
 	margin-bottom: 25px;
@@ -44,7 +44,7 @@ p
 body
 {
 	background-color: rgb(237, 235, 245);
-	background-image: url(images/bc_02.png);
+	background-image: url(../images/bc_02.png);
 	background-size: cover;
 	background-position: center center; 
 }
@@ -133,57 +133,54 @@ a:hover
 	<body>
 <div class="container">
 	<h1>Welcome to Webserv</h1><br>
-<h2>If you see this page, the our web server is <span class="green-text">successfully installed</span> and working.<br>
-	 Thank you for using our Webserv.</h2>
+<h2>Error pages<br>
 <p>More information go to <a href="https://github.com/coisu/webserv" target="_blank">our git</a></p>
 </div>
 <div>
   	<body>
 		<div class="centered-container"></div>
-    	<div>POST test</div>
-    	<form action="./post/" method="post">
-    	  <input type="text" id="name" name="name">
-    	  <input type="text" id="age" name="age">
-    	  <input type="submit" value="Submit">
-    	</form>
   	</body>
 	<body>
-	  <div>CGI test</div>
-	  <form action="./cgi-bin/" method="get">
-		<input type="submit" value="CGI TEST">
+	  <div>404 test</div>
+	  <form action="404.html" method="get">
+		<input type="submit" value="404">
 	  </form>
 	</body>
 </div>
 <div>
 	<body>
-	  	<div>Autoindex</div>
-	  	<form action="autoindex_tester/" method="get">
-			<input type="submit" value="Autoindex">
+	  	<div>413 test</div>
+	  	<form action="413.html" method="get">
+			<input type="submit" value="413">
 	  	</form>
 	</body>
 </div>
 <div>
 	<body>
-	  	<div>Alias</div>
-	  	<form action="alias_tester/" method="get">
-			<input type="submit" value="Alias tester">
+	  	<div>403 test</div>
+	  	<form action="403.html" method="get">
+			<input type="submit" value="403">
 	  	</form>
 	</body>
 </div>
 <div>
-	<body>
-		<div>Redirection to google</div>
-		<form action="redirection_google/" method="get">
-		  <input type="submit" value="Redirection to google">
-		</form>	
-		<div>Error page (with FILE)</div>
-		<form action="error_pages_file/index.html" method="get">
-		  <input type="submit" value="Redirection to error page">
-		</form>
-		<div>Error page (Redirection)</div>
-		<form action="error_pages_redirection/" method="get">
-		  <input type="submit" value="Redirection to error page">
-		</form>
-	</body>
+	<div>
+		<body>
+			  <div>405 test</div>
+			  <form action="405.html" method="get">
+				<input type="submit" value="405">
+			  </form>
+		</body>
+	</div>
+</div>
+<div>
+	<div>
+		<body>
+			  <div>500 test</div>
+			  <form action="500.html" method="get">
+				<input type="submit" value="500">
+			  </form>
+		</body>
+	</div>
 </div>
 </html>

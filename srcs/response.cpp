@@ -229,7 +229,7 @@ std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 	}
 
 	/* MAKE HEADER */
-	if ((_currentMethod == GET && !_location.getIsCGI()) || _status >= 400)
+	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400)
 	{
 		_headerStr += buildHeader(_body.size(), _status);
 		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + "\r\n" + _body + "\r\n";
@@ -272,9 +272,7 @@ void Response::setTargetPath()
 		if (_location.getIndex() != "")
 		{
 			if(pathIsDir(_target_path) == IS_DIR && !_location.getAutoIndex())
-			{
 				_target_path += _location.getIndex();
-			}
 		}
 	}
 	std::cout << "\n[ Directive Path ] " << _target_path << std::endl << std::endl;
@@ -299,9 +297,7 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 				else if (ret == IS_REG)						//regular file
 					_body = fileTextIntoBody(_mimeList.getMimeType(ext) == "text/html");
 				else
-				{
 					_status = _return == -1 ? 403 : _return;
-				}
 			}
 			else
 			{
@@ -320,7 +316,8 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 			if (_location.getUploadStore() != "")
 			{
 				std::string uploadPath = _server.getRoot() + _location.getUploadStore();
-				if (pathIsDir(uploadPath) != IS_DIR || )
+				if (pathIsDir(uploadPath) != IS_DIR || !isPermit(uploadPath) & WRITABLE)
+					_status = _return == -1 ? 403 : _return;
 			}
 			if (_location.getIsCGI())
 			{
@@ -329,8 +326,8 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 			}
 			else
 			{
-				std::cout << "CGI is not set\n";
-				_status = 405;
+				_status = _return == -1 ? 405 : _return;
+				_body = "CGI is not set";
 			}
 
 		}
@@ -362,7 +359,7 @@ void Response::buildErrorBody(std::string ext)
 
 }
 
-std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, bool isHTML)
+std::pair<bool, std::string>	Response::writeBodyHtmlPair(std::string filePath, bool isHTML)
 {
 	std::string		ret;
 	std::ifstream 	ifs;
@@ -648,35 +645,9 @@ std::string		Response::buildHeader(int bodySize, int status)
 
 	setContentLength(bodySize);
 	header += makeStartLine(status);
-	header += makeTimeLine(false);
-	header += appendMapHeaders(false, status);
+	header += makeTimeLine();
+	header += appendMapHeaders(status);
 	
-	return (header);
-}
-
-std::string		Response::buildHeaderCgi(std::string &body, int status)
-{
-	std::string	header;
-	std::string tmp(body);
-	std::string::size_type n;
-
-	header += makeStartLine(status);
-
-	n = tmp.find("\r\n\r\n");
-	if (n != std::string::npos)
-	{
-		header += tmp.substr(0, n) + "\r\n";
-		body.clear();
-		body = tmp.substr(n, tmp.size());
-	}
-
-	if (_request.getMethodEnum() == DELETE && _status == 204)
-		setContentLength(0);
-	else
-		setContentLength(body.size() - 2);
-	header += appendMapHeaders(true, status);
-	header += makeTimeLine(true);
-
 	return (header);
 }
 
@@ -701,36 +672,35 @@ std::string		Response::makeStartLine(int status)
 }
 
 
-std::string		Response::appendMapHeaders(bool isCGI, int statusCode)	
+std::string		Response::appendMapHeaders(int statusCode)	
 {
-	std::string	_headerStr;
+	std::string	headerStr;
 
 	for (std::map<std::string, std::string>::iterator it=_headers.begin(); it!=_headers.end(); it++)
 	{
 		if ( !(it->second.empty()) )
 		{
 			if ((_request.getMethodEnum() == DELETE && it->first == "Content-Type") 
-			|| (it->first == "Content-Type" && isCGI == true)
+			|| (it->first == "Content-Type")
 			|| (it->first == "Transfer-Encoding"))
 			{
-				std::cout << "\n\nisCGI : " << isCGI <<std::endl;
 				std::cout << "skip : " <<it->first <<std::endl<<std::endl;
 				continue ;
 			} 
-			_headerStr += it->first;
-			_headerStr += ": ";
+			headerStr += it->first;
+			headerStr += ": ";
 			if (it->first == "Content-Type" && statusCode >= 400)
-				_headerStr += "text/html";
+				headerStr += "text/html";
 			else
-				_headerStr += it->second;
-			_headerStr += "\r\n";
+				headerStr += it->second;
+			headerStr += "\r\n";
 		}
 	}
-	return _headerStr;
+	return headerStr;
 }
 
 // Date: Thu, 18 Aug 2022 11:02:41 GMT
-std::string		Response::makeTimeLine(bool isCGI) 
+std::string		Response::makeTimeLine() 
 {
 	std::string	timeLine;
 	timeLine += "Date: ";
@@ -745,7 +715,7 @@ std::string		Response::makeTimeLine(bool isCGI)
   	strftime(buffer, 80, "%a, %d %b %Y %T GMT", timeinfo);
 
 	timeLine += buffer;
-	if (isCGI == false || _request.getMethodEnum() != DELETE)
+	if (_request.getMethodEnum() != DELETE)
 		timeLine += "\r\n";
 	return (timeLine);
 }

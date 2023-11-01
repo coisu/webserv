@@ -323,7 +323,6 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 				_return == -1 ? (_status = 405) : (throw _return);
 				_body = "CGI is not set";
 			}
-
 		}
 	}
 	else if (_currentMethod == DELETE)
@@ -335,7 +334,6 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 
 void Response::buildErrorBody(std::string ext)
 {
-
 	if (_status >= 400)
 	{
 		std::cout << "status -- " << _status << std::endl;
@@ -353,7 +351,7 @@ void Response::buildErrorBody(std::string ext)
 
 }
 
-void Response::buildErrorBody(int err)
+std::string Response::buildErrorBody(int err)
 {
 
 	if (_status >= 400)
@@ -369,6 +367,7 @@ void Response::buildErrorBody(int err)
 
 		_connect = "Close";
 	}
+	return (_body);
 }
 
 std::pair<bool, std::string>	Response::writeBodyHtmlPair(std::string filePath, bool isHTML)

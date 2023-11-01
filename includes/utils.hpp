@@ -53,7 +53,10 @@
 #define N_PERMIT_READ 4
 #define N_PERMIT_WRITE 5
 #define N_PERMIT_EXEC 6
-#define UNDEFINE 7
+
+#define READABLE 1<<2
+#define WRITABLE 1<<1
+#define EXCUTABLE 1
 
 #ifndef LOG_LEVEL
 # define LOG_LEVEL 1
@@ -134,7 +137,7 @@ bool						pathExists(std::string path);
 std::string					readFile(std::string location);
 std::vector<std::string>	splitUrl(std::string url);
 int						pathIsDir(std::string path);
-int getpermit(std::string path);
+int isPermit(std::string path);
 bool						isNumeric(std::string const &str);
 std::string					trimWhiteSpace( const std::string &str );
 

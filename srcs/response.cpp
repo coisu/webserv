@@ -313,47 +313,15 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 						_status = 200;
 					_body = body_pair.second;
 				}
-				else
-					_body = body_pair.second;
 			}
 		}
 		else
 		{
-			// CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-			// _body = cgi.exec_cgi();
-			// std::cout << "\n\n>> CGI BODY PRINT >>>>>>>>>>\n";
-			// std::cout << _body;
-			// std::cout << "\n<<<<<<<<<<<<<<<<<<CGI BODY PRINT\n\n";
-			// if (_currentMethod == POST)
-			// {
-			// 	int ret = pathIsDir(_target_path);
-			// 	if (ret == IS_REG || ret == N_FOUND)
-			// 	{
-			// 		std::string reqBody = _request.getBody();
-			// 		std::cout << "\n   request body : " << reqBody << std::endl;
-			// 		_body = reqBody;
-			// 		// if (ext == "html" && reqBody.find("&") != std::string::npos)
-			// 		// 	_headers["Content-Type"] = "application/x-www-form-urlencoded";
-			// 		std::cout << "Content-type : " << _headers["Content-Type"] <<std::endl;
-			// 		int	fd = open(_target_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0665);
-			// 		if (fd > 0 && reqBody.length() && write(fd, reqBody.c_str(), reqBody.length()) > 0)
-			// 		{
-			// 			std::cout << "Created by POST at " << _target_path <<std::endl;
-			// 		}
-			// 		close(fd);
-			// 		_status = (ret == N_FOUND) ? 201 : 200;
-			// 	}
-			// 	else
-			// 	{
-			// 		std::cout << "POST creating failed : stat : " << ret <<std::endl;
-			// 		if (ret == IS_DIR)
-			// 			_status = 405;
-			// 		else
-			// 			_status = 403;
-			// 		// _body = _request.getBody();
-			// 	}
-
-			// }
+			if (_location.getUploadStore() != "")
+			{
+				std::string uploadPath = _server.getRoot() + _location.getUploadStore();
+				if (pathIsDir(uploadPath) != IS_DIR || )
+			}
 			if (_location.getIsCGI())
 			{
 				CGI	cgi(_server, _location, _request);
@@ -406,28 +374,19 @@ std::pair<bool, std::string>		Response::writeBodyHtmlPair(std::string filePath, 
 	if (ifs.fail())
 	{
 		ifs.close();
-		if (getpermit(filePath) == N_FOUND)
-		{
-			_status = 404;
-			return (std::make_pair(false, makeErrorPage(404)));
-		}
-		else
-		{
-			_status = 403;
-			return (std::make_pair(false, makeErrorPage(403)));
-		}
+		if (pathIsDir(filePath) == N_FOUND)
+			_status = _return == -1 ? 404 : _return;
+		else if (!isPermit(filePath) & READABLE)
+			_status = _return == -1 ? 403 : _return;
+		return (std::make_pair(false, ""));
 	}
 	std::string	str;
 	while (std::getline(ifs, str))
 	{
 		if (isHTML)
-		{
 			ret += "\r\n";
-		}
 		else
-		{
 			ret += "\n";
-		}
 		ret += str;
 	}
 	ifs.close();
@@ -446,25 +405,22 @@ std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 	if (ifs.fail())
 	{
 		ifs.close();
+		_status = _return == -1 ? 404 : _return;
 		std::map<int, std::string> ep = _server.getErrorPages();
-		ifs.open(const_cast<char*>((_server.getRoot() + ep[404]).c_str()));
+		ifs.open(const_cast<char*>((_server.getRoot() + ep[_status]).c_str()));
 		if (ifs.fail())
 		{
 			ifs.close();
-			return makeErrorPage(404);
+			return makeErrorPage(_status);
 		}
 	}
 	std::string	str;
 	while (std::getline(ifs, str))
 	{
 		if (isHTML)
-		{
 			ret += "\r\n";
-		}
 		else
-		{
 			ret += "\n";
-		}
 		ret += str;
 	}
 	ifs.close();
@@ -478,7 +434,7 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 	std::string line;
 	std::string ret;
 
-	if (getpermit(_target_path) == N_PERMIT_READ || getpermit(_target_path) == N_PERMIT_EXEC)
+	if (!isPermit(_target_path) & READABLE || !isPermit(_target_path) & EXCUTABLE)
 	{
 		_status = _return == -1 ? 403 : _return;		
 		return "";
@@ -518,7 +474,7 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 	if (!(*(url.rbegin()) == '/'))
 		url.append("/");
 
-	if (getpermit(_target_path) == N_PERMIT_READ || getpermit(_target_path) == N_PERMIT_EXEC)
+	if (!isPermit(_target_path) & READABLE || isPermit(_target_path) & EXCUTABLE)
 	{
 		_status = _return == -1 ? 403 : _return;
 		return "";
@@ -596,9 +552,8 @@ std::string	Response::getExt(std::string const &filename) const
 	std::string	ext;
 	std::string::size_type	idx;
 	idx = filename.rfind(".");
-	if (idx != std::string::npos) {
+	if (idx != std::string::npos)
 		ext = filename.substr(idx + 1);
-	}
 	else
 		ext = "default";
     return ext;
@@ -608,15 +563,10 @@ void	Response::setRequestVal(void)
 {
 	std::map<std::string, std::string> reqHead = _request.getHead();
 
-	std::cout << "===========HERE==================" << std::endl;
 	for (std::map<std::string, std::string>::iterator it = reqHead.begin(); it != reqHead.end(); ++it)
 	{
-		// Header = _headers.find(it->first);
 		if (it != _headers.end() && it->first != "Content-Length" && _headers.find(it->first) != _headers.end())
-		{
  			_headers[it->first] = it->second;
-			std::cout << "[ " << it->first << " ] : " << it->second << std::endl;
-		}
 	}     
 }    
 
@@ -630,8 +580,6 @@ bool	Response::checkSetLocation(std::string path)
 {
 	std::pair<bool, Location> location_pair;
 
-
-	// location_pair = getMatchLoc(path);
 	location_pair = _server.srchLocation(path);
 	if (location_pair.first == true)
 	{
@@ -688,13 +636,9 @@ int	Response::execteDelete(void)
 	int	status(200);
 
 	if (remove(const_cast<char*>(_target_path.c_str())) == -1)
-	{
 		status = 204;
-	}
 	else
-	{
 		_body = "\r\nSuccessfully deleted: " + _target_path;
-	}
 	return (status);
 }
 
@@ -727,13 +671,9 @@ std::string		Response::buildHeaderCgi(std::string &body, int status)
 	}
 
 	if (_request.getMethodEnum() == DELETE && _status == 204)
-	{
 		setContentLength(0);
-	}
 	else
-	{
 		setContentLength(body.size() - 2);
-	}
 	header += appendMapHeaders(true, status);
 	header += makeTimeLine(true);
 
@@ -780,13 +720,9 @@ std::string		Response::appendMapHeaders(bool isCGI, int statusCode)
 			_headerStr += it->first;
 			_headerStr += ": ";
 			if (it->first == "Content-Type" && statusCode >= 400)
-			{
 				_headerStr += "text/html";
-			}
 			else
-			{
 				_headerStr += it->second;
-			}
 			_headerStr += "\r\n";
 		}
 	}
@@ -810,9 +746,7 @@ std::string		Response::makeTimeLine(bool isCGI)
 
 	timeLine += buffer;
 	if (isCGI == false || _request.getMethodEnum() != DELETE)
-	{
 		timeLine += "\r\n";
-	}
 	return (timeLine);
 }
 
@@ -823,7 +757,6 @@ std::string	Response::getFileDateTime(time_t sec)
 
 	strftime(buf, sizeof(buf), "%d-%b-%Y %H:%M", localtime(&sec));
 	ret += buf;
-
 	return (ret);
 }
 

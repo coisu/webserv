@@ -2,35 +2,144 @@
 <head>
 <title>Auto Index</title>
 <style>
-h1{
-font-size:40px;
-font-weight:800;
-text-align:center;
+h1
+{
+	color:rgb(113, 90, 153);
+	font-size:65px;
+	font-weight:600;
+	text-align:center;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	text-shadow: 2px 2px 5px rgb(59, 58, 60);
 }
+
 h2
 {
-font-size:25px;
-text-align:center;
-margin-top:-40px;
+	color:rgb(34, 34, 37);
+	font-size:23px;
+	text-align:center;
+	margin-top:-40px;
+	margin-bottom: 25px;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+	word-spacing: 3px;
+	line-height: 1.5;
+	text-shadow: 1px 1px 3px rgb(85, 83, 86);
 }
-p{
-text-align:center;
-font-size:15px;
+
+p
+{
+	color:rgb(59, 56, 68);
+	text-align:center;
+	font-size:18px;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+	font-weight: bold;
+	text-shadow: 2px 2px 3px rgb(59, 58, 60);
+}
+
+body
+{
+	background-color: rgb(237, 235, 245);
+	background-image: url(../../images/bc_02.png);
+	background-size: cover;
+	background-position: center center; 
+}
+
+a
+{
+	text-decoration:none;
+	color: rgb(253, 159, 65);
+	font-style: oblique;
+	text-shadow: 2px 2px 3px rgb(125, 101, 69);
+}
+
+/* Style for div */
+div {
+	color: rgb(237, 222, 255);
+	font-weight: bold;
+    font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+	text-shadow: 2px 2px 5px rgb(59, 58, 60);
+	font-size: 20px;
+}
+
+/* Style for form */
+form 
+{
+	text-align:left; 
+    width: 200px;
+	display: inline-block;
+}
+
+input[type="text"] 
+{
+	display: block; 
+    width: 100%; 
+    margin-bottom: 5px; /* Espacement entre les champs de saisie */
+}
+
+/* Style pour le bouton "Submit" */
+input[type="submit"] {
+	width: 200px;
+    height: 35px; 
+	padding: 0;
+	border-radius: 5px; 
+	font-size:15px;
+	font-display:  Courier, monospace, Lucida, Monaco, Verdana, !important;
+	display: block;
+	margin: 5px auto; 
+	background-color: #fddec1;
+	color: rgb(51, 51, 51);
+	cursor: pointer; /* Change le curseur en une main lorsqu'il survole le bouton */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Ombre légère sous le bouton */
+    transition: transform 0.3s; /* Animation douce lors du clic */
+}
+
+input[type="submit"]:active {
+    transform: scale(0.96); /* Réduit légèrement la taille du bouton lorsqu'il est cliqué */
+}
+
+a:hover
+{
+	color:blue;
+	text-decoration:underline;
+}
+
+.green-text
+{
+	color: rgb(51, 254, 169);
+	font-style: oblique;
+	font-weight: bold;
+	text-shadow: 2px 2px 5px rgb(59, 58, 60);
+}
+
+.orange-text
+{
+	color: rgb(247, 223, 211);
+	font-style: oblique;
+	font-weight:lighter;
+	font-size:40px;
+	font-weight: bold;
+	text-shadow: 2px 2px 5px rgb(255, 160, 36);
 }
 
 .container
 {
-width:1000px;
-margin: 0 auto;
-margin-top:15%;
+	width:1200px;
+	margin: 0 auto;
+	margin-top:15%;
+}
+
+.centered-container 
+{
+	text-align: center; 
 }
 </style>
 </head>
 <body>
 <div class="container">
 	<h1>		Webserv		</h1><br>
-	<h1>Written by Autoindex !</h1><br>
-<h2>If you see this page, the our web server is successfully installed and working.<br>Thank you for using our Webserv.</h2>
+	<h2> <span class="orange-text"> Written by Autoindex !</span></h1><br>
+<h2>If you see this page, the our web server is <span class="green-text">successfully installed</span> and working.<br>Thank you for using our Webserv.</h2>
 <p>More information go to <a href="https://github.com/coisu/webserv">our git</a></p>
 </div>
 </body>

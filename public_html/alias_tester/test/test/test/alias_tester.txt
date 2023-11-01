@@ -1,2 +1,0 @@
-directive to ./public_html/alias_tester/test/test/test/alias_tester.txt
-requested /alias_tester/alias_tester.txt

@@ -240,7 +240,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			// throw std::runtime_error("Select() failed");
 			if (global_running_flag == true)
 			{
-				exit(1);
+				// exit(1);
 				perror("select"); // <-- COMMENT THIS OUT LATER
 				std::cerr << "Error: select() failed\n";
 			}

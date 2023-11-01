@@ -412,24 +412,35 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 							try
 							{
 								Response response(request, servers[idx]); // <-- create response with request obj and selected server
-								std::pair<bool, Location> loc_pair = servers[idx].srchLocation(request.getLocPath());
-								if (loc_pair.first && loc_pair.second.getIsCGI() 
-								&& (!pathIsDir(request.getLocPath()) || !loc_pair.second.getIndex().empty()))
-								{
-									CGI cgi(servers[idx], loc_pair.second, request);
-									// CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
-									int fd;
-									cgi.exec_cgi(fd);
-									// update maxSocket as needed
-									if (fd > maxSocket)
-										maxSocket = fd;
+								int fd = -1, pid = -1;
+								std::string fullResponseStr = response.processResponse(fd, pid);
+								if (fd > 0)
 									cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
-								}
-								else
-								{
-									client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
-									client.requestCompleted = false; // <-- set to false so that next message will be read
-								}
+								if (fd > maxSocket)
+									maxSocket = fd;
+								if (!fullResponseStr.empty())
+									client.responseQueue.push(fullResponseStr); // <-- push processed response to the queue
+								client.requestCompleted = false; // <-- set to false so that next message will be read
+
+								// Response response(request, servers[idx]); // <-- create response with request obj and selected server
+								// std::pair<bool, Location> loc_pair = servers[idx].srchLocation(request.getLocPath());
+								// if (loc_pair.first && loc_pair.second.getIsCGI() 
+								// && (!pathIsDir(request.getLocPath()) || !loc_pair.second.getIndex().empty()))
+								// {
+								// 	CGI cgi(servers[idx], loc_pair.second, request);
+								// 	// CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
+								// 	int fd;
+								// 	cgi.exec_cgi(fd);
+								// 	// update maxSocket as needed
+								// 	if (fd > maxSocket)
+								// 		maxSocket = fd;
+								// 	cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
+								// }
+								// else
+								// {
+								// 	client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
+								// 	client.requestCompleted = false; // <-- set to false so that next message will be read
+								// }
 									// fullResponseStr = response.processResponse();
 								// response.processResponse(statusCode);
 							}

@@ -315,28 +315,26 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			{
 				char	buffer[1024];
 				bytesReceived = read(cgiSocket, buffer, sizeof(buffer));
-				if (bytesReceived <= 0)
+				if (bytesReceived < 0)
 				{
-					if (bytesReceived == -1)
-					{
-						ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
-						std::cerr << "Error reading from CGI" << std::endl;
-						close(cgiSocket);
-						// FD_CLR(cgiSocket, &readSet);
-						cgi.isFinished = true;
-						cgi_map.erase(cgi_it++);
-						continue ;
-					}
-					if (bytesReceived == 0)
-					{
-						ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
-						std::cout << "RECV CGI RETURNED ZERO\n";
-						cgi.isFinished = true;
-						clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
-						cgi.incompleteResponse.clear();
-						cgi_map.erase(cgi_it++);
-						continue ;
-					}
+					ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+					std::cerr << "Error reading from CGI" << std::endl;
+					close(cgiSocket);
+					// FD_CLR(cgiSocket, &readSet);
+					cgi.isFinished = true;
+					cgi_map.erase(cgi_it++);
+					continue ;
+				}
+				else if (bytesReceived == 0)
+				{
+					ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+					std::cout << "RECV CGI RETURNED ZERO\n";
+					cgi.isFinished = true;
+					close(cgiSocket);
+					clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
+					cgi.incompleteResponse.clear();
+					cgi_map.erase(cgi_it++);
+					continue ;
 				}
 				else
 				{
@@ -370,23 +368,20 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				char    buffer[1024];
 				bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
 				// std::cout << "\n----MESSGE----\n" << client.incompleteRequest << "\n-----END-----\n";
-				if (bytesReceived <= 0)
+				if (bytesReceived < 0)
 				{
-					if (bytesReceived == -1)
-					{
-						std::cerr << "Error reading from client" << std::endl;
-						close(clientSocket);
-						FD_CLR(clientSocket, &readSet);
-						FD_CLR(clientSocket, &writeSet);
-						client.isClosed = true;
-                        perror("bytes");
-						continue ;
-					}
-					if (bytesReceived == 0)
-					{
-						std::cout << "RECV RETURNED ZERO\n";
-						client.isClosing = true;
-					}
+					std::cerr << "Error reading from client" << std::endl;
+					close(clientSocket);
+					FD_CLR(clientSocket, &readSet);
+					FD_CLR(clientSocket, &writeSet);
+					client.isClosed = true;
+					perror("bytes");
+					continue ;
+				}
+				else if (bytesReceived == 0)
+				{
+					std::cout << "RECV RETURNED ZERO\n";
+					client.isClosing = true;
 				}
 				else
 				{
@@ -459,13 +454,21 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					}
 				}
 			}
-			if (FD_ISSET(clientSocket, &writeSet) && client.responseQueue.empty() == false) // <-- check if client is ready to write into
+			else if (FD_ISSET(clientSocket, &writeSet) && client.responseQueue.empty() == false) // <-- check if client is ready to write into
 			{
 				std::string	&responseStr = client.responseQueue.front();
 				int bytesSent = send(clientSocket, responseStr.data(), responseStr.size(), 0);
 				if(bytesSent < 0)
 				{
-					// Handle error or close
+					// Handle disconnect
+					close(clientSocket);
+					FD_CLR(clientSocket, &readSet);
+					FD_CLR(clientSocket, &writeSet);
+					client.isClosed = true;
+				}
+				else if (bytesSent == 0)
+				{
+					// Handle disconnect
 					close(clientSocket);
 					FD_CLR(clientSocket, &readSet);
 					FD_CLR(clientSocket, &writeSet);
@@ -486,8 +489,13 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 	}
 	FD_ZERO(&readSet);
 	FD_ZERO(&writeSet);
+	// close all cgi fds
+	for (cgi_it = cgi_map.begin(); cgi_it != cgi_map.end(); cgi_it++)
+		close(cgi_it->first);
+	// close all client sockets
 	for (it = clients.begin(); it != clients.end(); it++)
 		close(it->first);
+	// close all server sockets
 	for (size_t i = 0; i < serverSockets.size(); i++)
 		close(serverSockets[i]);
 }

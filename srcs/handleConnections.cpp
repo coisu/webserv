@@ -335,6 +335,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
 					std::cout << "RECV CGI RETURNED ZERO\n";
 					cgi.isFinished = true;
+					close(cgiSocket);
 					clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
 					cgi.incompleteResponse.clear();
 					cgi_map.erase(cgi_it++);
@@ -493,8 +494,13 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 	}
 	FD_ZERO(&readSet);
 	FD_ZERO(&writeSet);
+	// close all cgi fds
+	for (cgi_it = cgi_map.begin(); cgi_it != cgi_map.end(); cgi_it++)
+		close(cgi_it->first);
+	// close all client sockets
 	for (it = clients.begin(); it != clients.end(); it++)
 		close(it->first);
+	// close all server sockets
 	for (size_t i = 0; i < serverSockets.size(); i++)
 		close(serverSockets[i]);
 }

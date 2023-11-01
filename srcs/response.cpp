@@ -315,12 +315,12 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 		}
 		else
 		{
-			if (_location.getUploadStore() != "")
-			{
-				std::string uploadPath = _server.getRoot() + _location.getUploadStore();
-				if (pathIsDir(uploadPath) != IS_DIR || !(isPermit(uploadPath) & WRITABLE))
-					_status = _return == -1 ? 403 : _return;
-			}
+			// if (_location.getUploadStore() != "")
+			// {
+			// 	std::string uploadPath = _server.getRoot() + _location.getUploadStore();
+			// 	if (pathIsDir(uploadPath) != IS_DIR || !(isPermit(uploadPath) & WRITABLE))
+			// 		_status = _return == -1 ? 403 : _return;
+			// }
 			if (_location.getIsCGI())
 			{
 				CGI	cgi(_server, _location, _request);
@@ -361,7 +361,7 @@ void Response::buildErrorBody(std::string ext)
 
 }
 
-void Response::buildErrorBody(int err)
+std::string Response::buildErrorBody(int err)
 {
 
 	if (_status >= 400)
@@ -377,6 +377,7 @@ void Response::buildErrorBody(int err)
 
 		_connect = "Close";
 	}
+	return (_body);
 }
 
 std::pair<bool, std::string>	Response::writeBodyHtmlPair(std::string filePath, bool isHTML)

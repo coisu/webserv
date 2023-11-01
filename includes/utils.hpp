@@ -50,9 +50,7 @@
 #define IS_REG 1
 #define N_DIR 2
 #define N_FOUND 3
-#define N_PERMIT_READ 4
-#define N_PERMIT_WRITE 5
-#define N_PERMIT_EXEC 6
+#define UNDEFINE -1
 
 #define READABLE 1<<2
 #define WRITABLE 1<<1
@@ -136,8 +134,8 @@ typedef enum e_level
 bool						pathExists(std::string path);
 std::string					readFile(std::string location);
 std::vector<std::string>	splitUrl(std::string url);
-int						pathIsDir(std::string path);
-int isPermit(std::string path);
+int							pathIsDir(std::string path);
+char						isPermit(std::string path);
 bool						isNumeric(std::string const &str);
 std::string					trimWhiteSpace( const std::string &str );
 

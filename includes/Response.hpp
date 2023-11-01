@@ -94,11 +94,11 @@ class Response
     std::string		buildHeaderCgi(std::string &body, int status);
 
     std::string		makeStartLine(int status);
-    std::string		makeTimeLine(bool isCGI) ;
+    std::string		makeTimeLine() ;
     void	        setContentType(std::string ext);
     void            setLocationHeader(std::string url);
     void	        setContentLength(int bodySize);
-    std::string		appendMapHeaders(bool isCGI, int statusCode)	;
+    std::string		appendMapHeaders(int statusCode)	;
 
 
 

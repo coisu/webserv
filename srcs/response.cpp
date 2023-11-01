@@ -318,7 +318,7 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 			if (_location.getUploadStore() != "")
 			{
 				std::string uploadPath = _server.getRoot() + _location.getUploadStore();
-				if (pathIsDir(uploadPath) != IS_DIR || !isPermit(uploadPath) & WRITABLE)
+				if (pathIsDir(uploadPath) != IS_DIR || !(isPermit(uploadPath) & WRITABLE))
 					_status = _return == -1 ? 403 : _return;
 			}
 			if (_location.getIsCGI())
@@ -393,7 +393,7 @@ std::pair<bool, std::string>	Response::writeBodyHtmlPair(std::string filePath, b
 		ifs.close();
 		if (pathIsDir(filePath) == N_FOUND)
 			_status = _return == -1 ? 404 : _return;
-		else if (!isPermit(filePath) & READABLE)
+		else if (!(isPermit(filePath) & READABLE))
 			_status = _return == -1 ? 403 : _return;
 		return (std::make_pair(false, ""));
 	}
@@ -451,7 +451,7 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 	std::string line;
 	std::string ret;
 
-	if (!isPermit(_target_path) & READABLE || !isPermit(_target_path) & EXCUTABLE)
+	if (!(isPermit(_target_path) & READABLE) || !(isPermit(_target_path) & EXCUTABLE))
 	{
 		_status = _return == -1 ? 403 : _return;		
 		return "";
@@ -491,7 +491,7 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 	if (!(*(url.rbegin()) == '/'))
 		url.append("/");
 
-	if (!isPermit(_target_path) & READABLE || isPermit(_target_path) & EXCUTABLE)
+	if (!(isPermit(_target_path) & READABLE) || !(isPermit(_target_path) & EXCUTABLE))
 	{
 		_status = _return == -1 ? 403 : _return;
 		return "";

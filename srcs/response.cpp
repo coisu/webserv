@@ -232,7 +232,7 @@ std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400)
 	{
 		_headerStr += buildHeader(_body.size(), _status);
-		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + "\r\n" + _body + "\r\n";
+		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
 	}
 	std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
 	return _buffer;
@@ -357,6 +357,24 @@ void Response::buildErrorBody(std::string ext)
 		_connect = "Close";
 	}
 
+}
+
+void Response::buildErrorBody(int err)
+{
+
+	if (_status >= 400)
+	{
+		std::map<int, std::string> ep = _server.getErrorPages();
+		if (ep.find(err) != ep.end())
+		{
+			std::cout << "making error page with directive file \n\n";
+			_body = writeBodyHtml(_server.getRoot() + ep[err], true);
+		}
+		else
+			_body = makeErrorPage(err);
+
+		_connect = "Close";
+	}
 }
 
 std::pair<bool, std::string>	Response::writeBodyHtmlPair(std::string filePath, bool isHTML)

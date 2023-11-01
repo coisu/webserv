@@ -229,13 +229,11 @@ std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 	}
 
 	/* MAKE HEADER */
-	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400)
+	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400 || (_location.getIsCGI() && _status == _return))
 	{
 		_headerStr += buildHeader(_body.size(), _status);
 		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
 	}
-
-
 	// std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
 	return _buffer;
 }
@@ -315,12 +313,6 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 		}
 		else
 		{
-			if (_location.getUploadStore() != "")
-			{
-				std::string uploadPath = _server.getRoot() + _location.getUploadStore();
-				if (pathIsDir(uploadPath) != IS_DIR || !(isPermit(uploadPath) & WRITABLE))
-					_status = _return == -1 ? 403 : _return;
-			}
 			if (_location.getIsCGI())
 			{
 				CGI	cgi(_server, _location, _request);
@@ -328,7 +320,7 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 			}
 			else
 			{
-				_status = _return == -1 ? 405 : _return;
+				_return == -1 ? (_status = 405) : (throw _return);
 				_body = "CGI is not set";
 			}
 

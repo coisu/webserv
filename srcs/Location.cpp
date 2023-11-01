@@ -165,6 +165,15 @@ void Location::initAutoIndex(std::string value)
 
 void Location::initRet(std::string value)
 {
+    int code;
+    if (isNumeric(value))
+    {
+        std::stringstream ssint;
+        ssint << _location.getRet();
+        ssint >> code;
+        if (code < 100 || code > 599)
+            throw std::runtime_error("return must be a string or integer between 100-599.");
+    }
     this->_ret = value;
 }
 

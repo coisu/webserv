@@ -70,6 +70,7 @@ class Response
     void            setTargetPath();
     void            buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid);
     void            buildErrorBody(std::string ext);
+    void            buildErrorBody(int err);
     std::pair<bool, Location>	getMatchLoc(const std::string& request_path);
 
 
@@ -93,11 +94,11 @@ class Response
     std::string		buildHeaderCgi(std::string &body, int status);
 
     std::string		makeStartLine(int status);
-    std::string		makeTimeLine(bool isCGI) ;
+    std::string		makeTimeLine() ;
     void	        setContentType(std::string ext);
     void            setLocationHeader(std::string url);
     void	        setContentLength(int bodySize);
-    std::string		appendMapHeaders(bool isCGI, int statusCode)	;
+    std::string		appendMapHeaders(int statusCode)	;
 
 
 

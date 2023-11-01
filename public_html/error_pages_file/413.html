@@ -2,35 +2,99 @@
 <head>
 <title>413</title>
 <style>
+
 h1{
-font-size:40px;
-font-weight:800;
-text-align:center;
+	color:rgb(113, 90, 153);
+	font-size:40px;
+	font-weight:800;
+	text-align:center;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	text-shadow: 2px 2px 5px rgb(59, 58, 60);
 }
+
 h2
 {
-font-size:25px;
-text-align:center;
-margin-top:-40px;
+	color:rgb(78, 76, 85);
+	font-size:23px;
+	text-align:center;
+	margin-top:-40px;
+	margin-bottom: 25px;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+	word-spacing: -1px;
+	line-height: 1.5;
+	text-shadow: 1px 1px 3px rgb(41, 41, 41);
 }
-p{
-text-align:center;
-font-size:15px;
+
+p
+{
+	color:rgb(77, 74, 88);
+	text-align:center;
+	font-size:18px;
+	font-family: 'Courier New', Courier, monospace, Lucida, Monaco, sans-serif;
+}
+
+body
+{
+	background-color: rgb(237, 235, 245);
+}
+
+img {
+    max-width: 30%;  /* Ajustez selon la taille que vous souhaitez */
+	margin-top: -100px; /* Espace entre le texte et l'image */
+}
+
+a
+{
+	text-decoration:none;
+	color: rgb(255, 169, 135);
+	font-style: oblique;
+}
+
+a:hover
+{
+	color:blue;
+	text-decoration:underline;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
+.green-text
+{
+	color: rgb(94, 190, 150);
+	font-style: oblique;
+	font-weight: bold;
+}
+
+.orange-text
+{
+	color: rgb(228, 163, 133);
+	font-style: oblique;
+	font-weight:lighter;
+	text-shadow: 1px 1px 3px rgb(255, 160, 36);
 }
 
 .container
 {
-width:1000px;
-margin: 0 auto;
-margin-top:15%;
+	width:1200px;
+	margin: 0 auto;
+	margin-top:15%;
 }
+
 </style>
 </head>
 <body>
 <div class="container">
-	<h1>			error page 413	</h1><br>
-	<h1>			Yuo're testing Error:[Payload Too Large]	</h1><br></br>
-<h2>If you see this page, the our web server is successfully installed and working.<br>Thank you for using our Webserv.</h2>
+	<img src="../images/413.png"class="center">
+	<h1>			Error page 413	</h1><br>
+	<h2>			<span class="orange-text"> Yuo're testing Error:[Payload Too Large]	</span></h2><br></br>
+<h2>If you see this page, the our web server is <span class="green-text">successfully installed</span> and working.<br>Thank you for using our Webserv.</h2>
 <p>More information go to <a href="https://github.com/coisu/webserv">our git</a></p>
 </div>
 </body>

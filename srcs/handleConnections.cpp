@@ -408,6 +408,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
                                 std::cerr << "SERVER NOT FOUND" << std::endl;
 								throw 404;
                             }
+
 							Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
 							try
 							{

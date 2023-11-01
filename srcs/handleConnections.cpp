@@ -220,7 +220,9 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 		{
 			if (it->second.isClosed)
 				clients.erase(it++);
-			else if (it->second.isClosing && it->second.incompleteResponse.empty())
+			else if (it->second.isClosing 
+			&& it->second.incompleteResponse.empty()
+			&& it->second.responseQueue.empty())
 			{
 				close(it->first);
 				clients.erase(it++);
@@ -343,19 +345,19 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else
 				{
-					ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+					// ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
 					cgi.incompleteResponse.append(buffer, bytesReceived); // <-- append received data
-					if (cgi.incompleteResponse.find("\r\n\r\n") != std::string::npos)
-					{
-						ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
-						std::cout << "CGI RESPONSE:\n" << cgi.incompleteResponse << std::endl;
-						cgi.isFinished = true;
-						clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
-						cgi.incompleteResponse.clear();
-						close(cgiSocket);
-						cgi_map.erase(cgi_it++);
-						continue ;
-					}
+					// if (cgi.incompleteResponse.find("\r\n\r\n") != std::string::npos)
+					// {
+					// 	ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+					// 	// std::cout << "CGI RESPONSE:\n" << cgi.incompleteResponse << std::endl;
+					// 	cgi.isFinished = true;
+					// 	clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
+					// 	cgi.incompleteResponse.clear();
+					// 	close(cgiSocket);
+					// 	cgi_map.erase(cgi_it++);
+					// 	continue ;
+					// }
 				}
 			}
 			cgi_it++;
@@ -418,6 +420,9 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 									// CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
 									int fd;
 									cgi.exec_cgi(fd);
+									// update maxSocket as needed
+									if (fd > maxSocket)
+										maxSocket = fd;
 									cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
 								}
 								else
@@ -464,7 +469,11 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				{
 					responseStr.erase(0, bytesSent); // <-- erase sent data
 					if (responseStr.empty())
+					{
 						client.responseQueue.pop();
+						// close(clientSocket);
+						// client.isClosed = true;
+					}
 				}
 			}
 		}

@@ -5,8 +5,9 @@ INC_DIR = includes/
 INCLUDES = $(INC_DIR)*.h*
 FLAGS = -std=c++98
 FLAGS += -Wall -Werror -Wextra
-FLAGS += -g3 -fno-limit-debug-info 
+FLAGS += -g3 #-fno-limit-debug-info 
 FLAGS += -I$(INC_DIR)
+FLAGS += -D LOG_LEVEL=2
 
 # LOG_LEVEL ?= 0
 

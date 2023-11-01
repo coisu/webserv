@@ -159,7 +159,7 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 	// 	}
 	// }
 
-	// The first server for a host:port will be the default for this host:port
+	// The first server for a host:port will be the{...} default for this host:port
 	for (it = servers.begin(); it != servers.end(); it++)
 	{
 		if (it->getPort() == clientPort)
@@ -220,7 +220,9 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 		{
 			if (it->second.isClosed)
 				clients.erase(it++);
-			else if (it->second.isClosing && it->second.incompleteResponse.empty())
+			else if (it->second.isClosing 
+			&& it->second.incompleteResponse.empty()
+			&& it->second.responseQueue.empty())
 			{
 				close(it->first);
 				clients.erase(it++);
@@ -231,6 +233,21 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				// if (!it->second.incompleteResponse.empty()) // <-- only add to writeSet if there is something to send
 					FD_SET(it->first, &writeSet);
 				it++;
+			}
+		}
+
+		for (int i = 0; i < FD_SETSIZE; ++i) {
+			if (FD_ISSET(i, &readSet)) {
+				if (fcntl(i, F_GETFD) == -1) {
+					// Invalid file descriptor
+					perror("fcntl read");
+				}
+			}
+			if (FD_ISSET(i, &writeSet)) {
+				if (fcntl(i, F_GETFD) == -1) {
+					// Invalid file descriptor
+					perror("fcntl write");
+				}
 			}
 		}
 
@@ -305,7 +322,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 						ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
 						std::cerr << "Error reading from CGI" << std::endl;
 						close(cgiSocket);
-						FD_CLR(cgiSocket, &readSet);
+						// FD_CLR(cgiSocket, &readSet);
 						cgi.isFinished = true;
 						cgi_map.erase(cgi_it++);
 						continue ;
@@ -323,19 +340,19 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else
 				{
-					ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+					// ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
 					cgi.incompleteResponse.append(buffer, bytesReceived); // <-- append received data
-					if (cgi.incompleteResponse.find("\r\n\r\n") != std::string::npos)
-					{
-						ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
-						std::cout << "CGI RESPONSE:\n" << cgi.incompleteResponse << std::endl;
-						cgi.isFinished = true;
-						clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
-						cgi.incompleteResponse.clear();
-						close(cgiSocket);
-						cgi_map.erase(cgi_it++);
-						continue ;
-					}
+					// if (cgi.incompleteResponse.find("\r\n\r\n") != std::string::npos)
+					// {
+					// 	ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+					// 	// std::cout << "CGI RESPONSE:\n" << cgi.incompleteResponse << std::endl;
+					// 	cgi.isFinished = true;
+					// 	clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
+					// 	cgi.incompleteResponse.clear();
+					// 	close(cgiSocket);
+					// 	cgi_map.erase(cgi_it++);
+					// 	continue ;
+					// }
 				}
 			}
 			cgi_it++;
@@ -373,7 +390,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else
 				{
-					std::string fullResponseStr;
+					// std::string fullResponseStr;
 					client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
 					parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 					if (client.requestCompleted == true) // <-- if the request has been fully parsed then create the response
@@ -390,20 +407,36 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 							try
 							{
 								Response response(request, servers[idx]); // <-- create response with request obj and selected server
-								std::pair<bool, Location> loc_pair = servers[idx].srchLocation(request.getLocPath());
-								if (loc_pair.first && loc_pair.second.getIsCGI() 
-								&& (!pathIsDir(request.getLocPath()) || !loc_pair.second.getIndex().empty()))
-								{
-									CGI cgi(servers[idx], loc_pair.second, request);
-									// CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
-									int fd;
-									cgi.exec_cgi(fd);
+								int fd = -1, pid = -1;
+								std::string fullResponseStr = response.processResponse(fd, pid);
+								if (fd > 0)
 									cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
-								}
-								else
-								fullResponseStr = response.processResponse();
-								client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
+								if (fd > maxSocket)
+									maxSocket = fd;
+								if (!fullResponseStr.empty())
+									client.responseQueue.push(fullResponseStr); // <-- push processed response to the queue
 								client.requestCompleted = false; // <-- set to false so that next message will be read
+
+								// Response response(request, servers[idx]); // <-- create response with request obj and selected server
+								// std::pair<bool, Location> loc_pair = servers[idx].srchLocation(request.getLocPath());
+								// if (loc_pair.first && loc_pair.second.getIsCGI() 
+								// && (!pathIsDir(request.getLocPath()) || !loc_pair.second.getIndex().empty()))
+								// {
+								// 	CGI cgi(servers[idx], loc_pair.second, request);
+								// 	// CGI cgi(servers[idx], request.getURL(), request.getMethodStr(), loc_pair.second.getCGIConfig());
+								// 	int fd;
+								// 	cgi.exec_cgi(fd);
+								// 	// update maxSocket as needed
+								// 	if (fd > maxSocket)
+								// 		maxSocket = fd;
+								// 	cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
+								// }
+								// else
+								// {
+								// 	client.responseQueue.push(response.processResponse()); // <-- push processed response to the queue
+								// 	client.requestCompleted = false; // <-- set to false so that next message will be read
+								// }
+									// fullResponseStr = response.processResponse();
 								// response.processResponse(statusCode);
 							}
 							catch(int errorCode)
@@ -442,7 +475,11 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				{
 					responseStr.erase(0, bytesSent); // <-- erase sent data
 					if (responseStr.empty())
+					{
 						client.responseQueue.pop();
+						// close(clientSocket);
+						// client.isClosed = true;
+					}
 				}
 			}
 		}

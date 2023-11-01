@@ -7,6 +7,7 @@ FLAGS = -std=c++98
 FLAGS += -Wall -Werror -Wextra
 FLAGS += -g3 #-fno-limit-debug-info 
 FLAGS += -I$(INC_DIR)
+FLAGS += -D LOG_LEVEL=2
 
 # LOG_LEVEL ?= 0
 
@@ -75,6 +76,6 @@ noinfo: re
 
 run: FLAGS += -D LOG_LEVEL=2
 run: all
-	valgrind --quiet --leak-check=full --show-leak-kinds=all --track-fds=yes --exit-on-first-error=yes --error-exitcode=1 ./$(BINARY) resources/test_hard.config
+	valgrind --quiet --leak-check=full --show-leak-kinds=all --track-fds=yes --error-exitcode=1 -s ./$(BINARY)
 
 .PHONY: clean fclean re all run

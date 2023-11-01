@@ -1,6 +1,6 @@
 #include "CGI.hpp"
 
-CGI::CGI(Server& serv, Location& location, Request& request) 
+CGI::CGI(const Server& serv, const Location& location, const Request& request) 
 : server(serv), _location(location), _request(request), _cgiConfig(location.getCGIConfig())
 {
 	this->_env = constructEnv(request.getURL(), request.getMethodStr());
@@ -104,7 +104,7 @@ char**	CGI::getCharEnv( void )
 #include <string.h>
 #include <stdio.h>
 
-void CGI::exec_cgi( int &fd )
+void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
 {
 	int pipefd[2];
 	pid_t pid;
@@ -123,7 +123,7 @@ void CGI::exec_cgi( int &fd )
 		throw std::runtime_error("Failed to create pipe");
 	}
 
-	fd = pipefd[0];
+	cgi_fd = pipefd[0];
 	// Fork the process
 	pid = fork();
 	if (pid == -1)
@@ -151,25 +151,10 @@ void CGI::exec_cgi( int &fd )
 	else
 	{
 		// Parent process
-
+		cgi_pid = pid;
 		// Close write end in parent
 		close(pipefd[1]);
-
-		// char buffer[1024];
-		// ssize_t bytesRead;
-		// while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
-		// {
-			// Here, buffer contains bytesRead bytes of output from the CGI program.
-			// Send this back as the HTTP response.
-			// response += buffer;
-			// write()
-			// write(STDOUT_FILENO, buffer, bytesRead);
-		// }
-
-		// close(pipefd[0]);
-		// waitpid(pid, NULL, 0);
 	}
-	// return (response);
 }
 
 // std::string	CGI::exec_cgi( void )

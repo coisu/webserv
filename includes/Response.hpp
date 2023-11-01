@@ -66,9 +66,9 @@ class Response
 
 
     /* Process */
-    std::string     processResponse(void);
+    std::string     processResponse(int &cgi_fd, int &cgi_pid);
     void            setTargetPath();
-    void            buildBodywithMethod(std::string ext);
+    void            buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid);
     void            buildErrorBody(std::string ext);
     std::pair<bool, Location>	getMatchLoc(const std::string& request_path);
 

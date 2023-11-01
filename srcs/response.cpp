@@ -125,7 +125,7 @@ std::string Response::jumpToErrorPage(int status)
 	return (errorHeader + errorBody + "\r\n");
 }
 
-std::string Response::processResponse()
+std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 {
 	_currentMethod = _request.getMethodEnum();
 	bool isRedirect = false;
@@ -203,7 +203,7 @@ std::string Response::processResponse()
 	}
 			
 	if (isAllowedMethod(_currentMethod) && (_status == -1))
-		buildBodywithMethod(ext);
+		buildBodywithMethod(ext, cgi_fd, cgi_pid);
 	if (_status >= 400)
 		buildErrorBody(ext);	
 
@@ -229,7 +229,8 @@ std::string Response::processResponse()
 	}
 
 	/* MAKE HEADER */
-	if ((_currentMethod == GET && ext != "php") || _status >= 400)
+	if ((_currentMethod == GET && !_location.getIsCGI()) || _status >= 400)
+	{
 		_headerStr += buildHeader(_body.size(), _status);
 	else
 		_headerStr += buildHeaderCgi(_body, _status);
@@ -282,12 +283,12 @@ void Response::setTargetPath()
 	std::cout << "\n[ Directive Path ] " << _target_path << std::endl << std::endl;
 }
 
-void Response::buildBodywithMethod(std::string ext)
+void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 {
 
 	if (_currentMethod == GET || _currentMethod == POST)
 	{
-		if (_currentMethod == GET && ext != "php")	//html
+		if (_currentMethod == GET && !_location.getIsCGI())	//html
 		{
 			if (_location.getAutoIndex())
 			{
@@ -358,8 +359,13 @@ void Response::buildBodywithMethod(std::string ext)
 			// }
 			if (_location.getIsCGI())
 			{
-				// CGI	cgi(_server, _request.getURL(), _request.getMethodStr(), _location.getCGIConfig());
-				// _body = cgi.exec_cgi();
+				CGI	cgi(_server, _location, _request);
+				cgi.exec_cgi(cgi_fd, cgi_pid);
+			}
+			else
+			{
+				std::cout << "CGI is not set\n";
+				_status = 405;
 			}
 
 		}

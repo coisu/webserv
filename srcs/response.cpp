@@ -331,7 +331,6 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 				_status = _return == -1 ? 405 : _return;
 				_body = "CGI is not set";
 			}
-
 		}
 	}
 	else if (_currentMethod == DELETE)
@@ -343,7 +342,6 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 
 void Response::buildErrorBody(std::string ext)
 {
-
 	if (_status >= 400)
 	{
 		std::cout << "status -- " << _status << std::endl;

@@ -218,20 +218,27 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 		// Add all client sockets to writeSet and readSet
 		for (it = clients.begin(); it != clients.end(); )
 		{
-			if (it->second.isClosed)
+			int clientSocket = it->first;
+			ClientState &client = it->second;
+
+			if (client.isClosed) // <-- if client is closed then erase from clients
 				clients.erase(it++);
-			else if (it->second.isClosing 
-			&& it->second.incompleteResponse.empty()
-			&& it->second.responseQueue.empty())
+			else if (client.isClosing // <-- if client is closing and there is no more data to send then close
+			&& client.incompleteResponse.empty()
+			&& client.responseQueue.empty())
 			{
-				close(it->first);
+				close(clientSocket);
+				clients.erase(it++);
+			}
+			else if (fcntl(clientSocket, F_GETFD) == -1) // <-- if client is broken or closed then erase from clients
+			{
+				close(clientSocket);
 				clients.erase(it++);
 			}
 			else
 			{
-				FD_SET(it->first, &readSet);
-				// if (!it->second.incompleteResponse.empty()) // <-- only add to writeSet if there is something to send
-					FD_SET(it->first, &writeSet);
+				FD_SET(clientSocket, &readSet);
+				FD_SET(clientSocket, &writeSet);
 				it++;
 			}
 		}
@@ -245,7 +252,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			}
 			if (FD_ISSET(i, &writeSet)) {
 				if (fcntl(i, F_GETFD) == -1) {
-					// Invalid file descriptor
+					
 					perror("fcntl write");
 				}
 			}
@@ -303,33 +310,29 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			int	cgiSocket = cgi_it->first;
 			CgiState &cgi = cgi_it->second;
 
-			if (cgi.incompleteResponse.empty() && cgi.isFinished == true)
-			{
-				ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
-				close(cgiSocket);
-				FD_CLR(cgiSocket, &readSet);
-				cgi_map.erase(cgi_it++);
-				continue ;
-			}
-			else if (FD_ISSET(cgiSocket, &readSet))
+			// if (cgi.incompleteResponse.empty() && cgi.isFinished == true)
+			// {
+			// 	ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+			// 	close(cgiSocket);
+			// 	FD_CLR(cgiSocket, &readSet);
+			// 	cgi_map.erase(cgi_it++);
+			// 	continue ;
+			// }
+			if (FD_ISSET(cgiSocket, &readSet))
 			{
 				char	buffer[1024];
+
 				bytesReceived = read(cgiSocket, buffer, sizeof(buffer));
 				if (bytesReceived < 0)
 				{
-					ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
-					std::cerr << "Error reading from CGI" << std::endl;
+					ft_logger("Error reading from CGI", ERROR, __FILE__, __LINE__);
 					close(cgiSocket);
-					// FD_CLR(cgiSocket, &readSet);
-					cgi.isFinished = true;
 					cgi_map.erase(cgi_it++);
 					continue ;
 				}
 				else if (bytesReceived == 0)
 				{
-					ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
-					std::cout << "RECV CGI RETURNED ZERO\n";
-					cgi.isFinished = true;
+					ft_logger("CGI pipe read returned zero", INFO, __FILE__, __LINE__);
 					close(cgiSocket);
 					clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
 					cgi.incompleteResponse.clear();
@@ -338,19 +341,8 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else
 				{
-					// ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
+					ft_logger("Reading from cgi..", INFO, __FILE__, __LINE__);
 					cgi.incompleteResponse.append(buffer, bytesReceived); // <-- append received data
-					// if (cgi.incompleteResponse.find("\r\n\r\n") != std::string::npos)
-					// {
-					// 	ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
-					// 	// std::cout << "CGI RESPONSE:\n" << cgi.incompleteResponse << std::endl;
-					// 	cgi.isFinished = true;
-					// 	clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
-					// 	cgi.incompleteResponse.clear();
-					// 	close(cgiSocket);
-					// 	cgi_map.erase(cgi_it++);
-					// 	continue ;
-					// }
 				}
 			}
 			cgi_it++;

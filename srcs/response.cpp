@@ -422,7 +422,7 @@ std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 	if (ifs.fail())
 	{
 		ifs.close();
-		_status = _return == -1 ? 404 : _return;
+		_status = 404;
 		std::map<int, std::string> ep = _server.getErrorPages();
 		ifs.open(const_cast<char*>((_server.getRoot() + ep[_status]).c_str()));
 		if (ifs.fail())

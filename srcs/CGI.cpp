@@ -146,7 +146,7 @@ void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
 		{
 			perror("execve"); // <-- COMMENT THIS OUT LATER
 		}
-		exit(1);
+		// exit(1);
 	}
 	else
 	{
@@ -155,6 +155,9 @@ void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
 		// Close write end in parent
 		close(pipefd[1]);
 	}
+	for (int i = 0; envp[i]; i++)
+		delete[] envp[i];
+	delete[] envp;
 }
 
 // std::string	CGI::exec_cgi( void )

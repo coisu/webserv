@@ -232,10 +232,9 @@ std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 	if ((_currentMethod == GET && !_location.getIsCGI()) || _status >= 400)
 	{
 		_headerStr += buildHeader(_body.size(), _status);
-	else
-		_headerStr += buildHeaderCgi(_body, _status);
+		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
+	}
 
-	_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
 
 	// std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
 	return _buffer;

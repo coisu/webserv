@@ -416,20 +416,11 @@ std::string		Response::writeBodyHtml(std::string filePath, bool isHTML)
 	std::string		ret;
 	std::ifstream 	ifs;
 	
-	// if (path[0] != '/')
-	// 	filePath = "/" + path;
 	ifs.open(const_cast<char*>(filePath.c_str()));
 	if (ifs.fail())
 	{
 		ifs.close();
-		_status = 404;
-		std::map<int, std::string> ep = _server.getErrorPages();
-		ifs.open(const_cast<char*>((_server.getRoot() + ep[_status]).c_str()));
-		if (ifs.fail())
-		{
-			ifs.close();
-			return makeErrorPage(_status);
-		}
+		return makeErrorPage(_status);
 	}
 	std::string	str;
 	while (std::getline(ifs, str))

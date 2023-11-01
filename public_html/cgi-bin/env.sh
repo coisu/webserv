@@ -1,20 +1,26 @@
-#!/bin/bash
+#!/bin/bash 
 
-echo -e 'HTTP/1.1 200 OK'
-echo -e 'Content-Type: text/html\r\n'
-echo '<html>'
-echo '<h3>'
-echo 'Environment:'
-echo '</h3>'
-echo ''
-echo '<pre>' 
-env 
-echo '</pre>'
+# Capturez le contenu dans une variable
+content=$(cat <<END
+<html>
+<h3>Environment:</h3>
+<pre>
+$(env)
+</pre>
+<h3>Hostname</h3>
+<pre>
+$(hostname)
+</pre>
+</html>
+END
+)
 
-echo '<h3>'
-echo 'Hostname'
-echo '</h3>'
-echo '<pre>' 
-hostname
-echo '</pre>'
-echo '</html>'
+# Calculez la longueur du contenu
+content_length=${#content}
+
+# Imprimez les en-têtes HTTP et le contenu
+echo -e "HTTP/1.1 200 OK"
+echo -e "Content-Type: text/html"
+echo -e "Content-Length: $content_length\r\n"
+echo -e "$content\r\n"
+

@@ -332,6 +332,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					cgi.isFinished = true;
 					close(cgiSocket);
 					clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
+					std::cerr << "CGIIIIII:\n" << cgi.incompleteResponse << std::endl;
 					cgi.incompleteResponse.clear();
 					cgi_map.erase(cgi_it++);
 					continue ;

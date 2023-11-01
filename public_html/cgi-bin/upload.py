@@ -14,6 +14,16 @@ if fileitem.filename:
 else:
    message = 'Uploading Failed'
 
+# Generate the HTML content
+html_content = "<H1> " + message + " </H1>"
+
+# Calculate Content-Length
+content_length = len(html_content.encode('utf-8'))
+
+# Print out the HTTP headers
 print("Content-Type: text/html;charset=utf-8")
-print ("Content-type:text/html\r\n")
-print("<H1> " + message + " </H1>")
+print(f"Content-Length: {content_length}\r\n")
+
+# Output the HTML content
+print(html_content)
+

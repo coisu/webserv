@@ -20,7 +20,7 @@ Request::~Request() {}
 
 Request::Request(const Request& copy) : _server(copy._server)
 {
-	// std::cout << "Request is being copied\n";
+	ft_logger("Request is being copied", DEBUG, __FILE__, __LINE__);
 	this->_full_request = copy._full_request;
 	this->_info = copy._info;
 	this->_method_enum = copy._method_enum;
@@ -33,7 +33,7 @@ Request::Request(const Request& copy) : _server(copy._server)
 
 Request&	Request::operator = (const Request& copy)
 {
-	// std::cout << "Request is being assigned\n";
+	ft_logger("Request is being assigned", DEBUG, __FILE__, __LINE__);
 	if (this != &copy)
 	{
 		this->_full_request = copy._full_request;
@@ -52,19 +52,20 @@ void	Request::printRequest( void )
 {
 	std::map<std::string, std::string>::iterator it = this->_head.begin();
 
-	std::cout << "\n\n-------FULL-------\n" << std::endl;
-	std::cout << this->_full_request << std::endl;
-	std::cout << "\n--------END---------\n" << std::endl;
-	std::cout << "\n\n-------HEAD-------\n" << std::endl;
+	std::stringstream ss;
+	ss << "\n\n-------FULL-------\n" 
+		<< this->_full_request 
+		<< "\n--------END---------\n"
+		<< "\n\n-------HEAD-------\n";
 	while (it != this->_head.end())
 	{
-		std::cout << "[" << it->first << " : " << it->second << "]" << std::endl;
+		ss << "[" << it->first << " : " << it->second << "]" << std::endl;
 		++it;
 	}
-	std::cout << "\n\n-------BODY-------\n" << std::endl;
-	// _body = "name=JISU+CHOI&age=10";
-	std::cout << this->_body << std::endl;
-	std::cout << "\n--------END---------\n" << std::endl;
+	ss << "\n\n-------BODY-------\n" << std::endl;
+	ss << this->_body << std::endl;
+	ss << "\n--------END---------\n" << std::endl;
+	ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 }
 
 e_method	Request::extractMethodType(std::string info)

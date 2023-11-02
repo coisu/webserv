@@ -268,7 +268,7 @@ void Server::initHost(std::string value)
             throw std::runtime_error("(4) invalid host address in server block.");
     }
     this->_host = inet_addr(value.c_str());
-    ft_logger("INITHOST: host: " + this->_host, DEBUG, __FILE__, __LINE__);
+    ft_logger("INITHOST: host: " + value + " (" + SSTR(this->_host) + ")", DEBUG, __FILE__, __LINE__);
 }
 
 void Server::initServerName(std::string value)

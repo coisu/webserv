@@ -123,7 +123,7 @@ std::string makeResponse(int code, std::string body)
 		  << "Content-Type: text/plain\r\n" //text/plain\r\n"
 		  << "Content-Length: " << body.size() << "\r\n"
 		  << "\n" << body << "\r\n";
-	// std::cout << ss.str();
+	ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 	return (ss.str());
 }
 
@@ -176,7 +176,7 @@ void signalHandler(int signum)
 {
 	(void)signum;
 	std::string msg = "\nTerminating server...";
-	std::cout << msg << std::endl;
+	ft_logger(msg, INFO, __FILE__, __LINE__);
 	global_running_flag = 0; // Set the flag to break out of the loop
 }
 
@@ -344,7 +344,6 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			{
 				char    buffer[1024];
 				bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-				// std::cout << "\n----MESSGE----\n" << client.incompleteRequest << "\n-----END-----\n";
 				if (bytesReceived < 0)
 				{
 					std::stringstream ss;
@@ -359,7 +358,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else if (bytesReceived == 0)
 				{
-					std::cout << "RECV RETURNED ZERO\n";
+					ft_logger("Client socket read returned zero", INFO, __FILE__, __LINE__);
 					client.isClosing = true;
 				}
 				else

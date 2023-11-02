@@ -18,10 +18,8 @@ Location::Location( std::string locationBlock ) : _isCgi(false)
     {
         std::string key = part.substr(0, part.find(':'));
         std::string value = part.substr(part.find(':')+1);
-        // std::cout << "key: \"" << key << "\" value: \"" << value << "\"\n";
         setAttributes(key, value);
     }
-    // std::cout << "SERVER:\n" << *this << std::endl;
 }
 
 void	Location::initDefaults()

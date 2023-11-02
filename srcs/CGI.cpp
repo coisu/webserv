@@ -177,7 +177,9 @@ std::string	CGI::extractQueryString(std::vector<std::string> urlvec)
 
 	for (size_t i = 0; i < urlvec.size(); i++)
 	{
-		std::cout << "Query string ===== " << urlvec[i] <<std::endl;
+		std::stringstream ss;
+		ss << "Query string ===== " << urlvec[i] <<std::endl;
+		ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 		if (urlvec[i][0] == '?')
 			return (urlvec[i].substr(1));
 	}

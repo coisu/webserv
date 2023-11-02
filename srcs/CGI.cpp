@@ -73,7 +73,7 @@ char**	CGI::getCharEnv( void )
 	return (char_env);
 }
 
-void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
+void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 {
 	int pipefd[2];
 	pid_t pid;
@@ -95,7 +95,7 @@ void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
 		throw std::runtime_error("Failed to create pipe");
 	}
 
-	cgi_fd = pipefd[0];
+	read_fd = pipefd[0];
 	// Fork the process
 	pid = fork();
 	if (pid == -1)

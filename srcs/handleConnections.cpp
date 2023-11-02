@@ -182,27 +182,38 @@ void signalHandler(int signum)
 
 void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<Server> &servers)
 {
+	// Create a set to watch for activity on client sockets.
 	fd_set  readSet, writeSet;
+	// Create a map to store the state of each client socket.
 	std::map<int, ClientState>				clients;
 	std::map<int, ClientState>::iterator	it;
-	std::map<int, CgiState>					cgi_map;
-	std::map<int, CgiState>::iterator		cgi_it;
+	// Create a map to store the state of each cgi *out* pipe.
+	std::map<int, CgiState>					cgi_read_map;
+	std::map<int, CgiState>::iterator		cgi_read_it;
+	// Create a map to store the state of each cgi *in* pipe.
+	std::map<int, CgiState>					cgi_write_map;
+	std::map<int, CgiState>::iterator		cgi_write_it;
 
-	signal(SIGINT, signalHandler);
+	signal(SIGINT, signalHandler); // <-- set signal handler for SIGINT so program can exit gracefully
 
-	while (global_running_flag)
+	while (global_running_flag) // <-- loop while global_running_flag is true (set to false by signal handler)
 	{
+		// Reset the read and write sets
 		ssize_t bytesReceived = 0;
 		FD_ZERO(&readSet);
 		FD_ZERO(&writeSet);
 
-		// Add all server sockets to the set.
+		// Add all server sockets to the set
 		for (size_t i = 0; i < serverSockets.size(); i++)
 			FD_SET(serverSockets[i], &readSet);
 
-		// Add all cgis to the set.
-		for (cgi_it = cgi_map.begin(); cgi_it != cgi_map.end(); cgi_it++)
-			FD_SET(cgi_it->first, &readSet);
+		// Add all cgi out pipes to the set
+		for (cgi_read_it = cgi_read_map.begin(); cgi_read_it != cgi_read_map.end(); cgi_read_it++)
+			FD_SET(cgi_read_it->first, &readSet);
+		
+		// Add all cgi in pipes to the set
+		for (cgi_write_it = cgi_write_map.begin(); cgi_write_it != cgi_write_map.end(); cgi_write_it++)
+			FD_SET(cgi_write_it->first, &readSet);
 
 		// Add all client sockets to writeSet and readSet
 		for (it = clients.begin(); it != clients.end(); )
@@ -297,11 +308,11 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			}
 		}
 
-		// Loop through cgi_map to check for readiness for reading
-		for (cgi_it = cgi_map.begin(); cgi_it != cgi_map.end(); )
+		// Loop through cgi_read_map to check for readiness for reading
+		for (cgi_read_it = cgi_read_map.begin(); cgi_read_it != cgi_read_map.end(); )
 		{
-			int	cgiSocket = cgi_it->first;
-			CgiState &cgi = cgi_it->second;
+			int	cgiSocket = cgi_read_it->first;
+			CgiState &cgi = cgi_read_it->second;
 
 			if (FD_ISSET(cgiSocket, &readSet))
 			{
@@ -312,7 +323,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				{
 					ft_logger("Error reading from CGI", ERROR, __FILE__, __LINE__);
 					close(cgiSocket);
-					cgi_map.erase(cgi_it++);
+					cgi_read_map.erase(cgi_read_it++);
 					continue ;
 				}
 				else if (bytesReceived == 0)
@@ -321,7 +332,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					close(cgiSocket);
 					clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
 					cgi.incompleteResponse.clear();
-					cgi_map.erase(cgi_it++);
+					cgi_read_map.erase(cgi_read_it++);
 					continue ;
 				}
 				else
@@ -330,7 +341,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					cgi.incompleteResponse.append(buffer, bytesReceived); // <-- append received data
 				}
 			}
-			cgi_it++;
+			cgi_read_it++;
 		}
 
 		// Loop through clients and check for readiness for reading and writing
@@ -380,13 +391,19 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 							Response response(request, servers[idx]); // <-- create response with request obj and selected server
 							try
 							{
-								int fd = -1, pid = -1;
-								std::string fullResponseStr = response.processResponse(fd, pid);
-								if (fd > 0) // <-- if fd is greater than 0 then it is a cgi
-									cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
+								int read_fd = -1, write_fd = -1, cgi_pid = -1;
+								std::string fullResponseStr = response.processResponse(read_fd, write_fd, cgi_pid);
+								if (read_fd > 0) // <-- if fd is greater than 0 then the cgi will send response
+									cgi_read_map[read_fd] = (CgiState){std::string(), cgi_pid, clientSocket};
+								if (write_fd > 0) // <-- if fd is greater than 0 then the cgi will receive post data
+									cgi_write_map[write_fd] = (CgiState){std::string(), cgi_pid, -1};
+							
 								// update maxSocket as needed
-								if (fd > maxSocket)
-									maxSocket = fd;
+								if (read_fd > maxSocket)
+									maxSocket = read_fd;
+								if (write_fd > maxSocket)
+									maxSocket = write_fd;
+							
 								if (!fullResponseStr.empty()) // <-- if the response was created (not cgi) push to the queue
 									client.responseQueue.push(fullResponseStr);
 							}
@@ -453,8 +470,8 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 	FD_ZERO(&readSet);
 	FD_ZERO(&writeSet);
 	// close all cgi fds
-	for (cgi_it = cgi_map.begin(); cgi_it != cgi_map.end(); cgi_it++)
-		close(cgi_it->first);
+	for (cgi_read_it = cgi_read_map.begin(); cgi_read_it != cgi_read_map.end(); cgi_read_it++)
+		close(cgi_read_it->first);
 	// close all client sockets
 	for (it = clients.begin(); it != clients.end(); it++)
 		close(it->first);

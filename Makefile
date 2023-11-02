@@ -8,7 +8,7 @@ VALUE_FILE = .log_value
 
 FLAGS = -std=c++98
 FLAGS += -Wall -Werror -Wextra
-FLAGS += -g3
+FLAGS += -g3 -fno-limit-debug-info
 FLAGS += -I$(INC_DIR)
 FLAGS += -D LOG_LEVEL=$(LOG)
 
@@ -26,6 +26,9 @@ OBJS = $(addprefix $(OBJ_DIR), $(OBJ_FILES))
 # RULES #
 all: $(BINARY)
 
+$(OBJ_DIR):
+	@mkdir -p $(OBJ_DIR)
+
 $(BINARY): $(OBJS) $(INCLUDES) | check-log
 	$(COMPILER) $(FLAGS) $(SRCS) -o $(BINARY)
 
@@ -33,7 +36,7 @@ $(OBJ_DIR)%.o: $(SOURCE_DIR)%.cpp $(INCLUDES) | check-log
 	@mkdir -p $(OBJ_DIR)
 	$(COMPILER) $(FLAGS) -c $< -o $@
 
-check-log:
+check-log: $(OBJ_DIR)
 	@if [ ! -f $(VALUE_FILE) ] || [ "$(LOG)" != "$$(cat $(VALUE_FILE))" ]; then \
 		echo "$(LOG)" > $(VALUE_FILE); \
 		find $(OBJ_DIR) -type f -name '*.o' -exec touch {} +; \

@@ -23,7 +23,7 @@ std::string	readFile(std::string location)
 	std::ifstream t(location.c_str());
 	std::stringstream buffer;
 	buffer << t.rdbuf();
-	std::cout << "buff: " << buffer << "\nloc: " << location << std::endl;
+	ft_logger("buff: " + buffer.str() + "\nloc: " + location, DEBUG, __FILE__, __LINE__);
 	return (buffer.str());
 }
 

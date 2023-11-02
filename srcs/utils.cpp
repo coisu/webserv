@@ -23,7 +23,7 @@ std::string	readFile(std::string location)
 	std::ifstream t(location.c_str());
 	std::stringstream buffer;
 	buffer << t.rdbuf();
-	std::cout << "buff: " << buffer << "\nloc: " << location << std::endl;
+	ft_logger("buff: " + buffer.str() + "\nloc: " + location, DEBUG, __FILE__, __LINE__);
 	return (buffer.str());
 }
 
@@ -99,7 +99,7 @@ bool isNumeric(std::string const &str)
 
 void ft_logger(std::string thing, int level, std::string FILE, int LINE)
 {
-	std::cerr << "LOG_LEVEL: " << LOG_LEVEL << std::endl;
+	// std::cerr << "LOG_LEVEL: " << LOG_LEVEL << std::endl;
 	if (level > LOG_LEVEL)
 		return ;
 	std::cout << "[\033[1;34m" << FILE << ":" << LINE << "\033[0m] ";

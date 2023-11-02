@@ -11,7 +11,6 @@ bool    startsWith( std::string str, std::string match )
 // helper function to verify location line e.g: "location /foo/bar {"
 bool    validLocation( std::string line )
 {
-    // std::cout << "\nLOCATION:\n" << line << "\n\n";
     std::string                 word("location/");
 
     return (line.substr(0, word.size()) == word);
@@ -29,15 +28,11 @@ std::string removeSpaces(const std::string& input) {
 
 std::string cut(std::string str, size_t start, size_t end)
 {
-    // if (start >= str.size() || end >= str.size())
-        // throw std::runtime_error("cut out of range.");
     start++;
     if (start >= str.size())
         throw std::runtime_error("cut out of range.");
-        // start = str.size() - 1;
     if (end >= str.size())
         end = str.size() - 1;
-    // std::cout << "start: " << start << "end " << end << std::endl;
     return (std::string(&str[start], &str[end]));
 }
 

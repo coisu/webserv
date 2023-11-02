@@ -29,16 +29,16 @@ int main(int ac, char **av) {
 
 		for (size_t i = 0; i < servers.size(); i++)
 		{
-			std::cout << "Server " << i << ":\n" << servers[i] << "\n\n";
-			// servers[i].startServer();
+			std::stringstream ss;
+			ss << "Server " << i << ":\n" << servers[i] << "\n\n";
+			ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 		}
 		
 		handleConnections(servers);
 	}
 	catch(const std::exception& e)
 	{
-		std::cerr << "Error caught in main: ";
-		std::cerr << e.what() << '\n';
+		ft_logger("Failed to setup server: " + std::string(e.what()) +"", ERROR, __FILE__, __LINE__);
 	}
     return 0;
 }

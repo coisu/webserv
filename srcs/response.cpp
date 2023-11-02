@@ -17,17 +17,18 @@ Response::Response(int status, Request &r, Server &s) : _request(r), _server(s)
 	initStatusCode();
 	initHeaders();
 	std::string responseBuffer = jumpToErrorPage(status);
-	std::cout << "============================\n";
-	std::cout << responseBuffer << std::endl;
-	std::cout << "============================\n";
-	
+	std::stringstream ss;
+	ss << "==============EMPTY CONFIG RESPONSE==============\n";
+	ss << responseBuffer << std::endl;
+	ss << "=================================================\n";
+	ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 }
 
 Response::Response(const Request &request, Server &server ) : _request(request), _server(server)
 {
 	// _target_path = _server.getRoot() + "/";
 	_target_path = _request.getLocPath();
-	std::cerr << "target path: " << _target_path << std::endl;
+	ft_logger("target path: " + _target_path, DEBUG, __FILE__, __LINE__);
 	_body = "";
 	_headerStr = "";
 	_body_len = 0;
@@ -134,8 +135,10 @@ std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 		_status = -1;
 	if (_request.getBody().length() > _server.getClientBodySize())
 	{
-		std::cout << "_request.getBody() : " << _request.getBody() << std::endl;
-		std::cout << "clien max body size : " << _server.getClientBodySize() << std::endl << std::endl;
+		std::stringstream ss;
+		ss << "_request.getBody() : " << _request.getBody() << std::endl;
+		ss << "clien max body size : " << _server.getClientBodySize() << std::endl << std::endl;
+		ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 		setStatus(413);
 	}
 	/* copy if there are same header from request */
@@ -144,7 +147,7 @@ std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 	if(!checkSetLocation(_target_path))
 	{
 		Location L("location/;index:index.html;allow_methods:DELETE,POST,GET;autoindex:off;");
-		std::cout << "Location set with default\n";
+		ft_logger("Location not set, set default location", DEBUG, __FILE__, __LINE__);
 		setLocation(L);
 	}
 
@@ -229,12 +232,14 @@ std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 	}
 
 	/* MAKE HEADER */
-	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400 || (_location.getIsCGI() && _status == _return))
+	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400 || (!_location.getIsCGI() && _status == _return))
 	{
 		_headerStr += buildHeader(_body.size(), _status);
 		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
 	}
-	// std::cout << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
+	std::stringstream ss;
+	ss << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
+	ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 	return _buffer;
 }
 
@@ -275,7 +280,7 @@ void Response::setTargetPath()
 				_target_path += _location.getIndex();
 		}
 	}
-	std::cout << "\n[ Directive Path ] " << _target_path << std::endl << std::endl;
+	ft_logger("[ Directive Path ] " + _target_path, DEBUG, __FILE__, __LINE__);
 }
 
 void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
@@ -336,11 +341,11 @@ void Response::buildErrorBody(std::string ext)
 {
 	if (_status >= 400)
 	{
-		std::cout << "status -- " << _status << std::endl;
+		ft_logger("status -- " + toString(_status), DEBUG, __FILE__, __LINE__);
 		std::map<int, std::string> ep = _server.getErrorPages();
 		if (ep.find(_status) != ep.end())
 		{
-			std::cout << "making error page with directive file \n\n";
+			ft_logger("making error page with directive file", DEBUG, __FILE__, __LINE__);
 			_body = writeBodyHtml(_server.getRoot() + ep[_status], _mimeList.getMimeType(ext) == "text/html");
 		}
 		else
@@ -359,7 +364,7 @@ std::string Response::buildErrorBody(int err)
 		std::map<int, std::string> ep = _server.getErrorPages();
 		if (ep.find(err) != ep.end())
 		{
-			std::cout << "making error page with directive file \n\n";
+			ft_logger("making error page with directive file", DEBUG, __FILE__, __LINE__);
 			_body = writeBodyHtml(_server.getRoot() + ep[err], true);
 		}
 		else
@@ -440,7 +445,7 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 	}
 	if (in.is_open())
 	{
-		std::cout << "file opened\n\n";
+		ft_logger("file opened", DEBUG, __FILE__, __LINE__);
 		while (std::getline(in, line))
 		{
 			if (isHTML)
@@ -582,7 +587,7 @@ bool	Response::checkSetLocation(std::string path)
 	location_pair = _server.srchLocation(path);
 	if (location_pair.first == true)
 	{
-		std::cout << "Location successfully set\n";
+		ft_logger("Location successfully set", DEBUG, __FILE__, __LINE__);
 		setLocation(location_pair.second);
 		return (true);
 	}
@@ -683,10 +688,9 @@ std::string		Response::appendMapHeaders(int statusCode)
 		if ( !(it->second.empty()) )
 		{
 			if ((_request.getMethodEnum() == DELETE && it->first == "Content-Type") 
-			|| (it->first == "Content-Type")
-			|| (it->first == "Transfer-Encoding"))
+			|| (it->first == "Transfer-Encoding")) // || (it->first == "Content-Type")
 			{
-				std::cout << "skip : " <<it->first <<std::endl<<std::endl;
+				ft_logger("skip : " + it->first, DEBUG, __FILE__, __LINE__);
 				continue ;
 			} 
 			headerStr += it->first;

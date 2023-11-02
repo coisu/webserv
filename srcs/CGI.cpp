@@ -42,19 +42,7 @@ std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std
 	env["PATH_INFO"] = this->server.getRoot() + extractPathInfo(urlvec);
 	env["QUERY_STRING"] = extractQueryString(urlvec);
 	env["UPLOAD_STORE"] = this->_location.getUploadStore();
-	// if (!env["PATH_INFO"].empty())
-		// env["PATH_TRANSLATED"] = temp_config.root + env["PATH_INFO"];
-	// env["SCRIPT_NAME"] = temp_config.root + extractScriptName(urlvec);
-	// env["REMOTE_HOST"] = "";
-	// env["REMOTE_ADDR"] = "";
-	// env["AUTH_TYPE"] = "";
-	// env["REMOTE_IDENT"] = "";
-	// env["CONTENT_TYPE"] = "";
-	// env["CONTENT_LENGTH"] = "";
-	// env["HTTP_ACCEPT"] = "";
-	// env["HTTP_ACCEPT_LANGUAGE"] = "";
-	// env["HTTP_USER_AGENT"] = "";
-	// env["HTTP_COOKIE"] = "";
+	env["SCRIPT_NAME"] = extractScriptName(urlvec);
 	std::map<std::string, std::string>::iterator it = env.begin();
 	while( it != env.end())
 	{
@@ -164,7 +152,7 @@ void	CGI::identifyCGI(std::vector<std::string> urlvec)
 std::string	CGI::extractScriptName(std::vector<std::string> urlvec)
 {
 	std::string	script_name;
-	
+
 	if (urlvec.size() >= 2)
 		script_name = urlvec[0] + urlvec[1];
 	return (script_name);
@@ -189,7 +177,9 @@ std::string	CGI::extractQueryString(std::vector<std::string> urlvec)
 
 	for (size_t i = 0; i < urlvec.size(); i++)
 	{
-		std::cout << "Query string ===== " << urlvec[i] <<std::endl;
+		std::stringstream ss;
+		ss << "Query string ===== " << urlvec[i] <<std::endl;
+		ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 		if (urlvec[i][0] == '?')
 			return (urlvec[i].substr(1));
 	}

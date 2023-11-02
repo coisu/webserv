@@ -418,7 +418,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					}
 				}
 			}
-			else if (FD_ISSET(clientSocket, &writeSet) && client.responseQueue.empty() == false) // <-- check if client is ready to write into
+			if (FD_ISSET(clientSocket, &writeSet) && client.responseQueue.empty() == false) // <-- check if client is ready to write into
 			{
 				std::string	&responseStr = client.responseQueue.front();
 				int bytesSent = send(clientSocket, responseStr.data(), responseStr.size(), 0);

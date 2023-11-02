@@ -229,7 +229,7 @@ std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 	}
 
 	/* MAKE HEADER */
-	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400 || (_location.getIsCGI() && _status == _return))
+	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400 || (!_location.getIsCGI() && _status == _return))
 	{
 		_headerStr += buildHeader(_body.size(), _status);
 		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
@@ -683,8 +683,7 @@ std::string		Response::appendMapHeaders(int statusCode)
 		if ( !(it->second.empty()) )
 		{
 			if ((_request.getMethodEnum() == DELETE && it->first == "Content-Type") 
-			|| (it->first == "Content-Type")
-			|| (it->first == "Transfer-Encoding"))
+			|| (it->first == "Transfer-Encoding")) // || (it->first == "Content-Type")
 			{
 				std::cout << "skip : " <<it->first <<std::endl<<std::endl;
 				continue ;

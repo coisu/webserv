@@ -136,28 +136,17 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 	struct sockaddr_in sin;
 	socklen_t len = sizeof(sin);
 	if (getsockname(clientSocket, (struct sockaddr *)&sin, &len) == -1)
-		std::cerr << "Error: problem directing to server\n"; // return server error
+	{
+		ft_logger("Error getting client port", ERROR, __FILE__, __LINE__);
+		throw 500;
+	}
 	else
-		std::cout << "Port Number: " << ntohs(sin.sin_port) << std::endl;
+		ft_logger("Client port (" + SSTR(ntohs(sin.sin_port)) + ") received", INFO, __FILE__, __LINE__);
 
 	// set the client values
 	unsigned int clientPort = sin.sin_port;
 	std::string clientName = client.header["Host"];
 	clientName = clientName.substr(0, clientName.find(':'));
-
-	// std::cout << "HOST: " << clientName
-	// 		  << "\nclient PORT: " << sin.sin_port
-	// 		  << "\nserver[0] PORT: " << servers[0].getPort() << std::endl;
-
-	// // select default server (server with no name)
-	// for (it = servers.begin(); it != servers.end(); it++)
-	// {
-	// 	if (it->getPort() == clientPort && it->getServerName().empty())
-	// 	{
-	// 		serverIndex = it - servers.begin();
-	// 		break ;
-	// 	}
-	// }
 
 	// The first server for a host:port will be the{...} default for this host:port
 	for (it = servers.begin(); it != servers.end(); it++)
@@ -266,7 +255,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			{
 				// exit(1);
 				perror("select"); // <-- COMMENT THIS OUT LATER
-				std::cerr << "Error: select() failed\n";
+				ft_logger("Error: select() failed", ERROR, __FILE__, __LINE__);
 			}
 			continue ;
 		}
@@ -283,10 +272,11 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				int clientSocket = accept(serverSockets[i], (struct sockaddr *)&clientSocketAddress, &clientSocketSize);
 				if (clientSocket < 0)
 				{
-					std::cerr << 
-					"Server failed to accept incoming connection from clent ADDRESS: " 
+					std::stringstream ss;
+					ss << "Server failed to accept incoming connection from clent ADDRESS: " 
 					<< inet_ntoa(clientSocketAddress.sin_addr) << "; PORT: " 
 					<< ntohs(clientSocketAddress.sin_port);
+					ft_logger(ss.str(), ERROR, __FILE__, __LINE__);
 					continue ;
 				}
 				// update maxSocket as needed
@@ -296,11 +286,12 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, false, false, 0, 0, 
 													  std::map<std::string, std::string>(), std::string(), std::string(), std::queue<std::string>()};
 				// clients[clientSocket] = (ClientState){0, 0, 0, 0, 0, 0, std::map<std::string, std::string>(), 0, 0};
-				std::cout << "New connection incomming: " 
-							<< inet_ntoa(clientSocketAddress.sin_addr) 
-							<< ":" << ntohs(clientSocketAddress.sin_port) 
-							<< std::endl;
-				ft_logger("New connection incomming", INFO, __FILE__, __LINE__);
+				std::stringstream ss;
+				ss	<< "New connection incomming: " 
+					<< inet_ntoa(clientSocketAddress.sin_addr) 
+					<< ":" << ntohs(clientSocketAddress.sin_port) 
+					<< std::endl;
+				ft_logger(ss.str(), INFO, __FILE__, __LINE__);
 			}
 		}
 
@@ -362,7 +353,9 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				// std::cout << "\n----MESSGE----\n" << client.incompleteRequest << "\n-----END-----\n";
 				if (bytesReceived < 0)
 				{
-					std::cerr << "Error reading from client" << std::endl;
+					std::stringstream ss;
+					ss << "Error reading from client: (" << clientSocket << ") " << std::endl;
+					ft_logger(ss.str(), ERROR, __FILE__, __LINE__);
 					close(clientSocket);
 					FD_CLR(clientSocket, &readSet);
 					FD_CLR(clientSocket, &writeSet);
@@ -382,39 +375,52 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 					if (client.requestCompleted == true) // <-- if the request has been fully parsed then create the response
 					{
-						int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
-						if (idx < 0 || (size_t)idx >= servers.size())
-						{
-							std::cerr << "SERVER NOT FOUND" << std::endl;
-							// throw 404;
-						}
-						Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
-						Response response(request, servers[idx]); // <-- create response with request obj and selected server
 						try
 						{
-							int fd = -1, pid = -1;
-							std::string fullResponseStr = response.processResponse(fd, pid);
-							if (fd > 0) // <-- if fd is greater than 0 then it is a cgi
-								cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
-							// update maxSocket as needed
-							if (fd > maxSocket)
-								maxSocket = fd;
-							if (!fullResponseStr.empty()) // <-- if the response was created (not cgi) push to the queue
-								client.responseQueue.push(fullResponseStr);
+							int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
+							if (idx < 0 || (size_t)idx >= servers.size())
+							{
+								std::cerr << "SERVER NOT FOUND" << std::endl;
+								throw 404;
+							}
+							Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
+							Response response(request, servers[idx]); // <-- create response with request obj and selected server
+							try
+							{
+								int fd = -1, pid = -1;
+								std::string fullResponseStr = response.processResponse(fd, pid);
+								if (fd > 0) // <-- if fd is greater than 0 then it is a cgi
+									cgi_map[fd] = (CgiState){std::string(), false, clientSocket};
+								// update maxSocket as needed
+								if (fd > maxSocket)
+									maxSocket = fd;
+								if (!fullResponseStr.empty()) // <-- if the response was created (not cgi) push to the queue
+									client.responseQueue.push(fullResponseStr);
+							}
+							catch(int errorCode) // <-- if there was an error creating the cgi then send error response
+							{
+								std::string body = response.buildErrorBody(errorCode);
+								std::string header = response.buildHeader(body.size(), errorCode);
+								client.responseQueue.push(header + body);
+							}
+							catch(...) // <-- if there was an error creating the cgi then send error response
+							{
+								std::string body = response.buildErrorBody(500);
+								std::string header = response.buildHeader(body.size(), 500);
+								client.responseQueue.push(header + body);
+							}
+							client.requestCompleted = false; // <-- set to false so that next message will be read
 						}
 						catch(int errorCode) // <-- if there was an error creating the cgi then send error response
 						{
-							std::string body = response.buildErrorBody(errorCode);
-							std::string header = response.buildHeader(body.size(), errorCode);
-							client.responseQueue.push(header + body);
+							std::string body = makeResponse(errorCode, "Error");
+							client.responseQueue.push(body);
 						}
 						catch(...) // <-- if there was an error creating the cgi then send error response
 						{
-							std::string body = response.buildErrorBody(500);
-							std::string header = response.buildHeader(body.size(), 500);
-							client.responseQueue.push(header + body);
+							std::string body = makeResponse(500, "Error");
+							client.responseQueue.push(body);
 						}
-						client.requestCompleted = false; // <-- set to false so that next message will be read
 					}
 				}
 			}

@@ -27,7 +27,7 @@ OBJS = $(addprefix $(OBJ_DIR), $(OBJ_FILES))
 all: $(BINARY)
 
 $(BINARY): $(OBJS) $(INCLUDES) | check-log
-	$(COMPILER) $(FLAGS) $(OBJS) -o $(BINARY)
+	$(COMPILER) $(FLAGS) $(SRCS) -o $(BINARY)
 
 $(OBJ_DIR)%.o: $(SOURCE_DIR)%.cpp $(INCLUDES) | check-log
 	@mkdir -p $(OBJ_DIR)

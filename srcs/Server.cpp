@@ -281,12 +281,13 @@ void Server::initErrorPage(std::string value)
     std::stringstream   ss(value);
     std::string         code;
     std::string         path;
+    int stat = 0;
     
     while (std::getline(ss, code, ',') && std::getline(ss, path, ','))
     {
         if (code.size() > 3 || code.find_first_not_of("0123456789") != code.npos)
             throw std::runtime_error("invalid error page code.");
-        int stat = atoi(code.c_str());
+        stat = atoi(code.c_str());
         if (stat > 599 || stat < 400)
             throw std::runtime_error("error codes must be in the range: 400-599.");
         if (path[0] != '/')
@@ -295,6 +296,8 @@ void Server::initErrorPage(std::string value)
             throw std::runtime_error("error page path must *not* end with \'/\' - path: " + path);
         this->_errorPages[stat] = path;
     }
+    if (value.empty() || stat == 0)
+        throw std::runtime_error("error page path must have error code and path.");
 }
 
 void Server::initClientBodySize(std::string value)

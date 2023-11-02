@@ -56,4 +56,4 @@ fclean: clean
 re: fclean all
 
 run: all
-	@valgrind --quiet --leak-check=full --show-leak-kinds=all --track-fds=yes --error-exitcode=1 -s ./$(BINARY)
+	@valgrind --quiet --leak-check=full --show-leak-kinds=all --track-fds=yes --exit-on-first-error=yes --error-exitcode=1 -s ./$(BINARY)

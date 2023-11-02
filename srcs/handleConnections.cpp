@@ -204,6 +204,11 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 	std::map<int, CgiState>					cgi_write_map;
 	std::map<int, CgiState>::iterator		cgi_write_it;
 
+	// Create a timeval struct for the timeout.
+	struct timeval timeout;
+	timeout.tv_sec = 10; // <-- seconds
+	timeout.tv_usec = 0; // <-- microseconds
+
 	signal(SIGINT, signalHandler); // <-- set signal handler for SIGINT so program can exit gracefully
 
 	while (global_running_flag) // <-- loop while global_running_flag is true (set to false by signal handler)
@@ -309,7 +314,8 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 		}
 
 		// wait for activity on sockets in readSet and writeSet
-		if (select(maxSocket + 1, &readSet, &writeSet, NULL, NULL) == -1)
+		int activity = select(maxSocket + 1, &readSet, &writeSet, NULL, NULL);
+		if (activity == -1)
 		{
 			// throw std::runtime_error("Select() failed");
 			if (global_running_flag == true)
@@ -319,6 +325,10 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				ft_logger("Error: select() failed", ERROR, __FILE__, __LINE__);
 			}
 			continue ;
+		}
+		else if (activity == 0) // handle timeout
+		{
+			ft_logger("Timeout occurred: No data after " + SSTR(timeout.tv_sec) + " seconds", INFO, __FILE__, __LINE__);
 		}
 
 		// Loop through the server sockets to find the one that is ready.
@@ -478,6 +488,27 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 									cgi_read_map[read_fd] = (CgiState){std::string(), cgi_pid, clientSocket};
 								if (write_fd > 0) // <-- if fd is greater than 0 then the cgi will receive post data
 									cgi_write_map[write_fd] = (CgiState){client.body, cgi_pid, -1};
+
+								if (client.cgi_pid != -1)
+								{
+									int status;
+									pid_t result = waitpid(client.cgi_pid, &status, WNOHANG);
+									if (result == 0) {
+										// Process is still running
+
+									else if (result == cgi_pid) {
+										// Process ended
+									} else {
+										// An error occurred
+										// close the cgi pipes
+										close(read_fd);
+										close(write_fd);
+										// remove the cgi pipes from the map
+										cgi_read_map.erase(read_fd);
+										cgi_write_map.erase(write_fd);
+									}
+								}
+								client.cgi_pid = cgi_pid;
 							
 								// update maxSocket as needed
 								if (read_fd > maxSocket)

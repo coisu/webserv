@@ -37,8 +37,7 @@ int main(int ac, char **av) {
 	}
 	catch(const std::exception& e)
 	{
-		std::cerr << "Error caught in main: ";
-		std::cerr << e.what() << '\n';
+		ft_logger("Failed to setup server: " + std::string(e.what()) +"", ERROR, __FILE__, __LINE__);
 	}
     return 0;
 }

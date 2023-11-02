@@ -12,8 +12,8 @@ Request::Request(std::map<std::string, std::string> header, std::string body, st
 	this->_method_str = methods[this->_method_enum];
 	this->_url = extractURL(this->_info);
 	this->_locPath = this->_server.getRoot() + this->_url.substr(0, this->_url.find_first_of('?'));
-	std::cerr << "CONSTRUCT locPath: " << this->_locPath << std::endl;
-	std::cerr << "INFO: " << this->_info << std::endl;
+	ft_logger("CONSTRUCT locPath: " + this->_locPath, DEBUG, __FILE__, __LINE__);
+	ft_logger("INFO: " + this->_info, DEBUG, __FILE__, __LINE__);
 }
 
 Request::~Request() {} 
@@ -80,7 +80,7 @@ e_method	Request::extractMethodType(std::string info)
 		i++;
 	if (i >= 3)
 	{
-		std::cerr << "INVALID METHOD: " << type << std::endl;
+		ft_logger("INVALID METHOD: " + type, ERROR, __FILE__, __LINE__);
 		throw 400;
 	}
 	return ((t_method)i);

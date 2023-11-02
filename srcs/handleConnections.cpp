@@ -268,6 +268,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				// Accept and handle the connection on the port i.
 				struct sockaddr_in  clientSocketAddress;
 				socklen_t           clientSocketSize = sizeof(clientSocketAddress);
+
 				// accept the client connection and create client socket
 				int clientSocket = accept(serverSockets[i], (struct sockaddr *)&clientSocketAddress, &clientSocketSize);
 				if (clientSocket < 0)
@@ -279,13 +280,14 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					ft_logger(ss.str(), ERROR, __FILE__, __LINE__);
 					continue ;
 				}
+
 				// update maxSocket as needed
 				if (clientSocket > maxSocket)
 					maxSocket = clientSocket;
-				// clients[clientSocket] = (ClientState){};
+
 				clients[clientSocket] = (ClientState){std::string(), std::string(), false, false, false, false, false, false, 0, 0, 
 													  std::map<std::string, std::string>(), std::string(), std::string(), std::queue<std::string>()};
-				// clients[clientSocket] = (ClientState){0, 0, 0, 0, 0, 0, std::map<std::string, std::string>(), 0, 0};
+
 				std::stringstream ss;
 				ss	<< "New connection incomming: " 
 					<< inet_ntoa(clientSocketAddress.sin_addr) 
@@ -301,14 +303,6 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			int	cgiSocket = cgi_it->first;
 			CgiState &cgi = cgi_it->second;
 
-			// if (cgi.incompleteResponse.empty() && cgi.isFinished == true)
-			// {
-			// 	ft_logger("CGI is finished", INFO, __FILE__, __LINE__);
-			// 	close(cgiSocket);
-			// 	FD_CLR(cgiSocket, &readSet);
-			// 	cgi_map.erase(cgi_it++);
-			// 	continue ;
-			// }
 			if (FD_ISSET(cgiSocket, &readSet))
 			{
 				char	buffer[1024];
@@ -380,7 +374,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 							int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
 							if (idx < 0 || (size_t)idx >= servers.size())
 							{
-								std::cerr << "SERVER NOT FOUND" << std::endl;
+								ft_logger("Error: server not found", ERROR, __FILE__, __LINE__);
 								throw 404;
 							}
 							Request request(client.header, client.body, client.info, servers[idx]); // <-- create request obj with ClientStatus info
@@ -498,8 +492,10 @@ void handleConnections(std::vector<Server> &servers)
 		int port = *it;
 		int currentSocket = socket(AF_INET, SOCK_STREAM, 0);
 		if (currentSocket == -1) {
-			// std::cerr << "Error creating socket for port " << i << std::endl;
-			std::cerr << "Error creating socket for port " << port << std::endl;
+			std::stringstream ss;
+			ss << "Error creating socket for port " << port << std::endl;
+			ft_logger(ss.str(), ERROR, __FILE__, __LINE__);
+			throw std::runtime_error("Cannot create socket");
 		}
 		serverSockets.push_back(currentSocket);
 
@@ -510,30 +506,38 @@ void handleConnections(std::vector<Server> &servers)
 		serverSocketAddress.sin_port = port;
 		serverSocketAddress.sin_addr.s_addr = INADDR_ANY;
 
-		std::cout << "PORT: " << ntohs(port) << std::endl;
+		ft_logger("PORT: " + SSTR(ntohs(port)) + "", DEBUG, __FILE__, __LINE__);
 		
-		// Bind the socket to the address and port.
+		// Set socket options to reuse the address and port.
 		int yes = 1;
 		if (setsockopt(currentSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
+			ft_logger("Failed to setsocket: " + SSTR(currentSocket), ERROR, __FILE__, __LINE__);
 			perror("setsockopt"); // <-- COMMENT THIS OUT LATER
 		}
+
+		// Bind the socket to the address and port.
 		if (bind(currentSocket,(struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress)) < 0)
 		{
 			close(currentSocket);
-				perror("bind failed"); // <-- COMMENT THIS OUT LATER
+			perror("bind failed"); // <-- COMMENT THIS OUT LATER
+			ft_logger("Failed to bind socket: " + SSTR(htons(serverSocketAddress.sin_port)), ERROR, __FILE__, __LINE__);
 			throw std::runtime_error("Cannot bind socket to address");
 		}
+
 		// Listen for incoming connections.
 		if (listen(currentSocket, 10) < 0)
-			{
-				close(currentSocket);
+		{
+			close(currentSocket);
+			ft_logger("Failed to listen on socket: " + SSTR(htons(serverSocketAddress.sin_port)), ERROR, __FILE__, __LINE__);
 			throw std::runtime_error("Socket listen failed");
-			}
+		}
+
 		std::ostringstream ss;
 		ss << "\n*** Listening on ADDRESS: " 
 		<< inet_ntoa(serverSocketAddress.sin_addr) // convert the IP address (binary) in string
 		<< " PORT: " << ntohs(serverSocketAddress.sin_port) // invert octets, beacause network have big endians before and we want to have little endians before
 		<< " ***\n\n";
+		ft_logger(ss.str(), INFO, __FILE__, __LINE__);
 
 		if (currentSocket < 0)
 		{
@@ -542,7 +546,8 @@ void handleConnections(std::vector<Server> &servers)
 			"Server failed to setup connection on ADDRESS: " 
 			<< inet_ntoa(serverSocketAddress.sin_addr) << "; PORT: " 
 			<< ntohs(serverSocketAddress.sin_port);
-			throw std::runtime_error(ss.str());
+			ft_logger(ss.str(), ERROR, __FILE__, __LINE__);
+			throw std::runtime_error("Cannot setup connection");
 		}
 
 		// Update the maximum socket descriptor for select.
@@ -551,81 +556,8 @@ void handleConnections(std::vector<Server> &servers)
 		}
 	}
 
-	std::cout << "Server is listening on multiple ports..." << std::endl;
+	ft_logger("Server is listening on multiple ports...", INFO, __FILE__, __LINE__);
 
 	//main loop
 	recvSendLoop(serverSockets, maxSocket, servers);
 }
-
-// handleConnections(std::vector<Server> &servers)
-// {
-//     const int numPorts = getPorts(&servers);  // Change this to the number of ports you want to listen on.
-
-//     // Create an array to store socket descriptors for multiple ports.
-//     int serverSockets[numPorts];
-//     fd_set readSet;
-//     int maxSocket = 0;
-
-//     // Create and initialize sockets for each port.
-//     for (int i = 0; i < numPorts; ++i) {
-//         serverSockets[i] = socket(AF_INET, SOCK_STREAM, 0);
-//         if (serverSockets[i] == -1) {
-//             std::cerr << "Error creating socket for port " << i << std::endl;
-//             return -1;
-//         }
-
-//         // Set up the server address structure.
-//         struct sockaddr_in serverAddress;
-//         serverAddress.sin_family = AF_INET;
-//         serverAddress.sin_port = htons(8080 + i); // Use different ports.
-//         serverAddress.sin_addr.s_addr = INADDR_ANY;
-
-//         // Bind the socket to the address and port.
-//         if (bind(serverSockets[i], (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
-//             std::cerr << "Error binding socket for port " << i << std::endl;
-//             return -1;
-//         }
-
-//         // Listen for incoming connections.
-//         if (listen(serverSockets[i], 5) == -1) {
-//             std::cerr << "Error listening on port " << i << std::endl;
-//             return -1;
-//         }
-
-//         // Update the maximum socket descriptor for select.
-//         if (serverSockets[i] > maxSocket) {
-//             maxSocket = serverSockets[i];
-//         }
-//     }
-
-//     std::cout << "Server is listening on multiple ports..." << std::endl;
-
-//     while (true) {
-//         FD_ZERO(&readSet);
-
-//         // Add all server sockets to the set.
-//         for (int i = 0; i < numPorts; ++i) {
-//             FD_SET(serverSockets[i], &readSet);
-//         }
-
-//         int readySockets = select(maxSocket + 1, &readSet, NULL, NULL, NULL);
-
-//         if (readySockets > 0) {
-//             // Loop through the server sockets to find the one that is ready.
-//             for (int i = 0; i < numPorts; ++i) {
-//                 if (FD_ISSET(serverSockets[i], &readSet)) {
-//                     // Accept and handle the connection on the port i.
-//                     struct sockaddr_in clientAddress;
-//                     socklen_t clientAddressSize = sizeof(clientAddress);
-//                     int clientSocket = accept(serverSockets[i], (struct sockaddr*)&clientAddress, &clientAddressSize);
-//                     // Handle the connection on this port as needed.
-//                 }
-//             }
-//         }
-//     }
-
-//     // Close sockets and perform cleanup when done.
-
-//     return 0;
-
-// }

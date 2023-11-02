@@ -27,7 +27,7 @@ Response::Response(const Request &request, Server &server ) : _request(request),
 {
 	// _target_path = _server.getRoot() + "/";
 	_target_path = _request.getLocPath();
-	std::cerr << "target path: " << _target_path << std::endl;
+	ft_logger("target path: " + _target_path, DEBUG, __FILE__, __LINE__);
 	_body = "";
 	_headerStr = "";
 	_body_len = 0;

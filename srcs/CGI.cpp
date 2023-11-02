@@ -95,7 +95,8 @@ void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 		throw std::runtime_error("Failed to create pipe");
 	}
 
-	read_fd = pipefd[0];
+	read_fd = pipefd[0]; // <-- Save the read end of the pipe for the multiplexer
+	write_fd = pipefd[1]; // <-- Save the write end of the pipe for the multiplexer
 	// Fork the process
 	pid = fork();
 	if (pid == -1)

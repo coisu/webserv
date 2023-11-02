@@ -232,7 +232,7 @@ std::string Response::processResponse( int &read_fd, int &write_fd, int &cgi_pid
 	}
 
 	/* MAKE HEADER */
-	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400 || (!_location.getIsCGI() && _status == _return))
+	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400) // || (!_location.getIsCGI() && _status == _return))
 	{
 		_headerStr += buildHeader(_body.size(), _status);
 		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";

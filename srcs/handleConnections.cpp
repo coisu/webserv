@@ -35,8 +35,8 @@ struct ClientState {
 };
 
 struct CgiState {
-	std::string incompleteResponse;
-	bool		isFinished;
+	std::string	buffer;
+	int			pid;
 	int			clientSocket;
 };
 
@@ -213,7 +213,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 		
 		// Add all cgi in pipes to the set
 		for (cgi_write_it = cgi_write_map.begin(); cgi_write_it != cgi_write_map.end(); cgi_write_it++)
-			FD_SET(cgi_write_it->first, &readSet);
+			FD_SET(cgi_write_it->first, &writeSet);
 
 		// Add all client sockets to writeSet and readSet
 		for (it = clients.begin(); it != clients.end(); )
@@ -311,37 +311,68 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 		// Loop through cgi_read_map to check for readiness for reading
 		for (cgi_read_it = cgi_read_map.begin(); cgi_read_it != cgi_read_map.end(); )
 		{
-			int	cgiSocket = cgi_read_it->first;
+			int	cgiOut = cgi_read_it->first;
 			CgiState &cgi = cgi_read_it->second;
 
-			if (FD_ISSET(cgiSocket, &readSet))
+			if (FD_ISSET(cgiOut, &readSet))
 			{
 				char	buffer[1024];
 
-				bytesReceived = read(cgiSocket, buffer, sizeof(buffer));
+				bytesReceived = read(cgiOut, buffer, sizeof(buffer));
 				if (bytesReceived < 0)
 				{
 					ft_logger("Error reading from CGI", ERROR, __FILE__, __LINE__);
-					close(cgiSocket);
+					close(cgiOut);
 					cgi_read_map.erase(cgi_read_it++);
 					continue ;
 				}
 				else if (bytesReceived == 0)
 				{
 					ft_logger("CGI pipe read returned zero", INFO, __FILE__, __LINE__);
-					close(cgiSocket);
-					clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
-					cgi.incompleteResponse.clear();
+					close(cgiOut);
+					clients[cgi.clientSocket].responseQueue.push(cgi.buffer);
+					cgi.buffer.clear();
 					cgi_read_map.erase(cgi_read_it++);
 					continue ;
 				}
 				else
 				{
 					ft_logger("Reading from cgi..", INFO, __FILE__, __LINE__);
-					cgi.incompleteResponse.append(buffer, bytesReceived); // <-- append received data
+					cgi.buffer.append(buffer, bytesReceived); // <-- append received data
 				}
 			}
 			cgi_read_it++;
+		}
+
+		// Loop through cgi_read_map to check for readiness for reading
+		for (cgi_write_it = cgi_write_map.begin(); cgi_write_it != cgi_write_map.end(); )
+		{
+			int	cgiIn = cgi_write_it->first;
+			CgiState &cgi = cgi_write_it->second;
+
+			if (FD_ISSET(cgiIn, &writeSet) && cgi.buffer.empty() == false) // <-- check if client is ready to write into
+			{
+				int bytesSent = write(cgiIn, cgi.buffer.data(), cgi.buffer.size());
+				if(bytesSent < 0)
+				{
+					ft_logger("Error writing to CGI", ERROR, __FILE__, __LINE__);
+					close(cgiIn);
+					cgi_write_map.erase(cgi_write_it++);
+					continue ;
+				}
+				else if (bytesSent == 0)
+				{
+					ft_logger("CGI pipe read returned zero", INFO, __FILE__, __LINE__);
+					close(cgiIn);
+					cgi_write_map.erase(cgi_write_it++);
+					continue ;
+				}
+				else
+				{
+					cgi.buffer.erase(0, bytesSent); // <-- erase sent data
+				}
+			}
+			cgi_write_it++;
 		}
 
 		// Loop through clients and check for readiness for reading and writing

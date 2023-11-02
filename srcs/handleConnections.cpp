@@ -335,7 +335,6 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					ft_logger("CGI pipe read returned zero", INFO, __FILE__, __LINE__);
 					close(cgiSocket);
 					clients[cgi.clientSocket].responseQueue.push(cgi.incompleteResponse);
-					std::cerr << "CGIIIIII:\n" << cgi.incompleteResponse << std::endl;
 					cgi.incompleteResponse.clear();
 					cgi_map.erase(cgi_it++);
 					continue ;

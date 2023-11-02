@@ -169,7 +169,7 @@ void Location::initRet(std::string value)
     if (isNumeric(value))
     {
         std::stringstream ssint;
-        ssint << _location.getRet();
+        ssint << value;
         ssint >> code;
         if (code < 100 || code > 599)
             throw std::runtime_error("return must be a string or integer between 100-599.");

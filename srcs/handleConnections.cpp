@@ -42,6 +42,16 @@ struct CgiState {
 
 void    parseHttpRequest(ClientState &client)
 {
+	if (client.incompleteRequest.size() >= 6)
+	{
+		if (client.incompleteRequest.substr(0, 3) != "GET"
+		&& client.incompleteRequest.substr(0, 4) != "POST"
+		&& client.incompleteRequest.substr(0, 6) != "DELETE")
+		{
+			ft_logger("Error: invalid request", ERROR, __FILE__, __LINE__);
+			throw 400;
+		}
+	}
 	size_t pos = client.incompleteRequest.find("\r\n\r\n"); // <-- seach for header-body seperator
 	if (!client.isReceivingBody && pos != std::string::npos) // <-- if client isnt receiving body and seperator is found
 	{
@@ -343,8 +353,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				std::stringstream ss;
 				ss	<< "New connection incomming: " 
 					<< inet_ntoa(clientSocketAddress.sin_addr) 
-					<< ":" << ntohs(clientSocketAddress.sin_port) 
-					<< std::endl;
+					<< ":" << ntohs(clientSocketAddress.sin_port);
 				ft_logger(ss.str(), INFO, __FILE__, __LINE__);
 			}
 		}
@@ -403,7 +412,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else if (bytesSent == 0)
 				{
-					ft_logger("CGI pipe read returned zero", INFO, __FILE__, __LINE__);
+					ft_logger("CGI pipe sent zero bytes", INFO, __FILE__, __LINE__);
 					close(cgiIn);
 					cgi_write_map.erase(cgi_write_it++);
 					continue ;
@@ -447,11 +456,11 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				else
 				{
 					// std::string fullResponseStr;
-					client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
-					parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
-					if (client.requestCompleted == true) // <-- if the request has been fully parsed then create the response
+					try
 					{
-						try
+						client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
+						parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
+						if (client.requestCompleted == true) // <-- if the request has been fully parsed then create the response
 						{
 							int idx = chooseServer(clientSocket, client, servers); // <-- select correct host according to hostname and server port
 							if (idx < 0 || (size_t)idx >= servers.size())
@@ -493,16 +502,22 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 							}
 							client.requestCompleted = false; // <-- set to false so that next message will be read
 						}
-						catch(int errorCode) // <-- if there was an error creating the cgi then send error response
-						{
-							std::string body = makeResponse(errorCode, "Error");
-							client.responseQueue.push(body);
-						}
-						catch(...) // <-- if there was an error creating the cgi then send error response
-						{
-							std::string body = makeResponse(500, "Error");
-							client.responseQueue.push(body);
-						}
+					}
+					catch(int errorCode) // <-- if there was an error creating the cgi then send error response
+					{
+						Server s;
+						Request r(s);
+						Response response(errorCode, r, s);
+						std::string data = response.jumpToErrorPage(errorCode);
+						client.responseQueue.push(data);
+					}
+					catch(...) // <-- if there was an error creating the cgi then send error response
+					{
+						Server s;
+						Request r(s);
+						Response response(500, r, s);
+						std::string data = response.jumpToErrorPage(500);
+						client.responseQueue.push(data);
 					}
 				}
 			}
@@ -510,6 +525,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			{
 				std::string	&responseStr = client.responseQueue.front();
 				int bytesSent = send(clientSocket, responseStr.data(), responseStr.size(), 0);
+				ft_logger("RESPONSE:\n" + responseStr, DEBUG, __FILE__, __LINE__);
 				if(bytesSent < 0)
 				{
 					// Handle disconnect
@@ -621,10 +637,9 @@ void handleConnections(std::vector<Server> &servers)
 		}
 
 		std::ostringstream ss;
-		ss << "\n*** Listening on ADDRESS: " 
+		ss << "Listening on ADDRESS: " 
 		<< inet_ntoa(serverSocketAddress.sin_addr) // convert the IP address (binary) in string
-		<< " PORT: " << ntohs(serverSocketAddress.sin_port) // invert octets, beacause network have big endians before and we want to have little endians before
-		<< " ***\n\n";
+		<< " PORT: " << ntohs(serverSocketAddress.sin_port); // invert octets, beacause network have big endians before and we want to have little endians before
 		ft_logger(ss.str(), INFO, __FILE__, __LINE__);
 
 		if (currentSocket < 0)

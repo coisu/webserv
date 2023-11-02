@@ -110,3 +110,11 @@ void ft_logger(std::string thing, int level, std::string FILE, int LINE)
 	else if (level == 2)
 		std::cout << "\033[1;33m" << thing << "\033[0m" << std::endl;
 }
+
+std::string toLowercase(const std::string& str) {
+    std::string lowerStr = str;
+    for (size_t i = 0; i < lowerStr.length(); ++i) {
+        lowerStr[i] = static_cast<char>(tolower(static_cast<unsigned char>(lowerStr[i])));
+    }
+    return lowerStr;
+}

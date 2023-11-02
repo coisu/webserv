@@ -238,7 +238,7 @@ std::string Response::processResponse( int &read_fd, int &write_fd, int &cgi_pid
 		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
 	}
 	std::stringstream ss;
-	ss << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
+	// ss << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
 	ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 	return _buffer;
 }

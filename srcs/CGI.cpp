@@ -121,7 +121,7 @@ void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 	else // Parent process
 	{
 		cgi_pid = pid; // <-- Save the CGI process ID
-		close(pipefd[1]); // <-- Close write end in parent
+		// close(pipefd[1]); // <-- Close write end in parent
 	}
 	// free envp
 	for (int i = 0; envp[i]; i++)

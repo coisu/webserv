@@ -52,16 +52,16 @@ void    parseHttpRequest(ClientState &client)
 		client.info = trimWhiteSpace(client.info);
 		// parse header into map of key: values
 		while(std::getline(std::getline(iss, key, ':') >> std::ws, val))
-			client.header[trimWhiteSpace(key)] = trimWhiteSpace(val.substr(0, val.size() - 1));
+			client.header[trimWhiteSpace(toLowercase(key))] = trimWhiteSpace(val.substr(0, val.size() - 1));
 
 		client.incompleteRequest.erase(0, pos + 4); // <-- erase what has been parsed
 
 		// if Content-Length is present in header setup values to start receiving the body
-		if (client.header["Content-Length"].empty())
+		if (client.header["content-length"].empty())
 			client.requestCompleted = true;
 		else
 		{
-			client.contentLength = atoi(client.header["Content-Length"].c_str());
+			client.contentLength = atoi(client.header["content-length"].c_str());
 			client.isReceivingBody = true;
 			client.receivedLength = 0;
 		}
@@ -203,17 +203,57 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 		FD_ZERO(&readSet);
 		FD_ZERO(&writeSet);
 
-		// Add all server sockets to the set
-		for (size_t i = 0; i < serverSockets.size(); i++)
-			FD_SET(serverSockets[i], &readSet);
+		for (size_t i = 0; i < serverSockets.size(); )
+		{
+			if (fcntl(serverSockets[i], F_GETFD) == 0)
+			{
+				FD_SET(serverSockets[i], &readSet);
+				i++; // Only increment if we didn't erase an element
+			}
+			else
+			{
+				close(serverSockets[i]);
+				serverSockets.erase(serverSockets.begin() + i);
+				ft_logger("Error: fcntl() failed", ERROR, __FILE__, __LINE__);
+			}
+		}
 
 		// Add all cgi out pipes to the set
-		for (cgi_read_it = cgi_read_map.begin(); cgi_read_it != cgi_read_map.end(); cgi_read_it++)
-			FD_SET(cgi_read_it->first, &readSet);
+		for (cgi_read_it = cgi_read_map.begin(); cgi_read_it != cgi_read_map.end(); )
+		{
+			if (fcntl(cgi_read_it->first, F_GETFD) == 0)
+			{
+				FD_SET(cgi_read_it->first, &readSet);
+				cgi_read_it++;
+			}
+			else
+			{
+				close(cgi_read_it->first);
+				cgi_read_map.erase(cgi_read_it++);
+				ft_logger("Error: fcntl() failed", ERROR, __FILE__, __LINE__);
+			}
+		}
 		
 		// Add all cgi in pipes to the set
-		for (cgi_write_it = cgi_write_map.begin(); cgi_write_it != cgi_write_map.end(); cgi_write_it++)
-			FD_SET(cgi_write_it->first, &writeSet);
+		for (cgi_write_it = cgi_write_map.begin(); cgi_write_it != cgi_write_map.end(); )
+		{
+			if (cgi_write_it->second.buffer.empty())
+			{
+				close(cgi_write_it->first);
+				cgi_write_map.erase(cgi_write_it++);
+			}
+			else if (fcntl(cgi_write_it->first, F_GETFD) == 0)
+			{
+				FD_SET(cgi_write_it->first, &writeSet);
+				cgi_write_it++;
+			}
+			else
+			{
+				close(cgi_write_it->first);
+				cgi_write_map.erase(cgi_write_it++);
+				ft_logger("Error: fcntl() failed", ERROR, __FILE__, __LINE__);
+			}
+		}
 
 		// Add all client sockets to writeSet and readSet
 		for (it = clients.begin(); it != clients.end(); )
@@ -252,7 +292,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			}
 			if (FD_ISSET(i, &writeSet)) {
 				if (fcntl(i, F_GETFD) == -1) {
-					
+					// Invalid file descriptor
 					perror("fcntl write");
 				}
 			}
@@ -270,6 +310,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			}
 			continue ;
 		}
+
 		// Loop through the server sockets to find the one that is ready.
 		for (size_t i = 0; i < serverSockets.size(); i++)
 		{
@@ -427,7 +468,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 								if (read_fd > 0) // <-- if fd is greater than 0 then the cgi will send response
 									cgi_read_map[read_fd] = (CgiState){std::string(), cgi_pid, clientSocket};
 								if (write_fd > 0) // <-- if fd is greater than 0 then the cgi will receive post data
-									cgi_write_map[write_fd] = (CgiState){std::string(), cgi_pid, -1};
+									cgi_write_map[write_fd] = (CgiState){client.body, cgi_pid, -1};
 							
 								// update maxSocket as needed
 								if (read_fd > maxSocket)

@@ -152,7 +152,7 @@ std::string Response::processResponse( int &read_fd, int &write_fd, int &cgi_pid
 	}
 
 	setTargetPath();
-
+	isItReallyCGI();
 	std::string ext = getExt(_target_path);
 	if ((_headers["Content-Type"] == "" && pathIsDir(_target_path) != IS_DIR)\
 		|| (pathIsDir(_target_path) == IS_DIR && _location.getAutoIndex()))
@@ -245,6 +245,22 @@ std::string Response::processResponse( int &read_fd, int &write_fd, int &cgi_pid
 	return _buffer;
 }
 
+void Response::isItReallyCGI()
+{
+	if (_location.getIsCGI())
+	{
+		std::map<std::string, std::string> conf = _location.getCGIConfig();
+		std::map<std::string, std::string>::iterator it;
+		std::string ext = getExt(_target_path);
+		for (it = conf.begin(); it != conf.end(); it++)
+		{
+			if (it->second == ext)
+				return ;
+		}
+		_location.setIsCGI(false);
+	}
+}
+
 void Response::setTargetPath()
 {
 	/* CASE: alias O */
@@ -283,6 +299,8 @@ void Response::setTargetPath()
 		}
 	}
 	ft_logger("[ Directive Path ] " + _target_path, DEBUG, __FILE__, __LINE__);
+	if (!pathExists(_target_path))
+		_status = 404;
 }
 
 void Response::buildBodywithMethod(std::string ext, int &read_fd, int &write_fd, int &cgi_pid )

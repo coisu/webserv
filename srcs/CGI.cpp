@@ -31,6 +31,7 @@ CGI&	CGI::operator = (const CGI& copy)
 std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std::string methodString)
 {
 	std::map<std::string, std::string>	env;
+	std::map<std::string, std::string>::iterator it;
 	std::vector<std::string>			urlvec = splitUrl(RequestUrl);
 
 	env["SERVER_SOFTWARE"] = "Jisu-Yoel-Amanda-Softwre";
@@ -43,17 +44,10 @@ std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std
 	env["QUERY_STRING"] = extractQueryString(urlvec);
 	env["UPLOAD_STORE"] = this->_location.getUploadStore();
 	env["SCRIPT_NAME"] = extractScriptName(urlvec);
-	try
-	{
-		env["CONTENT_TYPE"] = this->_request.getHead().find("content-type")->second;
-	}
-	catch(const std::exception& e)
-	{
-		env["CONTENT_TYPE"] = "";
-	}
+	env["CONTENT_TYPE"] = this->_request.getHead()["content-type"];
 	env["UPLOAD_DIR"] = this->server.getRoot() + this->_location.getUploadStore();
 	ft_logger("UPLOAD_DIR: " + env["UPLOAD_DIR"], DEBUG, __FILE__, __LINE__);
-	std::map<std::string, std::string>::iterator it = env.begin();
+	it = env.begin();
 	while( it != env.end())
 	{
 		if (it->second.empty())
@@ -175,8 +169,11 @@ void	CGI::identifyCGI(std::vector<std::string> urlvec)
 	this->_script = root + path;
 	this->_postfix = ext;
 	this->_program = this->_cgiConfig[this->_postfix];
-	ft_logger("Error: Not a CGI", ERROR, __FILE__, __LINE__);
-	throw 403;
+	if (this->_program.empty())
+	{
+		ft_logger("Error: Not a CGI", ERROR, __FILE__, __LINE__);
+		throw 403;
+	}
 }
 
 std::string	CGI::extractScriptName(std::vector<std::string> urlvec)

@@ -35,6 +35,7 @@ class Location
         std::vector<int>                        getAllowMethods() const;
         std::string                             getUploadStore() const;
         //setters
+        void    setIsCGI(bool isIT);
     
     private:
     /*methods*/

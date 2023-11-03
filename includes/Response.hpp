@@ -66,6 +66,8 @@ class Response
 
 
     /* Process */
+    void isItReallyCGI();
+
     std::string     processResponse( int &read_fd, int &write_fd, int &cgi_pid );
     void            setTargetPath();
     void            buildBodywithMethod(std::string ext, int &read_fd, int &write_fd, int &cgi_pid );

@@ -331,8 +331,8 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			else
 			{
 				FD_SET(clientSocket, &readSet);
-				if (client.responseQueue.empty() == false)
-					FD_SET(clientSocket, &writeSet);
+				FD_SET(clientSocket, &writeSet);
+				// if (client.responseQueue.empty() == false)
 				it++;
 			}
 		}

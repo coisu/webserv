@@ -231,6 +231,11 @@ void Location::initCGI(std::string value)
         throw std::runtime_error("cgi must have path and extension of the file");;
 }
 
+void    Location::setIsCGI(bool isIT)
+{
+    this->_isCgi = isIT;
+}
+
 std::string Location::getBlock() const
 {
     return (this->_block);

@@ -10,11 +10,16 @@
 #include <sstream>
 #include <signal.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include "utils.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
 #include "Server.hpp"
 #include "CGI.hpp"
+
+#define NOTSET -2
 
 struct CgiState {
 	std::string	readBuffer;
@@ -238,17 +243,25 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 
 		for (cgi_it = cgi_map.begin(); cgi_it != cgi_map.end(); )
 		{
-			int			pid = cgi_it->first;
+			// int			pid = cgi_it->first;
 			CgiState&	cgi = cgi_it->second;
-			if (fcntl(cgi.readFd, F_GETFD) == 0)
-				FD_SET(cgi.readFd, &readSet);
+			if (cgi.readFd != NOTSET && cgi.writeFd != NOTSET)
+			{
+				cgi_map.erase(cgi_it++);
+			}
 			else
-				ft_logger("Error: cgi read pipe broken or closed", ERROR, __FILE__, __LINE__);
+			{
+				if (fcntl(cgi.readFd, F_GETFD) == 0)
+					FD_SET(cgi.readFd, &readSet);
+				else
+					ft_logger("Error: cgi read pipe broken or closed", ERROR, __FILE__, __LINE__);
 
-			if (fcntl(cgi.writeFd, F_GETFD) == 0)
-				FD_SET(cgi.writeFd, &writeSet);
-			else
-				ft_logger("Error: cgi write pipe broken or closed", ERROR, __FILE__, __LINE__);
+				if (fcntl(cgi.writeFd, F_GETFD) == 0)
+					FD_SET(cgi.writeFd, &writeSet);
+				else
+					ft_logger("Error: cgi write pipe broken or closed", ERROR, __FILE__, __LINE__);
+				cgi_it++;
+			}
 		}
 
 		// // Add all cgi out pipes to the set
@@ -389,7 +402,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 		// Loop through cgi_map to check for readiness for reading and writing
 		for (cgi_it = cgi_map.begin(); cgi_it != cgi_map.end(); )
 		{
-			int			pid = cgi_it->first;
+			// int			pid = cgi_it->first;
 			int			cgiOut = cgi_it->second.readFd;
 			int			cgiIn = cgi_it->second.writeFd;
 			CgiState&	cgi = cgi_it->second;
@@ -410,7 +423,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				{
 					ft_logger("CGI pipe read returned zero", INFO, __FILE__, __LINE__);
 					close(cgiOut);
-					clients[cgi.clientSocket].responseQueue.push(cgi.readBuffer);
+					clients[cgi.clientSocket].responseQueue.push(cgi.readBuffer); // DANGER because cgi.clientSocket might not exist
 					cgi.readBuffer.clear();
 					// cgi_read_map.erase(cgi_read_it++);
 					// continue ;
@@ -442,76 +455,76 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else
 				{
-					cgi.buffer.erase(0, bytesSent); // <-- erase sent data
+					cgi.writeBuffer.erase(0, bytesSent); // <-- erase sent data
 				}
 			}
 		}
 
-		// Loop through cgi_read_map to check for readiness for reading
-		for (cgi_read_it = cgi_read_map.begin(); cgi_read_it != cgi_read_map.end(); )
-		{
-			int	cgiOut = cgi_read_it->first;
-			CgiState &cgi = cgi_read_it->second;
+		// // Loop through cgi_read_map to check for readiness for reading
+		// for (cgi_read_it = cgi_read_map.begin(); cgi_read_it != cgi_read_map.end(); )
+		// {
+		// 	int	cgiOut = cgi_read_it->first;
+		// 	CgiState &cgi = cgi_read_it->second;
 
-			if (FD_ISSET(cgiOut, &readSet))
-			{
-				char	buffer[1024];
+		// 	if (FD_ISSET(cgiOut, &readSet))
+		// 	{
+		// 		char	buffer[1024];
 
-				bytesReceived = read(cgiOut, buffer, sizeof(buffer));
-				if (bytesReceived < 0)
-				{
-					ft_logger("Error reading from CGI", ERROR, __FILE__, __LINE__);
-					close(cgiOut);
-					cgi_read_map.erase(cgi_read_it++);
-					continue ;
-				}
-				else if (bytesReceived == 0)
-				{
-					ft_logger("CGI pipe read returned zero", INFO, __FILE__, __LINE__);
-					close(cgiOut);
-					clients[cgi.clientSocket].responseQueue.push(cgi.buffer);
-					cgi.buffer.clear();
-					cgi_read_map.erase(cgi_read_it++);
-					continue ;
-				}
-				else
-				{
-					ft_logger("Reading from cgi..", INFO, __FILE__, __LINE__);
-					cgi.buffer.append(buffer, bytesReceived); // <-- append received data
-				}
-			}
-		}
+		// 		bytesReceived = read(cgiOut, buffer, sizeof(buffer));
+		// 		if (bytesReceived < 0)
+		// 		{
+		// 			ft_logger("Error reading from CGI", ERROR, __FILE__, __LINE__);
+		// 			close(cgiOut);
+		// 			cgi_read_map.erase(cgi_read_it++);
+		// 			continue ;
+		// 		}
+		// 		else if (bytesReceived == 0)
+		// 		{
+		// 			ft_logger("CGI pipe read returned zero", INFO, __FILE__, __LINE__);
+		// 			close(cgiOut);
+		// 			clients[cgi.clientSocket].responseQueue.push(cgi.buffer);
+		// 			cgi.buffer.clear();
+		// 			cgi_read_map.erase(cgi_read_it++);
+		// 			continue ;
+		// 		}
+		// 		else
+		// 		{
+		// 			ft_logger("Reading from cgi..", INFO, __FILE__, __LINE__);
+		// 			cgi.buffer.append(buffer, bytesReceived); // <-- append received data
+		// 		}
+		// 	}
+		// }
 
-		// Loop through cgi_read_map to check for readiness for reading
-		for (cgi_write_it = cgi_write_map.begin(); cgi_write_it != cgi_write_map.end(); )
-		{
-			int	cgiIn = cgi_write_it->first;
-			CgiState &cgi = cgi_write_it->second;
+		// // Loop through cgi_read_map to check for readiness for reading
+		// for (cgi_write_it = cgi_write_map.begin(); cgi_write_it != cgi_write_map.end(); )
+		// {
+		// 	int	cgiIn = cgi_write_it->first;
+		// 	CgiState &cgi = cgi_write_it->second;
 
-			if (FD_ISSET(cgiIn, &writeSet) && cgi.buffer.empty() == false) // <-- check if client is ready to write into
-			{
-				int bytesSent = write(cgiIn, cgi.buffer.data(), cgi.buffer.size());
-				if(bytesSent < 0)
-				{
-					ft_logger("Error writing to CGI", ERROR, __FILE__, __LINE__);
-					close(cgiIn);
-					cgi_write_map.erase(cgi_write_it++);
-					continue ;
-				}
-				else if (bytesSent == 0)
-				{
-					ft_logger("CGI pipe sent zero bytes", INFO, __FILE__, __LINE__);
-					close(cgiIn);
-					cgi_write_map.erase(cgi_write_it++);
-					continue ;
-				}
-				else
-				{
-					cgi.buffer.erase(0, bytesSent); // <-- erase sent data
-				}
-			}
-			cgi_write_it++;
-		}
+		// 	if (FD_ISSET(cgiIn, &writeSet) && cgi.buffer.empty() == false) // <-- check if client is ready to write into
+		// 	{
+		// 		int bytesSent = write(cgiIn, cgi.buffer.data(), cgi.buffer.size());
+		// 		if(bytesSent < 0)
+		// 		{
+		// 			ft_logger("Error writing to CGI", ERROR, __FILE__, __LINE__);
+		// 			close(cgiIn);
+		// 			cgi_write_map.erase(cgi_write_it++);
+		// 			continue ;
+		// 		}
+		// 		else if (bytesSent == 0)
+		// 		{
+		// 			ft_logger("CGI pipe sent zero bytes", INFO, __FILE__, __LINE__);
+		// 			close(cgiIn);
+		// 			cgi_write_map.erase(cgi_write_it++);
+		// 			continue ;
+		// 		}
+		// 		else
+		// 		{
+		// 			cgi.buffer.erase(0, bytesSent); // <-- erase sent data
+		// 		}
+		// 	}
+		// 	cgi_write_it++;
+		// }
 
 		// Loop through clients and check for readiness for reading and writing
 		for (it = clients.begin(); it != clients.end(); it++)
@@ -522,28 +535,52 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 
 			if (client.cgi_pid != NOTSET)
 			{
-				CgiState	*cgi_read = cgi_read_map.find(client.cgi_pid) != cgi_read_map.end() ? &cgi_read_map[client.cgi_pid] : NULL;
-				CgiState	*cgi_write = cgi_write_map.find(client.cgi_pid) != cgi_write_map.end() ? &cgi_write_map[client.cgi_pid] : NULL;
+				CgiState	*cgi = cgi_map.find(client.cgi_pid) != cgi_map.end() ? &cgi_map[client.cgi_pid] : NULL;
 				int status;
 				pid_t result = waitpid(client.cgi_pid, &status, WNOHANG);
 				if (result == 0)
 				{
 					// Process is still running
+					if (cgi == NULL)
+					{
+						ft_logger("Error: cgi not found", ERROR, __FILE__, __LINE__);
+					}
 				}
 				else if (result == client.cgi_pid)
 				{
 					// Process ended
-
+					if (cgi == NULL)
+					{
+						ft_logger("Error: cgi not found", ERROR, __FILE__, __LINE__);
+					}
+					else
+					{
+						// close the cgi pipes
+						close(cgi->readFd);
+						close(cgi->writeFd);
+						cgi->readFd = NOTSET;
+						cgi->writeFd = NOTSET;
+						client.cgi_pid = NOTSET;
+						ft_logger("CGI process ended", INFO, __FILE__, __LINE__);
+					}
 				}
 				else
 				{
 					// An error occurred
-					// close the cgi pipes
-					close(read_fd);
-					close(write_fd);
-					// remove the cgi pipes from the map
-					cgi_read_map.erase(read_fd);
-					cgi_write_map.erase(write_fd);
+					if (cgi == NULL)
+					{
+						ft_logger("Error: cgi not found", ERROR, __FILE__, __LINE__);
+					}
+					else
+					{
+						// close the cgi pipes
+						close(cgi->readFd);
+						close(cgi->writeFd);
+						cgi->readFd = NOTSET;
+						cgi->writeFd = NOTSET;
+						client.cgi_pid = NOTSET;
+						ft_logger("Error: waitpid() failed", ERROR, __FILE__, __LINE__);
+					}
 				}
 			}
 
@@ -561,7 +598,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					FD_CLR(clientSocket, &writeSet);
 					client.isClosed = true;
 					perror("bytes");
-					continue ;
+					continue ; // <-- NOT SURE IF THIS IS NEEDED
 				}
 				else if (bytesReceived == 0)
 				{
@@ -677,10 +714,12 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 	FD_ZERO(&readSet);
 	FD_ZERO(&writeSet);
 	// close all cgi pipe fds
-	for (cgi_it = cgi_map.begin(); cg_it != cgi_map.end(); cgi_it++)
+	for (cgi_it = cgi_map.begin(); cgi_it != cgi_map.end(); cgi_it++)
 	{
-		close(cgi_it->second.readFd);
-		close(cgi_it->second.writeFd);
+		if (cgi_it->second.readFd != NOTSET)
+			close(cgi_it->second.readFd);
+		if (cgi_it->second.writeFd != NOTSET)
+			close(cgi_it->second.writeFd);
 		// if waitpid is still running exit;
 	}
 	for (it = clients.begin(); it != clients.end(); it++)

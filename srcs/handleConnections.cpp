@@ -201,7 +201,7 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 	std::string clientName = client.header["Host"];
 	clientName = clientName.substr(0, clientName.find(':'));
 
-	ft_logger("Client NAME (" + clientName + ")\n", INFO, __FILE__, __LINE__);
+	ft_logger("Client NAME (" + clientName + ")\n", DEBUG, __FILE__, __LINE__);
 
 	// The first server for a host:port will be the{...} default for this host:port
 	for (it = servers.begin(); it != servers.end(); it++)

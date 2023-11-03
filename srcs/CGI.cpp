@@ -132,7 +132,7 @@ void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 			perror("execve"); // <-- COMMENT THIS OUT LATER
 		// close(STDIN_FILENO);
 		// close(STDOUT_FILENO);
-		_exit(EXIT_FAILURE);
+		// _exit(EXIT_FAILURE);
 	}
 	else // Parent process
 	{

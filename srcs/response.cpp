@@ -250,14 +250,9 @@ void Response::isItReallyCGI()
 	if (_location.getIsCGI())
 	{
 		std::map<std::string, std::string> conf = _location.getCGIConfig();
-		std::map<std::string, std::string>::iterator it;
-		std::string ext = getExt(_target_path);
-		for (it = conf.begin(); it != conf.end(); it++)
-		{
-			if (it->second == ext)
-				return ;
-		}
-		_location.setIsCGI(false);
+		std::string ext = "." + getExt(_target_path);
+		if (conf[ext].empty())
+			_location.setIsCGI(false);
 	}
 }
 
@@ -460,7 +455,11 @@ std::string		Response::fileTextIntoBody(bool isHTML)
 
 	if (!(isPermit(_target_path) & READABLE) || !(isPermit(_target_path) & EXCUTABLE))
 	{
-		_status = _return == -1 ? 403 : _return;		
+		if (_return == -1)
+		{
+			ft_logger("Error: Insufficient Permissions", ERROR, __FILE__, __LINE__);
+			 _status = 403;
+		}
 		return "";
 	}
 	if (in.is_open())

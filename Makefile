@@ -8,7 +8,7 @@ VALUE_FILE = .log_value
 
 FLAGS = -std=c++98
 FLAGS += -Wall -Werror -Wextra
-FLAGS += -g3 #-fno-limit-debug-info
+FLAGS += -g3 -fno-limit-debug-info
 FLAGS += -I$(INC_DIR)
 FLAGS += -D LOG_LEVEL=$(LOG)
 

@@ -126,6 +126,9 @@ void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 		// Execute the CGI program
 		if (execve(cgi_path, argv, envp) == -1)
 			perror("execve"); // <-- COMMENT THIS OUT LATER
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		_exit(EXIT_FAILURE);
 	}
 	else // Parent process
 	{

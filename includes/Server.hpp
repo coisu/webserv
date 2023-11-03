@@ -62,15 +62,16 @@ class Server
         void    initErrorPage(std::string value);
         void    initClientBodySize(std::string value);
         void    initRoot(std::string value);
+        bool    checkDupKey(std::string key);
         // void    initIndex(std::string value);
         // void    initAutoIndex(std::string value);
 
     /*attributes*/
-        unsigned int                _port;
+        int                _port;
         in_addr_t                   _host;
         std::string                 _serverName;
         std::map<int, std::string>  _errorPages;
-        size_t                      _clientBodySize;
+        long                        _clientBodySize;
         std::string                 _root;
         // std::string                 _index;
         // bool                        _autoIndex;

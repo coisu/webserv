@@ -13,9 +13,12 @@ Location::Location( std::string locationBlock ) : _isCgi(false)
 
     this->_block = locationBlock;
     std::getline(ss, part, ';');
+    if (ss.str().rfind(";") != ss.str().size() - 1)
+        throw std::runtime_error("Location value must end with ';'.");
     setAttributes(part.substr(0, part.find('/')), part.substr(part.find('/')));
     while (std::getline(ss, part, ';'))
     {
+        std::cout << "part: "<< part << std::endl;
         std::string key = part.substr(0, part.find(':'));
         std::string value = part.substr(part.find(':')+1);
         setAttributes(key, value);
@@ -179,7 +182,7 @@ void Location::initAllowMethods(std::string value)
 {
     std::stringstream   ss(value);
     std::string         method;
-	std::string methods[4] = {"GET", "POST", "DELETE", "INVALID"};
+	std::string methods[3] = {"GET", "POST", "DELETE"};
 
     while (std::getline(ss, method, ','))
     {
@@ -201,6 +204,8 @@ void Location::initAllowMethods(std::string value)
             throw std::runtime_error("unrecognised/unsupported method: " + method);
         }
     }
+    if (value.empty())
+        throw std::runtime_error("allow_methods must have at least one method");
 }
 
 void Location::initUploadStore(std::string value)
@@ -219,10 +224,11 @@ void Location::initCGI(std::string value)
     std::string         suffix;
     
 	this->_isCgi = true;
+
     while (std::getline(ss, cgiPath, ',') && std::getline(ss, suffix, ','))
-    {
         this->_cgiConfig[suffix] = cgiPath;
-    }
+    if (value.empty())
+        throw std::runtime_error("cgi must have path and extension of the file");;
 }
 
 std::string Location::getBlock() const

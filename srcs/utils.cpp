@@ -72,16 +72,18 @@ char isPermit(std::string path)
 {
 	struct stat	statbuf;
 	char ret = 0;
+	std::cout << "checking path:  " << path << "\n\n";
 
 	if (stat(path.c_str(), &statbuf) != 0)
 		return (0);
 	else
 	{
-		if (!(statbuf.st_mode & S_IRUSR))	// read permissions
+
+		if (statbuf.st_mode & S_IRUSR)	// read permissions
 			ret += 4;
-		if (!(statbuf.st_mode & S_IWUSR))	// write permissions
+		if (statbuf.st_mode & S_IWUSR)	// write permissions
 			ret += 2;
-		if (!(statbuf.st_mode & S_IXUSR))	// exec permission
+		if (statbuf.st_mode & S_IXUSR)	// exec permission
 			ret += 1;
 	}
 	return (ret);

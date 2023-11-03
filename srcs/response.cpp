@@ -237,8 +237,10 @@ std::string Response::processResponse( int &read_fd, int &write_fd, int &cgi_pid
 		_headerStr += buildHeader(_body.size(), _status);
 		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
 	}
-	std::stringstream ss;
-	// ss << "__________________RESPONSE___________________\n" << _buffer << "\n______________________________________________\n";
+	std::ostringstream ss;
+	ss << "\n__________________RESPONSE___________________\n" << _headerStr << "\n______________________________________________\n";
+	ft_logger(ss.str(), INFO, __FILE__, __LINE__);
+	ss << "\n" << _body << "\n______________________________________________\n";
 	ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 	return _buffer;
 }
@@ -318,6 +320,8 @@ void Response::buildBodywithMethod(std::string ext, int &read_fd, int &write_fd,
 		}
 		else
 		{
+			if (_location.getIsCGI())
+				std::cout << "is CGI\n\n";
 			if (_location.getIsCGI())
 			{
 				CGI	cgi(_server, _location, _request);

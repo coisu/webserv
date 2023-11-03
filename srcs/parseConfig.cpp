@@ -12,7 +12,6 @@ bool    startsWith( std::string str, std::string match )
 bool    validLocation( std::string line )
 {
     std::string                 word("location/");
-
     return (line.substr(0, word.size()) == word);
 }
 
@@ -63,12 +62,12 @@ std::vector<Server> parseConfig( std::string configPath )
         if (file[i] == '{')
         {
             brackets++;
-            if (brackets == 1)
+            if (brackets == 1) //server block start
             {
                 if ((line = cut(file, start, i)) != "server")
                     throw std::runtime_error("expected: \"server {\" got: \"" + line + "\".");
             }
-            else if (brackets == 2)
+            else if (brackets == 2) //location
             {
                 size_t  lastSeperator = file.find_last_of(";}", i);
                 if (!validLocation(line = cut(file, lastSeperator, i)))// std::string(&file[lastSeperator + 1], &file[i])))//file.substr(lastSeperator, i)))
@@ -82,6 +81,11 @@ std::vector<Server> parseConfig( std::string configPath )
         else if (file[i] == '}')
         {
             brackets--;
+            if (!inLocation )
+            {
+                size_t  lastSeperator = file.find_last_of(";}", i);
+                serverBlock += cut(file, start, lastSeperator );
+            }
             if (brackets == 0)
             {
                 serverVec.push_back(Server(serverBlock, locationVec));

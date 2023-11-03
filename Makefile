@@ -8,7 +8,7 @@ VALUE_FILE = .log_value
 
 FLAGS = -std=c++98
 FLAGS += -Wall -Werror -Wextra
-FLAGS += -g3 -fno-limit-debug-info
+FLAGS += -g3 #-fno-limit-debug-info
 FLAGS += -I$(INC_DIR)
 FLAGS += -D LOG_LEVEL=$(LOG)
 
@@ -55,5 +55,6 @@ fclean: clean
 
 re: fclean all
 
+run: LOG=2
 run: all
 	@valgrind --quiet --leak-check=full --show-leak-kinds=all --track-fds=yes --exit-on-first-error=yes --error-exitcode=1 -s ./$(BINARY)

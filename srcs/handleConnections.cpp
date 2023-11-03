@@ -60,19 +60,20 @@ void	ft_close(int &fd)
 
 void    parseHttpRequest(ClientState &client)
 {
-	if (client.incompleteRequest.size() >= 6)
-	{
-		if (client.incompleteRequest.substr(0, 3) != "GET"
-		&& client.incompleteRequest.substr(0, 4) != "POST"
-		&& client.incompleteRequest.substr(0, 6) != "DELETE")
-		{
-			ft_logger("Error: invalid request", ERROR, __FILE__, __LINE__);
-			throw 400;
-		}
-	}
 	size_t pos = client.incompleteRequest.find("\r\n\r\n"); // <-- seach for header-body seperator
 	if (!client.isReceivingBody && pos != std::string::npos) // <-- if client isnt receiving body and seperator is found
 	{
+		if (client.incompleteRequest.size() >= 6)
+		{
+			if (client.incompleteRequest.substr(0, 3) != "GET"
+			&& client.incompleteRequest.substr(0, 4) != "POST"
+			&& client.incompleteRequest.substr(0, 6) != "DELETE")
+			{
+				ft_logger("Error: invalid request", ERROR, __FILE__, __LINE__);
+				ft_logger("Request: " + client.incompleteRequest, DEBUG, __FILE__, __LINE__);
+				throw 400;
+			}
+		}
 		std::istringstream  iss(client.incompleteRequest.substr(0, pos + 4)); // <-- put header part of the request into istream
 		std::string         key, val;
 
@@ -266,7 +267,6 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					FD_SET(cgi.readFd, &readSet);
 				else
 					ft_logger("Error: cgi read pipe broken or closed", ERROR, __FILE__, __LINE__);
-
 				if (fcntl(cgi.writeFd, F_GETFD) == 0)
 					FD_SET(cgi.writeFd, &writeSet);
 				else
@@ -439,7 +439,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					else
 					{
 						ft_logger("Error: CGI returned empty response", ERROR, __FILE__, __LINE__);
-						// push 500 to responseQueue
+						clients[cgi.clientSocket].responseQueue.push(makeResponse(500, "CGI DID NOT RESPOND")); // push 500 to responseQueue
 					}
 					cgi.readBuffer.clear();
 					// cgi_read_map.erase(cgi_read_it++);
@@ -449,6 +449,8 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				{
 					ft_logger("Reading from cgi..", INFO, __FILE__, __LINE__);
 					cgi.readBuffer.append(buffer, bytesReceived); // <-- append received data
+					ft_logger("RESPONSE FROM CGI: " + cgi.readBuffer, DEBUG, __FILE__, __LINE__);
+					// clients[cgi.clientSocket].responseQueue.push(makeResponse(500, ""));
 					// if count is too high clear readbuffer and push 500 to responseQueue
 				}
 			}
@@ -472,6 +474,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else
 				{
+					ft_logger("TO CGI:\n" + cgi.writeBuffer.substr(0, bytesSent), DEBUG, __FILE__, __LINE__);
 					cgi.writeBuffer.erase(0, bytesSent); // <-- erase sent data
 				}
 			}
@@ -565,16 +568,17 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					else
 					{
 						std::clock_t now = std::clock();
-						if (now - cgi->start > CLOCKS_PER_SEC * 1)
+						if (now - cgi->start > CLOCKS_PER_SEC * 10)
 						{
 							ft_logger("Error: CGI process timed out", ERROR, __FILE__, __LINE__);
 							kill(client.cgi_pid, SIGKILL);
 							ft_close(cgi->readFd);
 							ft_close(cgi->writeFd);
 							client.cgi_pid = NOTSET;
+							client.responseQueue.push(makeResponse(500, "TIMEOUT"));
 						}
-						else
-							ft_logger("CGI process still running", INFO, __FILE__, __LINE__);
+						// else
+							// ft_logger("CGI process still running", INFO, __FILE__, __LINE__);
 					}
 				}
 				else if (result == client.cgi_pid)
@@ -614,8 +618,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					}
 				}
 			}
-
-			if (FD_ISSET(clientSocket, &readSet)) // <-- check if client is ready to read from
+			else if (FD_ISSET(clientSocket, &readSet)) // <-- check if client is ready to read from
 			{
 				char    buffer[1024];
 				bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
@@ -642,6 +645,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					try
 					{
 						client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
+						ft_logger("REQUEST:\n" + client.incompleteRequest, DEBUG, __FILE__, __LINE__);
 						parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 						if (client.requestCompleted == true) // <-- if the request has been fully parsed then create the response
 						{
@@ -707,7 +711,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					}
 				}
 			}
-			if (FD_ISSET(clientSocket, &writeSet) && client.responseQueue.empty() == false) // <-- check if client is ready to write into
+			else if (FD_ISSET(clientSocket, &writeSet) && client.responseQueue.empty() == false) // <-- check if client is ready to write into
 			{
 				std::string	&responseStr = client.responseQueue.front();
 				int bytesSent = send(clientSocket, responseStr.data(), responseStr.size(), 0);

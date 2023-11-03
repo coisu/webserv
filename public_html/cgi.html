@@ -158,14 +158,14 @@ a:hover
       <body>
       <div class="centered-container"></div>
         <div>Test upload</div>
-        <form action="/cgi-bin/upload.py" method="post">
+        <form action="/cgi-bin/upload.py" method="post" enctype="multipart/form-data">
           <input type="file" id="myFile" name="filename">
           <input type="submit" value="Submit">
         </form>
       </body>
     <body>
       <div>Test time</div>
-      <form action="./cgi-bin/time.py" method="get">
+      <form action="./cgi-bin/time.py" method="post">
       <input type="submit" value="Time">
       </form>
     </body>
@@ -173,7 +173,7 @@ a:hover
   <div>
     <body>
         <div>Test Env Python</div>
-        <form action="./cgi-bin/env.py" method="get">
+        <form action="./cgi-bin/env.py" method="post">
         <input type="submit" value="ENV - PY">
         </form>
     </body>
@@ -181,7 +181,7 @@ a:hover
   <div>
     <body>
         <div>Test Env SH</div>
-        <form action="./cgi-bin/env.sh" method="get">
+        <form action="./cgi-bin/env.sh" method="post">
         <input type="submit" value="ENV - SH">
         </form>
     </body>

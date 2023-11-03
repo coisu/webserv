@@ -43,6 +43,7 @@ std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std
 	env["QUERY_STRING"] = extractQueryString(urlvec);
 	env["UPLOAD_STORE"] = this->_location.getUploadStore();
 	env["SCRIPT_NAME"] = extractScriptName(urlvec);
+	env["CONTENT_TYPE"] = this->_request.getHead().find("content-type")->second;
 	std::map<std::string, std::string>::iterator it = env.begin();
 	while( it != env.end())
 	{
@@ -126,8 +127,8 @@ void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 		// Execute the CGI program
 		if (execve(cgi_path, argv, envp) == -1)
 			perror("execve"); // <-- COMMENT THIS OUT LATER
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
+		// close(STDIN_FILENO);
+		// close(STDOUT_FILENO);
 		_exit(EXIT_FAILURE);
 	}
 	else // Parent process

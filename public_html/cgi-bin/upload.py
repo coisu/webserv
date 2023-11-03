@@ -4,13 +4,15 @@ import cgi, os
 
 form = cgi.FieldStorage()
 
+upload_dir = os.environ['UPLOAD_DIR']
+
 # Get filename here
 fileitem = form['filename']
 
 # Test if the file was uploaded
 if fileitem.filename:
-   open(os.getcwd() + '/' + os.path.basename(fileitem.filename), 'wb').write(fileitem.file.read())
-   message = 'The file "' + os.path.basename(fileitem.filename) + '" was uploaded to ' + os.getcwd()
+   open(upload_dir + '/' + os.path.basename(fileitem.filename), 'wb').write(fileitem.file.read())
+   message = 'The file "' + os.path.basename(fileitem.filename) + '" was uploaded to ' + upload_dir
 else:
    message = 'Uploading Failed'
 

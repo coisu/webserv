@@ -44,6 +44,8 @@ std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std
 	env["UPLOAD_STORE"] = this->_location.getUploadStore();
 	env["SCRIPT_NAME"] = extractScriptName(urlvec);
 	env["CONTENT_TYPE"] = this->_request.getHead().find("content-type")->second;
+	env["UPLOAD_DIR"] = this->server.getRoot() + this->_location.getUploadStore();
+	ft_logger("UPLOAD_DIR: " + env["UPLOAD_DIR"], DEBUG, __FILE__, __LINE__);
 	std::map<std::string, std::string>::iterator it = env.begin();
 	while( it != env.end())
 	{

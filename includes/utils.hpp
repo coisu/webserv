@@ -141,6 +141,7 @@ std::string					trimWhiteSpace( const std::string &str );
 
 void	handleConnections(std::vector<Server> &servers);
 void	ft_logger(std::string thing, int level, std::string FILE, int LINE);
+std::string toLowercase(const std::string& str);
 
 
 #endif

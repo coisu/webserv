@@ -43,6 +43,9 @@ std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std
 	env["QUERY_STRING"] = extractQueryString(urlvec);
 	env["UPLOAD_STORE"] = this->_location.getUploadStore();
 	env["SCRIPT_NAME"] = extractScriptName(urlvec);
+	env["CONTENT_TYPE"] = this->_request.getHead().find("content-type")->second;
+	env["UPLOAD_DIR"] = this->server.getRoot() + this->_location.getUploadStore();
+	ft_logger("UPLOAD_DIR: " + env["UPLOAD_DIR"], DEBUG, __FILE__, __LINE__);
 	std::map<std::string, std::string>::iterator it = env.begin();
 	while( it != env.end())
 	{
@@ -73,9 +76,10 @@ char**	CGI::getCharEnv( void )
 	return (char_env);
 }
 
-void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
+void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 {
-	int pipefd[2];
+	int child_to_parent[2];
+	int parent_to_child[2];
 	pid_t pid;
 	char** const argv = this->_av;
 	if (!argv)
@@ -87,15 +91,20 @@ void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
 	char** const envp = this->getCharEnv();
 	// std::string response;
 
-	// Create a pipe
-	if (pipe(pipefd) == -1)
+	// Create a pipes
+	if (pipe(child_to_parent) == -1)
+	{
+		perror("pipe"); // <-- COMMENT THIS OUT LATER
+		ft_logger("Failed to create pipe", ERROR, __FILE__, __LINE__);
+		throw std::runtime_error("Failed to create pipe");
+	}
+	if (pipe(parent_to_child) == -1)
 	{
 		perror("pipe"); // <-- COMMENT THIS OUT LATER
 		ft_logger("Failed to create pipe", ERROR, __FILE__, __LINE__);
 		throw std::runtime_error("Failed to create pipe");
 	}
 
-	cgi_fd = pipefd[0];
 	// Fork the process
 	pid = fork();
 	if (pid == -1)
@@ -107,20 +116,32 @@ void CGI::exec_cgi( int &cgi_fd, int &cgi_pid)
 
 	if (pid == 0) // Child process
 	{
+		close(parent_to_child[1]); // Close the write end we don't need.
+		close(child_to_parent[0]); // Close the read end we don't need.
+
 		// Redirect stdout to the write end of the pipe
-		dup2(pipefd[1], STDOUT_FILENO);
-		close(pipefd[0]);
-		close(pipefd[1]);
+		dup2(parent_to_child[0], STDIN_FILENO); // Redirect read end to stdin.
+		dup2(child_to_parent[1], STDOUT_FILENO); // Redirect stdout to write end.
+
+		close(parent_to_child[0]); // These are no longer needed after dup2.
+		close(child_to_parent[1]);
 
 		// Execute the CGI program
 		if (execve(cgi_path, argv, envp) == -1)
 			perror("execve"); // <-- COMMENT THIS OUT LATER
-		exit(1);
+		// close(STDIN_FILENO);
+		// close(STDOUT_FILENO);
+		_exit(EXIT_FAILURE);
 	}
 	else // Parent process
 	{
+		close(parent_to_child[0]); // Close the read end we don't need.
+		close(child_to_parent[1]); // Close the write end we don't need.
+
+		read_fd = child_to_parent[0]; // <-- Save the read end of the pipe for the multiplexer
+		write_fd = parent_to_child[1]; // <-- Save the write end of the pipe for the multiplexer
+
 		cgi_pid = pid; // <-- Save the CGI process ID
-		close(pipefd[1]); // <-- Close write end in parent
 	}
 	// free envp
 	for (int i = 0; envp[i]; i++)

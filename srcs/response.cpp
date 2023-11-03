@@ -126,7 +126,7 @@ std::string Response::jumpToErrorPage(int status)
 	return (errorHeader + errorBody + "\r\n");
 }
 
-std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
+std::string Response::processResponse( int &read_fd, int &write_fd, int &cgi_pid )
 {
 	_currentMethod = _request.getMethodEnum();
 	bool isRedirect = false;
@@ -206,7 +206,7 @@ std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 	}
 			
 	if (isAllowedMethod(_currentMethod) && (_status == -1))
-		buildBodywithMethod(ext, cgi_fd, cgi_pid);
+		buildBodywithMethod(ext, read_fd, write_fd, cgi_pid);
 	if (_status >= 400)
 		buildErrorBody(ext);	
 
@@ -232,7 +232,7 @@ std::string Response::processResponse(int &cgi_fd, int &cgi_pid)
 	}
 
 	/* MAKE HEADER */
-	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400 || (!_location.getIsCGI() && _status == _return))
+	if ((_currentMethod != POST && !_location.getIsCGI()) || _status >= 400) // || (!_location.getIsCGI() && _status == _return))
 	{
 		_headerStr += buildHeader(_body.size(), _status);
 		_buffer = (_body == "") ? _headerStr + "\r\n\r\n" : _headerStr + _body + "\r\n";
@@ -285,7 +285,7 @@ void Response::setTargetPath()
 	ft_logger("[ Directive Path ] " + _target_path, DEBUG, __FILE__, __LINE__);
 }
 
-void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
+void Response::buildBodywithMethod(std::string ext, int &read_fd, int &write_fd, int &cgi_pid )
 {
 
 	if (_currentMethod == GET || _currentMethod == POST)
@@ -325,7 +325,7 @@ void Response::buildBodywithMethod(std::string ext, int &cgi_fd, int &cgi_pid)
 			if (_location.getIsCGI())
 			{
 				CGI	cgi(_server, _location, _request);
-				cgi.exec_cgi(cgi_fd, cgi_pid);
+				cgi.exec_cgi(read_fd, write_fd, cgi_pid);
 			}
 			else
 			{

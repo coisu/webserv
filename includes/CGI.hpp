@@ -27,7 +27,7 @@ class CGI
 		
 		//public methods
 		char**		getCharEnv( void );
-		void		exec_cgi( int &cgi_fd, int &cgi_pid );
+		void		exec_cgi( int &read_fd, int &write_fd, int &cgi_pid );
 		// std::string exec_cgi(const char* cgi_path, char* const argv[], char* const envp[])
 
 		//public attributes

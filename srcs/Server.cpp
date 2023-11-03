@@ -69,10 +69,10 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
 	// this->_serverIncomingMessage = (),
 	// this->_socketSet = ();
 	// this->_maxSocket = 
-	// this->_port = 0;
+	this->_port = -1;
 	this->_host = 0;
 	this->_serverName = "";
-	this->_clientBodySize = 0;
+	this->_clientBodySize = -1;
 	this->_root = "";
 	this->_listenFd = 0;
 	this->_block = "";
@@ -99,13 +99,35 @@ Server::Server(std::string serverBlock, std::vector<Location> locationVec)
         std::string value = part.substr(part.find(':')+1);
         setAttributes(key, value);
     }
+    if (this->_clientBodySize == -1)
+        _clientBodySize = 10485760;
+    if (this->_port == -1)
+        throw std::runtime_error("port value is missing.");
     // std::cout << "SERVER:\n" << *this << std::endl;
+}
+
+bool Server::checkDupKey(std::string key)
+{
+    if ((key == "port" && this->_port != -1) || (key == "host" && this->_host != 0) \
+        || (key == "server_name" && !this->_serverName.empty()) || (key == "client_body_size" && this->_clientBodySize != -1) \
+        || (key == "root" && !this->_root.empty()))
+    {
+        return false;
+    }
+    else
+        return true;
 }
 
 void    Server::setAttributes(std::string key, std::string value)
 {
     size_t      N = 6;
-
+    if(!checkDupKey(key))
+    {
+        if (this->_port == -1)
+            throw std::runtime_error("port value is missing2.");
+        else
+            throw std::runtime_error("duplicate server key: " + key);
+    }
     std::string keys[6] = {"port", 
                           "host", 
                           "server_name", 
@@ -137,12 +159,12 @@ void    Server::setAttributes(std::string key, std::string value)
     case 5:
         initRoot(value);
         break;
-    // case 6:
-    //     initIndex(value);
-    //     break;
-    // case 7:
-    //     initAutoIndex(value);
-    //     break;
+        // case 6:
+        //     initIndex(value);
+        //     break;
+        // case 7:
+        //     initAutoIndex(value);
+        //     break;
     default:
         throw std::runtime_error("unrecognised server key: " + key);
     }
@@ -302,7 +324,7 @@ void Server::initErrorPage(std::string value)
 
 void Server::initClientBodySize(std::string value)
 {
-    if (value.size() > 18 || value.find_first_not_of("0123456789") != value.npos)
+    if (value.size() > 18 || value.find_first_not_of("0123456789") != value.npos || value.empty())
         throw std::runtime_error("bad client body size.");
     this->_clientBodySize = static_cast<size_t>(atoll(value.c_str()));
 }

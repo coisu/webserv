@@ -13,9 +13,12 @@ Location::Location( std::string locationBlock ) : _isCgi(false)
 
     this->_block = locationBlock;
     std::getline(ss, part, ';');
+    if (ss.str().rfind(";") != ss.str().size() - 1)
+        throw std::runtime_error("Location value must end with ';'.");
     setAttributes(part.substr(0, part.find('/')), part.substr(part.find('/')));
     while (std::getline(ss, part, ';'))
     {
+        std::cout << "part: "<< part << std::endl;
         std::string key = part.substr(0, part.find(':'));
         std::string value = part.substr(part.find(':')+1);
         setAttributes(key, value);

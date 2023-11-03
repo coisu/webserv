@@ -240,8 +240,8 @@ std::string Response::processResponse( int &read_fd, int &write_fd, int &cgi_pid
 	std::ostringstream ss;
 	ss << "\n__________________RESPONSE___________________\n" << _headerStr << "\n______________________________________________\n";
 	ft_logger(ss.str(), INFO, __FILE__, __LINE__);
-	ss << "\n" << _body << "\n______________________________________________\n";
-	ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
+	// ss << "\n" << _body << "\n______________________________________________\n";
+	// ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 	return _buffer;
 }
 
@@ -279,7 +279,7 @@ void Response::setTargetPath()
 		if (_location.getIndex() != "")
 		{
 			if(pathIsDir(_target_path) == IS_DIR && !_location.getAutoIndex())
-				_target_path += _location.getIndex();
+				_target_path += "/" + _location.getIndex();
 		}
 	}
 	ft_logger("[ Directive Path ] " + _target_path, DEBUG, __FILE__, __LINE__);
@@ -321,8 +321,6 @@ void Response::buildBodywithMethod(std::string ext, int &read_fd, int &write_fd,
 		else
 		{
 			if (_location.getIsCGI())
-				std::cout << "is CGI\n\n";
-			if (_location.getIsCGI())
 			{
 				CGI	cgi(_server, _location, _request);
 				cgi.exec_cgi(read_fd, write_fd, cgi_pid);
@@ -330,7 +328,7 @@ void Response::buildBodywithMethod(std::string ext, int &read_fd, int &write_fd,
 			else
 			{
 				_return == -1 ? (_status = 405) : (throw _return);
-				_body = "CGI is not set";
+				// _body = "CGI is not set";
 			}
 		}
 	}
@@ -363,7 +361,7 @@ void Response::buildErrorBody(std::string ext)
 std::string Response::buildErrorBody(int err)
 {
 
-	if (_status >= 400)
+	if (err >= 400)
 	{
 		std::map<int, std::string> ep = _server.getErrorPages();
 		if (ep.find(err) != ep.end())

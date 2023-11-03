@@ -331,7 +331,8 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			else
 			{
 				FD_SET(clientSocket, &readSet);
-				FD_SET(clientSocket, &writeSet);
+				if (client.responseQueue.empty() == false)
+					FD_SET(clientSocket, &writeSet);
 				it++;
 			}
 		}
@@ -470,7 +471,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else
 				{
-					ft_logger("TO CGI:\n" + cgi.writeBuffer.substr(0, bytesSent), DEBUG, __FILE__, __LINE__);
+					// ft_logger("TO CGI:\n" + cgi.writeBuffer.substr(0, bytesSent), DEBUG, __FILE__, __LINE__);
 					cgi.writeBuffer.erase(0, bytesSent); // <-- erase sent data
 				}
 			}
@@ -576,7 +577,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					try
 					{
 						client.incompleteRequest.append(buffer, bytesReceived); // <-- append received data
-						ft_logger("REQUEST:\n" + client.incompleteRequest, DEBUG, __FILE__, __LINE__);
+						// ft_logger("REQUEST:\n" + client.incompleteRequest, DEBUG, __FILE__, __LINE__);
 						parseHttpRequest(client); // <-- parse the request into sdt::map client.header and std::string client.body
 						if (client.requestCompleted == true) // <-- if the request has been fully parsed then create the response
 						{
@@ -592,7 +593,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 							{
 								int read_fd = NOTSET, write_fd = NOTSET, cgi_pid = NOTSET;
 								std::string fullResponseStr = response.processResponse(read_fd, write_fd, cgi_pid);
-								ft_logger("RESPONSE STR:\n" + fullResponseStr, DEBUG, __FILE__, __LINE__);
+								// ft_logger("RESPONSE STR:\n" + fullResponseStr, DEBUG, __FILE__, __LINE__);
 								if (fullResponseStr.empty())
 								{
 									// CgiState cgi = {std::string(), client.body, read_fd, write_fd, clientSocket};

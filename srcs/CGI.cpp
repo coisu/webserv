@@ -43,7 +43,14 @@ std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std
 	env["QUERY_STRING"] = extractQueryString(urlvec);
 	env["UPLOAD_STORE"] = this->_location.getUploadStore();
 	env["SCRIPT_NAME"] = extractScriptName(urlvec);
-	env["CONTENT_TYPE"] = this->_request.getHead().find("content-type")->second;
+	try
+	{
+		env["CONTENT_TYPE"] = this->_request.getHead().find("content-type")->second;
+	}
+	catch(const std::exception& e)
+	{
+		env["CONTENT_TYPE"] = "";
+	}
 	env["UPLOAD_DIR"] = this->server.getRoot() + this->_location.getUploadStore();
 	ft_logger("UPLOAD_DIR: " + env["UPLOAD_DIR"], DEBUG, __FILE__, __LINE__);
 	std::map<std::string, std::string>::iterator it = env.begin();
@@ -168,6 +175,8 @@ void	CGI::identifyCGI(std::vector<std::string> urlvec)
 	this->_script = root + path;
 	this->_postfix = ext;
 	this->_program = this->_cgiConfig[this->_postfix];
+	ft_logger("Error: Not a CGI", ERROR, __FILE__, __LINE__);
+	throw 403;
 }
 
 std::string	CGI::extractScriptName(std::vector<std::string> urlvec)

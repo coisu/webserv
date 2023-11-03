@@ -127,11 +127,35 @@ std::string makeResponse(int code, std::string body)
 	return (ss.str());
 }
 
+bool isDup(std::vector<Server> &servers, std::vector<Server>::iterator cur)
+{
+	std::vector<Server>::iterator first = servers.begin();
+	std::vector<Server>::iterator it = servers.begin();
+	(void) cur;
+	if (servers.size() > 1)
+		++it;
+	// for (; it != servers.end(); it++)
+	// {
+	// 	if (it == first)
+	// 		break;
+	// }
+	if (it != servers.end())
+	{
+		++it;
+		for (; it != servers.end(); it++)
+		{
+			if (it->getPort() == first->getPort())
+				return true;
+		}
+	}
+	return false;
+}
+
 int chooseServer(int clientSocket, ClientState client, std::vector<Server> &servers)
 {
 	int	serverIndex = -1;
 	std::vector<Server>::iterator it;
-
+	
 	// get the port of the connected client with clientSocket and getsockname()
 	struct sockaddr_in sin;
 	socklen_t len = sizeof(sin);
@@ -148,25 +172,34 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 	std::string clientName = client.header["Host"];
 	clientName = clientName.substr(0, clientName.find(':'));
 
+	ft_logger("Client NAME (" + clientName + ")\n", INFO, __FILE__, __LINE__);
+
 	// The first server for a host:port will be the{...} default for this host:port
 	for (it = servers.begin(); it != servers.end(); it++)
 	{
-		if (it->getPort() == clientPort)
+		bool dupServer = isDup(servers, it);
+		if (it->getPort() == clientPort && ((it->getServerName() == clientName && dupServer) || !dupServer))
 		{
 			serverIndex = it - servers.begin();
+			ft_logger("set server with servername: " + it->getServerName() + "\n", INFO, __FILE__, __LINE__);
 			break ;
 		}
+	}
+	if (serverIndex == -1)
+	{
+		serverIndex = 0;
+		ft_logger("set server with default: " + servers.begin()->getServerName() + "\n", INFO, __FILE__, __LINE__);
 	}
 
-	// compare the client values with the server values to match the right server
-	for (it = servers.begin(); it != servers.end(); it++)
-	{
-		if (it->getPort() == clientPort && it->getServerName() == clientName)
-		{
-			serverIndex = it - servers.begin();
-			break ;
-		}
-	}
+	// // compare the client values with the server values to match the right server
+	// for (it = servers.begin(); it != servers.end(); it++)
+	// {
+	// 	if (it->getPort() == clientPort && it->getServerName() == clientName)
+	// 	{
+	// 		serverIndex = it - servers.begin();
+	// 		break ;
+	// 	}
+	// }
 
 	// return NULL if no server was found and there are no default servers (servers with no name)
 	return (serverIndex);

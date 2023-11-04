@@ -10,6 +10,7 @@
 !*.c
 !*.tpp
 !Makefile
+!siege
 
 # whitelist everything in ./folder/: !folder/*
 !resources/**

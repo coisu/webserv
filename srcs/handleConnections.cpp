@@ -69,9 +69,9 @@ void    parseHttpRequest(ClientState &client)
 			&& client.incompleteRequest.substr(0, 4) != "POST"
 			&& client.incompleteRequest.substr(0, 6) != "DELETE")
 			{
-				ft_logger("Error: invalid request", ERROR, __FILE__, __LINE__);
-				ft_logger("Request: " + client.incompleteRequest, DEBUG, __FILE__, __LINE__);
-				throw 400;
+				// ft_logger("Error: invalid request", ERROR, __FILE__, __LINE__);
+				// ft_logger("Request: " + client.incompleteRequest, DEBUG, __FILE__, __LINE__);
+				throw (int)400;
 			}
 		}
 		std::istringstream  iss(client.incompleteRequest.substr(0, pos + 4)); // <-- put header part of the request into istream
@@ -152,7 +152,7 @@ std::string makeResponse(int code, std::string body)
 		  << "Content-Type: text/plain\r\n" //text/plain\r\n"
 		  << "Content-Length: " << body.size() << "\r\n"
 		  << "\n" << body << "\r\n";
-	ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
+	// ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 	return (ss.str());
 }
 
@@ -190,7 +190,7 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 	socklen_t len = sizeof(sin);
 	if (getsockname(clientSocket, (struct sockaddr *)&sin, &len) == -1)
 	{
-		ft_logger("Error getting client port", ERROR, __FILE__, __LINE__);
+		// ft_logger("Error getting client port", ERROR, __FILE__, __LINE__);
 		throw 500;
 	}
 	else
@@ -201,7 +201,7 @@ int chooseServer(int clientSocket, ClientState client, std::vector<Server> &serv
 	std::string clientName = client.header["Host"];
 	clientName = clientName.substr(0, clientName.find(':'));
 
-	ft_logger("Client NAME (" + clientName + ")\n", DEBUG, __FILE__, __LINE__);
+	// ft_logger("Client NAME (" + clientName + ")\n", DEBUG, __FILE__, __LINE__);
 
 	// The first server for a host:port will be the{...} default for this host:port
 	for (it = servers.begin(); it != servers.end(); it++)
@@ -281,7 +281,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			{
 				ft_close(serverSockets[i]);
 				serverSockets.erase(serverSockets.begin() + i);
-				ft_logger("Error: fcntl() failed", ERROR, __FILE__, __LINE__);
+				// ft_logger("Error: fcntl() failed", ERROR, __FILE__, __LINE__);
 			}
 		}
 
@@ -292,7 +292,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			if (cgi.readFd == NOTSET && cgi.writeFd == NOTSET && cgi.readBuffer.empty() && cgi.writeBuffer.empty())
 			{
 				cgi_map.erase(cgi_it++);
-				ft_logger("CGI read and write pipes not set", DEBUG, __FILE__, __LINE__);
+				// ft_logger("CGI read and write pipes not set", DEBUG, __FILE__, __LINE__);
 			}
 			else
 			{
@@ -341,13 +341,13 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			if (FD_ISSET(i, &readSet)) {
 				if (fcntl(i, F_GETFD) == -1) {
 					// Invalid file descriptor
-					perror("fcntl read");
+					// perror("fcntl read");
 				}
 			}
 			if (FD_ISSET(i, &writeSet)) {
 				if (fcntl(i, F_GETFD) == -1) {
 					// Invalid file descriptor
-					perror("fcntl write");
+					// perror("fcntl write");
 				}
 			}
 		}
@@ -360,14 +360,14 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 			if (global_running_flag == true)
 			{
 				// exit(1);
-				perror("select"); // <-- COMMENT THIS OUT LATER
+				// perror("select"); // <-- COMMENT THIS OUT LATER
 				ft_logger("Error: select() failed", ERROR, __FILE__, __LINE__);
 			}
 			continue ;
 		}
 		else if (activity == 0) // handle timeout
 		{
-			ft_logger("Timeout occurred: No data after " + SSTR(timeout.tv_sec) + " seconds", INFO, __FILE__, __LINE__);
+			// ft_logger("Timeout occurred: No data after " + SSTR(timeout.tv_sec) + " seconds", INFO, __FILE__, __LINE__);
 		}
 
 		// Loop through the server sockets to find the one that is ready.
@@ -429,7 +429,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else if (bytesReceived == 0)
 				{
-					ft_logger("CGI pipe read returned zero", INFO, __FILE__, __LINE__);
+					// ft_logger("CGI pipe read returned zero", INFO, __FILE__, __LINE__);
 					ft_close(cgiOut);
 					if (!cgi.readBuffer.empty())
 						clients[cgi.clientSocket].responseQueue.push(cgi.readBuffer); // DANGER because cgi.clientSocket might not exist
@@ -464,7 +464,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 				}
 				else if (bytesSent == 0)
 				{
-					ft_logger("CGI pipe sent zero bytes", INFO, __FILE__, __LINE__);
+					// ft_logger("CGI pipe sent zero bytes", INFO, __FILE__, __LINE__);
 					ft_close(cgiIn);
 					// cgi_write_map.erase(cgi_write_it++);
 					// continue ;
@@ -527,7 +527,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 						ft_close(cgi->readFd);
 						ft_close(cgi->writeFd);
 						client.cgi_pid = NOTSET;
-						ft_logger("CGI process ended", INFO, __FILE__, __LINE__);
+						ft_logger("CGI process ended", DEBUG, __FILE__, __LINE__);
 					}
 				}
 				else
@@ -563,12 +563,11 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 					FD_CLR(clientSocket, &readSet);
 					FD_CLR(clientSocket, &writeSet);
 					client.isClosed = true;
-					perror("bytes");
 					continue ; // <-- NOT SURE IF THIS IS NEEDED
 				}
 				else if (bytesReceived == 0)
 				{
-					ft_logger("Client socket read returned zero", INFO, __FILE__, __LINE__);
+					ft_logger("Client socket read returned zero", DEBUG, __FILE__, __LINE__);
 					client.isClosing = true;
 				}
 				else
@@ -746,14 +745,14 @@ void handleConnections(std::vector<Server> &servers)
 		int yes = 1;
 		if (setsockopt(currentSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
 			ft_logger("Failed to setsocket: " + SSTR(currentSocket), ERROR, __FILE__, __LINE__);
-			perror("setsockopt"); // <-- COMMENT THIS OUT LATER
+			// perror("setsockopt"); // <-- COMMENT THIS OUT LATER
 		}
 
 		// Bind the socket to the address and port.
 		if (bind(currentSocket,(struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress)) < 0)
 		{
 			ft_close(currentSocket);
-			perror("bind failed"); // <-- COMMENT THIS OUT LATER
+			// perror("bind failed"); // <-- COMMENT THIS OUT LATER
 			ft_logger("Failed to bind socket: " + SSTR(htons(serverSocketAddress.sin_port)), ERROR, __FILE__, __LINE__);
 			throw std::runtime_error("Cannot bind socket to address");
 		}
@@ -770,7 +769,7 @@ void handleConnections(std::vector<Server> &servers)
 		ss << "Listening on ADDRESS: " 
 		<< inet_ntoa(serverSocketAddress.sin_addr) // convert the IP address (binary) in string
 		<< " PORT: " << ntohs(serverSocketAddress.sin_port); // invert octets, beacause network have big endians before and we want to have little endians before
-		ft_logger(ss.str(), INFO, __FILE__, __LINE__);
+		// ft_logger(ss.str(), INFO, __FILE__, __LINE__);
 
 		if (currentSocket < 0)
 		{
@@ -779,7 +778,7 @@ void handleConnections(std::vector<Server> &servers)
 			"Server failed to setup connection on ADDRESS: " 
 			<< inet_ntoa(serverSocketAddress.sin_addr) << "; PORT: " 
 			<< ntohs(serverSocketAddress.sin_port);
-			ft_logger(ss.str(), ERROR, __FILE__, __LINE__);
+			ft_logger(ss.str(), INFO, __FILE__, __LINE__);
 			throw std::runtime_error("Cannot setup connection");
 		}
 

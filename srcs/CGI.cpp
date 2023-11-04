@@ -45,7 +45,7 @@ std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std
 	env["SCRIPT_NAME"] = extractScriptName(urlvec);
 	env["CONTENT_TYPE"] = this->_request.getHead()["content-type"];
 	env["UPLOAD_DIR"] = this->server.getRoot() + this->_location.getUploadStore();
-	ft_logger("UPLOAD_DIR: " + env["UPLOAD_DIR"], DEBUG, __FILE__, __LINE__);
+	// ft_logger("UPLOAD_DIR: " + env["UPLOAD_DIR"], DEBUG, __FILE__, __LINE__);
 	it = env.begin();
 	while( it != env.end())
 	{
@@ -84,7 +84,7 @@ void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 	char** const argv = this->_av;
 	if (!argv)
 	{
-		ft_logger("Failed to run CGI: argv is empty", ERROR, __FILE__, __LINE__);
+		// ft_logger("Failed to run CGI: argv is empty", ERROR, __FILE__, __LINE__);
 		throw std::runtime_error("Failed to run CGI: argv is empty");
 	}
 	const char* cgi_path = argv[0];
@@ -94,14 +94,14 @@ void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 	// Create a pipes
 	if (pipe(child_to_parent) == -1)
 	{
-		perror("pipe"); // <-- COMMENT THIS OUT LATER
-		ft_logger("Failed to create pipe", ERROR, __FILE__, __LINE__);
+		// perror("pipe"); // <-- COMMENT THIS OUT LATER
+		// ft_logger("Failed to create pipe", ERROR, __FILE__, __LINE__);
 		throw std::runtime_error("Failed to create pipe");
 	}
 	if (pipe(parent_to_child) == -1)
 	{
-		perror("pipe"); // <-- COMMENT THIS OUT LATER
-		ft_logger("Failed to create pipe", ERROR, __FILE__, __LINE__);
+		// perror("pipe"); // <-- COMMENT THIS OUT LATER
+		// ft_logger("Failed to create pipe", ERROR, __FILE__, __LINE__);
 		throw std::runtime_error("Failed to create pipe");
 	}
 
@@ -109,8 +109,8 @@ void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 	pid = fork();
 	if (pid == -1)
 	{
-		perror("fork"); // <-- COMMENT THIS OUT LATER
-		ft_logger("Failed to fork process", ERROR, __FILE__, __LINE__);
+		// perror("fork"); // <-- COMMENT THIS OUT LATER
+		// ft_logger("Failed to fork process", ERROR, __FILE__, __LINE__);
 		throw std::runtime_error("Failed to fork process");
 	}
 
@@ -128,7 +128,8 @@ void CGI::exec_cgi( int &read_fd, int &write_fd, int &cgi_pid )
 
 		// Execute the CGI program
 		if (execve(cgi_path, argv, envp) == -1)
-			perror("execve"); // <-- COMMENT THIS OUT LATER
+		{}
+			// perror("execve"); // <-- COMMENT THIS OUT LATER
 		// close(STDIN_FILENO);
 		// close(STDOUT_FILENO);
 		// _exit(EXIT_FAILURE);
@@ -170,7 +171,7 @@ void	CGI::identifyCGI(std::vector<std::string> urlvec)
 	this->_program = this->_cgiConfig[this->_postfix];
 	if (this->_program.empty())
 	{
-		ft_logger("Error: Not a CGI", ERROR, __FILE__, __LINE__);
+		// ft_logger("Error: Not a CGI", ERROR, __FILE__, __LINE__);
 		throw 403;
 	}
 }
@@ -205,7 +206,7 @@ std::string	CGI::extractQueryString(std::vector<std::string> urlvec)
 	{
 		std::stringstream ss;
 		ss << "Query string ===== " << urlvec[i] <<std::endl;
-		ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
+		// ft_logger(ss.str(), DEBUG, __FILE__, __LINE__);
 		if (urlvec[i][0] == '?')
 			return (urlvec[i].substr(1));
 	}

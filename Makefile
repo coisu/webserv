@@ -8,7 +8,7 @@ VALUE_FILE = .log_value
 
 FLAGS = -std=c++98
 FLAGS += -Wall -Werror -Wextra
-FLAGS += -g3 -fno-limit-debug-info
+#FLAGS += -g3 #-fno-limit-debug-info
 FLAGS += -I$(INC_DIR)
 FLAGS += -D LOG_LEVEL=$(LOG)
 
@@ -21,7 +21,7 @@ OBJ_DIR = objs/
 OBJ_FILES = $(SOURCES_FILES:.cpp=.o)
 OBJS = $(addprefix $(OBJ_DIR), $(OBJ_FILES))
 
-.PHONY: clean fclean re all run check-log
+.PHONY: clean fclean re all run
 
 # RULES #
 all: $(BINARY)
@@ -29,20 +29,12 @@ all: $(BINARY)
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
 
-$(BINARY): $(OBJS) $(INCLUDES) | check-log
+$(BINARY): $(OBJS) $(INCLUDES)
 	$(COMPILER) $(FLAGS) $(SRCS) -o $(BINARY)
 
-$(OBJ_DIR)%.o: $(SOURCE_DIR)%.cpp $(INCLUDES) | check-log
+$(OBJ_DIR)%.o: $(SOURCE_DIR)%.cpp $(INCLUDES)
 	@mkdir -p $(OBJ_DIR)
 	$(COMPILER) $(FLAGS) -c $< -o $@
-
-check-log: $(OBJ_DIR)
-	@if [ ! -f $(VALUE_FILE) ] || [ "$(LOG)" != "$$(cat $(VALUE_FILE))" ]; then \
-		echo "$(LOG)" > $(VALUE_FILE); \
-		find $(OBJ_DIR) -type f -name '*.o' -exec touch {} +; \
-	else \
-		echo "LOG_LEVEL has not changed"; \
-	fi
 
 clean:
 	@echo "Deleting objects"
@@ -54,7 +46,3 @@ fclean: clean
 	@rm -rf $(BINARY)
 
 re: fclean all
-
-run: LOG=2
-run: all
-	@valgrind --quiet --leak-check=full --show-leak-kinds=all --track-fds=yes --exit-on-first-error=yes --error-exitcode=1 -s ./$(BINARY)

@@ -122,8 +122,8 @@ std::string Response::jumpToErrorPage(int status)
 	errorBody = makeErrorPage(status);
 	setContentType("default");
 	errorHeader = buildHeader(errorBody.size(), status);
-
-	return (errorHeader + errorBody + "\r\n");
+	std::string retStr = errorBody == "" ? errorHeader + "\r\n" : errorHeader + errorBody + "\r\n";
+	return (retStr);
 }
 
 std::string Response::processResponse( int &read_fd, int &write_fd, int &cgi_pid )
@@ -294,7 +294,7 @@ void Response::setTargetPath()
 		}
 	}
 	ft_logger("[ Directive Path ] " + _target_path, DEBUG, __FILE__, __LINE__);
-	if (!pathExists(_target_path))
+	if (!pathExists(_target_path) && _request.getMethodEnum() != DELETE)
 		_status = 404;
 }
 
@@ -373,7 +373,6 @@ void Response::buildErrorBody(std::string ext)
 
 std::string Response::buildErrorBody(int err)
 {
-
 	if (err >= 400)
 	{
 		std::map<int, std::string> ep = _server.getErrorPages();
@@ -543,7 +542,7 @@ std::string		Response::writeBodyAutoindex(const std::string &str)
 			}
 			else
 			{
-				perror("BIG ERROR"); // <-- COMMENT THIS OUT LATER
+				// perror("BIG ERROR"); // <-- COMMENT THIS OUT LATER
 				continue ;
 			}
 			ret += std::string(30 - filename.size(), ' ');
@@ -671,9 +670,9 @@ std::string		Response::buildHeader(int bodySize, int status)
 
 	setContentLength(bodySize);
 	header += makeStartLine(status);
-	header += makeTimeLine();
 	header += appendMapHeaders(status);
-	
+	header += makeTimeLine();
+	// ft_logger("HEADERRR:\n" + header, INFO, __FILE__, __LINE__);
 	return (header);
 }
 
@@ -740,8 +739,8 @@ std::string		Response::makeTimeLine()
   	strftime(buffer, 80, "%a, %d %b %Y %T GMT", timeinfo);
 
 	timeLine += buffer;
-	if (_request.getMethodEnum() != DELETE)
-		timeLine += "\r\n";
+	// if (!_body.empty())
+	timeLine += "\r\n";
 	return (timeLine);
 }
 

@@ -102,7 +102,11 @@ bool isNumeric(std::string const &str)
 void ft_logger(std::string thing, int level, std::string FILE, int LINE)
 {
 	// std::cerr << "LOG_LEVEL: " << LOG_LEVEL << std::endl;
+	// if (true)
+	// 	return ;
 	if (level > LOG_LEVEL)
+		return ;
+	if (level == DEBUG || level == ERROR)
 		return ;
 	std::cout << "[\033[1;34m" << FILE << ":" << LINE << "\033[0m]\t";
 	if (level == 0)

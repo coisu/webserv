@@ -14,6 +14,6 @@ Parse
 CMD correction:
 
 curl --resolve example.com:8080:127.0.0.1  http://localhost:8080
-curl -X POST -H "Content-Type:text/plain" --data "BODY IS HERE : banana" http://localhost:8080
-curl -X DELETE http://localhost:8080/delete/egs.jpg
+curl -X POST -H "Content-Type:text/plain" --data "BODY IS HERE : banana" http://localhost:8080/cgi-bin/env.sh
+curl -X DELETE http://localhost:8080/upload/form.php
 

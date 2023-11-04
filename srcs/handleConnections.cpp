@@ -148,7 +148,7 @@ std::string makeResponse(int code, std::string body)
 {
 	std::stringstream ss;
 
-	ss << "HTTP/1.1 " << code << " OK\r\n"
+	ss << "HTTP/1.1 " << code << " Internal Server Error\r\n"
 		  << "Content-Type: text/plain\r\n" //text/plain\r\n"
 		  << "Content-Length: " << body.size() << "\r\n"
 		  << "\n" << body << "\r\n";
@@ -289,7 +289,7 @@ void	recvSendLoop(std::vector<int> &serverSockets, int &maxSocket, std::vector<S
 		{
 			// int			pid = cgi_it->first;
 			CgiState&	cgi = cgi_it->second;
-			if (cgi.readFd == NOTSET && cgi.writeFd == NOTSET)
+			if (cgi.readFd == NOTSET && cgi.writeFd == NOTSET && cgi.readBuffer.empty() && cgi.writeBuffer.empty())
 			{
 				cgi_map.erase(cgi_it++);
 				ft_logger("CGI read and write pipes not set", DEBUG, __FILE__, __LINE__);

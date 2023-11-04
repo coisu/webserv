@@ -18,7 +18,6 @@ Location::Location( std::string locationBlock ) : _isCgi(false)
     setAttributes(part.substr(0, part.find('/')), part.substr(part.find('/')));
     while (std::getline(ss, part, ';'))
     {
-        std::cout << "part: "<< part << std::endl;
         std::string key = part.substr(0, part.find(':'));
         std::string value = part.substr(part.find(':')+1);
         setAttributes(key, value);

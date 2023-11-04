@@ -42,7 +42,6 @@ std::map<std::string, std::string>	CGI::constructEnv(std::string RequestUrl, std
 	env["REQUEST_METHOD"] = methodString;
 	env["PATH_INFO"] = this->server.getRoot() + extractPathInfo(urlvec);
 	env["QUERY_STRING"] = extractQueryString(urlvec);
-	env["UPLOAD_STORE"] = this->_location.getUploadStore();
 	env["SCRIPT_NAME"] = extractScriptName(urlvec);
 	env["CONTENT_TYPE"] = this->_request.getHead()["content-type"];
 	env["UPLOAD_DIR"] = this->server.getRoot() + this->_location.getUploadStore();
